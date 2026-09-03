@@ -123,15 +123,6 @@ Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地�
 
 移动端安装、配对与准确能力边界见 [`docs/MOBILE.md`](docs/MOBILE.md)。iOS Safari 可使用 Safari Web Extension 读取网页公开字幕；iOS Chrome 不能安装桌面 Chrome 扩展，可使用同一局域网内的移动知识工作台。
 
-## 从旧版重新加载
-
-如果 Chrome 仍显示 **YouTube Digest**，说明浏览器保存的是旧子目录入口：
-
-1. 在 `chrome://extensions` 删除名为 YouTube Digest 的旧卡片；
-2. 点击“加载已解压的扩展程序”；
-3. 选择本仓库的 `apps/browser-extension` 目录；
-4. 确认卡片名称为 **Quant Scholar Translator 0.6.0**，再刷新已打开的视频或论文页面。
-
 ## 已知边界
 
 - DRM 平台可能让 `tabCapture` 得到静音，不能承诺支持 Netflix 等站点。
