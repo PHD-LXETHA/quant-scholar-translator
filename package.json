@@ -1,0 +1,19 @@
+{
+  "name": "quant-scholar-translator",
+  "version": "0.4.0",
+  "author": "LX.COCOSCENT (https://github.com/PHD-LXETHA)",
+  "description": "Local-first professional translation workspace for technical video, web and research PDFs",
+  "homepage": "https://github.com/PHD-LXETHA/quant-scholar-translator",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PHD-LXETHA/quant-scholar-translator.git"
+  },
+  "bugs": "https://github.com/PHD-LXETHA/quant-scholar-translator/issues",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:glossary": "node scripts/build-domain-preset.mjs",
+    "test:extension": "node --test tests/extension.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js"
+  }
+}

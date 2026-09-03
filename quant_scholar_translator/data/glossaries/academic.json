@@ -1,0 +1,16 @@
+[
+  {"source":"abstract","target":"摘要","note":"paper section"},
+  {"source":"methodology","target":"研究方法","note":"academic research"},
+  {"source":"research question","target":"研究问题","note":"academic research"},
+  {"source":"literature review","target":"文献综述","note":"paper section"},
+  {"source":"hypothesis","target":"研究假设","note":"empirical paper"},
+  {"source":"identification strategy","target":"识别策略","note":"causal inference"},
+  {"source":"endogeneity","target":"内生性","note":"empirical research"},
+  {"source":"instrumental variable","target":"工具变量","note":"causal inference"},
+  {"source":"robustness check","target":"稳健性检验","note":"empirical research"},
+  {"source":"sensitivity analysis","target":"敏感性分析","note":"research validation"},
+  {"source":"replication","target":"复现","note":"research reproducibility"},
+  {"source":"peer review","target":"同行评审","note":"publishing"},
+  {"source":"appendix","target":"附录","note":"paper section"},
+  {"source":"supplementary materials","target":"补充材料","note":"paper assets"}
+]

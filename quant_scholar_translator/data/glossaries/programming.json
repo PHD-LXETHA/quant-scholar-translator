@@ -1,0 +1,22 @@
+[
+  {"source":"return value","target":"返回值","note":"programming"},
+  {"source":"class","target":"类","note":"object-oriented programming"},
+  {"source":"race condition","target":"竞态条件","note":"concurrency"},
+  {"source":"deadlock","target":"死锁","note":"concurrency"},
+  {"source":"thread safety","target":"线程安全","note":"concurrency"},
+  {"source":"dependency injection","target":"依赖注入","note":"software engineering"},
+  {"source":"runtime","target":"运行时","note":"programming"},
+  {"source":"compile time","target":"编译期","note":"programming"},
+  {"source":"garbage collection","target":"垃圾回收","note":"runtime"},
+  {"source":"memory leak","target":"内存泄漏","note":"debugging"},
+  {"source":"stack trace","target":"堆栈跟踪","note":"debugging"},
+  {"source":"exception handling","target":"异常处理","note":"programming"},
+  {"source":"asynchronous programming","target":"异步编程","note":"programming"},
+  {"source":"event loop","target":"事件循环","note":"runtime"},
+  {"source":"time complexity","target":"时间复杂度","note":"algorithms"},
+  {"source":"space complexity","target":"空间复杂度","note":"algorithms"},
+  {"source":"binary search tree","target":"二叉搜索树","note":"data structures"},
+  {"source":"application programming interface","target":"应用程序编程接口","note":"API"},
+  {"source":"continuous integration","target":"持续集成","note":"DevOps"},
+  {"source":"version control","target":"版本控制","note":"software engineering"}
+]

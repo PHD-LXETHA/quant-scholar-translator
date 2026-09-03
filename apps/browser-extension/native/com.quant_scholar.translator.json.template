@@ -1,0 +1,9 @@
+{
+  "name": "com.quant_scholar.translator",
+  "description": "Quant Scholar Translator backend launcher",
+  "path": "__LAUNCHER_BAT_PATH__",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://__EXTENSION_ID__/"
+  ]
+}

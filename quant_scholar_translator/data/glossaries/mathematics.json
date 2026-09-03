@@ -1,0 +1,22 @@
+[
+  {"source":"eigenvalue","target":"特征值","note":"linear algebra"},
+  {"source":"eigenvector","target":"特征向量","note":"linear algebra"},
+  {"source":"singular value decomposition","target":"奇异值分解","note":"linear algebra"},
+  {"source":"positive semidefinite","target":"半正定","note":"linear algebra"},
+  {"source":"orthogonal projection","target":"正交投影","note":"linear algebra"},
+  {"source":"convex optimization","target":"凸优化","note":"optimization"},
+  {"source":"Lagrange multiplier","target":"拉格朗日乘子","note":"optimization"},
+  {"source":"Karush-Kuhn-Tucker conditions","target":"KKT 条件","note":"optimization"},
+  {"source":"necessary condition","target":"必要条件","note":"mathematics"},
+  {"source":"sufficient condition","target":"充分条件","note":"mathematics"},
+  {"source":"partial derivative","target":"偏导数","note":"calculus"},
+  {"source":"gradient","target":"梯度","note":"calculus"},
+  {"source":"Hessian matrix","target":"海森矩阵","note":"calculus"},
+  {"source":"Lebesgue integral","target":"勒贝格积分","note":"analysis"},
+  {"source":"measurable function","target":"可测函数","note":"measure theory"},
+  {"source":"almost surely","target":"几乎必然","note":"probability"},
+  {"source":"stochastic process","target":"随机过程","note":"probability"},
+  {"source":"martingale","target":"鞅","note":"probability"},
+  {"source":"Brownian motion","target":"布朗运动","note":"stochastic calculus"},
+  {"source":"Itô's lemma","target":"伊藤引理","note":"stochastic calculus"}
+]

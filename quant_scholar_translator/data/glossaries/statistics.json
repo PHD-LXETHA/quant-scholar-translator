@@ -1,0 +1,22 @@
+[
+  {"source":"statistical power","target":"统计功效","note":"hypothesis testing"},
+  {"source":"null hypothesis","target":"原假设","note":"hypothesis testing"},
+  {"source":"alternative hypothesis","target":"备择假设","note":"hypothesis testing"},
+  {"source":"p-value","target":"p 值","note":"hypothesis testing"},
+  {"source":"type I error","target":"第一类错误","note":"hypothesis testing"},
+  {"source":"type II error","target":"第二类错误","note":"hypothesis testing"},
+  {"source":"unbiased estimator","target":"无偏估计量","note":"estimation"},
+  {"source":"consistent estimator","target":"一致估计量","note":"asymptotics"},
+  {"source":"confidence interval","target":"置信区间","note":"inference"},
+  {"source":"maximum likelihood estimation","target":"最大似然估计","note":"estimation"},
+  {"source":"ordinary least squares","target":"普通最小二乘法","note":"regression"},
+  {"source":"heteroskedasticity","target":"异方差性","note":"regression diagnostics"},
+  {"source":"multicollinearity","target":"多重共线性","note":"regression diagnostics"},
+  {"source":"autocorrelation","target":"自相关","note":"time series"},
+  {"source":"stationary process","target":"平稳过程","note":"time series"},
+  {"source":"unit root","target":"单位根","note":"time series"},
+  {"source":"cointegration","target":"协整","note":"time series"},
+  {"source":"central limit theorem","target":"中心极限定理","note":"probability"},
+  {"source":"law of large numbers","target":"大数定律","note":"probability"},
+  {"source":"Bayesian posterior","target":"贝叶斯后验分布","note":"Bayesian statistics"}
+]

@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a reproducible translation, subtitle, webpage, or PDF problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for helping improve Quant Scholar Translator. Never include API keys, private transcripts, or licensed PDFs."
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Live video subtitles
+        - Webpage translation
+        - PDF reader
+        - Local backend or models
+        - Knowledge export
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Include the public URL when possible and describe what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Windows version, Chrome version, CPU/GPU, selected model"

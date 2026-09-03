@@ -1,0 +1,21 @@
+[
+  {"source":"general equilibrium","target":"一般均衡","note":"microeconomics"},
+  {"source":"partial equilibrium","target":"局部均衡","note":"microeconomics"},
+  {"source":"marginal utility","target":"边际效用","note":"microeconomics"},
+  {"source":"price elasticity","target":"价格弹性","note":"economics"},
+  {"source":"consumer surplus","target":"消费者剩余","note":"welfare economics"},
+  {"source":"producer surplus","target":"生产者剩余","note":"welfare economics"},
+  {"source":"deadweight loss","target":"无谓损失","note":"welfare economics"},
+  {"source":"opportunity cost","target":"机会成本","note":"economics"},
+  {"source":"comparative advantage","target":"比较优势","note":"international trade"},
+  {"source":"monetary policy","target":"货币政策","note":"macroeconomics"},
+  {"source":"fiscal policy","target":"财政政策","note":"macroeconomics"},
+  {"source":"output gap","target":"产出缺口","note":"macroeconomics"},
+  {"source":"natural rate of unemployment","target":"自然失业率","note":"macroeconomics"},
+  {"source":"Phillips curve","target":"菲利普斯曲线","note":"macroeconomics"},
+  {"source":"purchasing power parity","target":"购买力平价","note":"international economics"},
+  {"source":"difference in differences","target":"双重差分法","note":"econometrics"},
+  {"source":"regression discontinuity","target":"断点回归","note":"causal inference"},
+  {"source":"fixed effects","target":"固定效应","note":"panel data"},
+  {"source":"random effects","target":"随机效应","note":"panel data"}
+]

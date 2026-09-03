@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quant Scholar Translator 设置</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header>
+        <div class="settings-heading-row">
+          <div class="eyebrow">QUANT SCHOLAR · LEARNING ENGINE</div>
+          <div
+            class="language-switch"
+            role="group"
+            aria-label="Interface language"
+            data-i18n-aria-label="languageGroupLabel"
+          >
+            <button
+              class="language-option"
+              type="button"
+              data-language="en"
+              aria-pressed="true"
+            >
+              English
+            </button>
+            <button
+              class="language-option"
+              type="button"
+              data-language="zh-CN"
+              aria-pressed="false"
+            >
+              中文
+            </button>
+          </div>
+        </div>
+        <h1 data-i18n="heading">配置 Kimi 专业学习模型</h1>
+        <p class="lede" data-i18n="lede">
+          Kimi API Key 仅保存在当前 Chrome 配置中。字幕由网页原字幕或本地 Whisper 提供，无需额外注册字幕服务。
+        </p>
+      </header>
+
+      <form id="settingsForm">
+        <section class="card">
+          <h2 data-i18n="aiProvider">AI provider</h2>
+          <div
+            class="provider-summary"
+            aria-label="Supported AI provider"
+            data-i18n-aria-label="providerSummaryLabel"
+          >
+            <span class="provider-name">Kimi K3</span>
+            <span class="provider-badge" data-i18n="providerBadge"
+              >Supported in this version</span
+            >
+          </div>
+
+          <label for="aiApiKey" data-i18n="kimiApiKeyLabel"
+            >Kimi API Key</label
+          >
+          <input
+            id="aiApiKey"
+            name="aiApiKey"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="粘贴你的 Kimi API Key"
+          />
+          <p class="help">
+            <span data-i18n="kimiHelp"
+              >Kimi K3 用于知识概览、专业解释、精译和笔记整理。</span
+            >
+            <a
+              href="https://platform.kimi.com/docs/get-api-key"
+              target="_blank"
+              rel="noreferrer"
+              data-i18n="kimiLink"
+              >创建 Kimi API Key</a
+            ><span data-i18n="kimiHelpSuffix">。</span>
+          </p>
+          <div class="privacy-note" data-i18n="privacyNote">
+            只有主动使用云端功能时，相关文本才会发送给 Kimi；本地 Whisper 转写不会上传音频。
+          </div>
+        </section>
+
+        <div class="form-actions">
+          <button class="primary" type="submit" data-i18n="saveSettings">
+            Save settings
+          </button>
+          <span id="saveStatus" role="status" aria-live="polite"></span>
+        </div>
+      </form>
+
+      <details class="card customization-card">
+        <summary class="customization-summary">
+          <span class="customization-summary-copy">
+            <span class="eyebrow" data-i18n="localRemix">Local remix</span>
+            <span class="customization-title" data-i18n="customizationTitle"
+              >Want to use another AI model?</span
+            >
+            <span
+              class="customization-purpose"
+              data-i18n="customizationPurpose"
+              >Edit and copy a safe prompt for your coding agent</span
+            >
+          </span>
+          <span class="agent-badge" data-i18n="agentBadge"
+            >Coding agent ready</span
+          >
+        </summary>
+        <div class="customization-content">
+          <p class="help customization-intro" data-i18n="customizationIntro">
+            You can edit the prompt directly. Complete these three steps before
+            copying:
+          </p>
+          <ol class="customization-steps">
+            <li data-i18n="customizationStepFolder">
+              Open the extracted Quant Scholar Translator project folder in your coding
+              agent.
+            </li>
+            <li data-i18n="customizationStepReplace">
+              Replace [PROVIDER] and [MODEL] with the service and model you want
+              to use.
+            </li>
+            <li data-i18n="customizationStepKeys">
+              Never include API keys in the prompt or chat. Enter them yourself
+              after the code is ready.
+            </li>
+          </ol>
+          <label for="customizationPrompt" data-i18n="customizationPromptLabel"
+            >Editable customization prompt</label
+          >
+          <div
+            id="customizationPromptReminder"
+            class="prompt-reminder"
+            role="note"
+            aria-label="Prompt reminder"
+            data-i18n-aria-label="customizationReminderLabel"
+          >
+            <span data-i18n="customizationReminder"
+              >Before copying, replace [PROVIDER] and [MODEL] with the provider
+              and model you want to use.</span
+            >
+          </div>
+          <textarea id="customizationPrompt" rows="12" aria-describedby="customizationPromptReminder">Customize this local Quant Scholar Translator workspace to use [PROVIDER] with [MODEL]. Keep API keys in Chrome local storage and never write them into source code, logs, screenshots, prompts, or chat. Preserve local Whisper transcription, professional terminology protection, PDF reading, and knowledge export. Update provider-specific request parameters and tests, then explain how to reload the unpacked extension.</textarea>
+          <div class="copy-actions">
+            <button
+              id="copyCustomizationPromptBtn"
+              type="button"
+              data-i18n="copyCustomizationPrompt"
+            >
+              Copy edited prompt
+            </button>
+            <span id="copyStatus" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </details>
+
+      <section class="card data-card">
+        <h2 data-i18n="localData">Local data</h2>
+        <p class="help" data-i18n="localDataHelp">
+          Digests, translations, and notes are stored only in this Chrome
+          profile. You can remove them at any time.
+        </p>
+        <div class="data-actions">
+          <button id="clearCacheBtn" type="button" data-i18n="clearCache">
+            Clear cached digests
+          </button>
+          <button id="clearNotesBtn" type="button" data-i18n="deleteNotes">
+            Delete all notes
+          </button>
+          <button
+            id="resetBtn"
+            class="danger"
+            type="button"
+            data-i18n="resetData"
+          >
+            Reset extension data
+          </button>
+        </div>
+        <span id="dataStatus" role="status" aria-live="polite"></span>
+      </section>
+
+      <footer data-i18n-html="footer">
+        Read <a href="PRIVACY.md" target="_blank">PRIVACY.md</a> in the
+        repository for the complete data-flow description.
+      </footer>
+    </main>
+
+    <script src="settings.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

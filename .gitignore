@@ -1,0 +1,11 @@
+**/__pycache__/
+*.py[cod]
+.venv/
+.models/
+services/realtime-backend/.venv/
+vendor-src/
+quant-scholar/
+*.log
+build/
+dist/
+*.egg-info/

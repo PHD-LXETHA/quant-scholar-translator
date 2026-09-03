@@ -1,0 +1,22 @@
+[
+  {"source":"expected return","target":"期望收益率","note":"asset pricing"},
+  {"source":"realized return","target":"已实现收益率","note":"performance"},
+  {"source":"excess return","target":"超额收益率","note":"asset pricing"},
+  {"source":"risk premium","target":"风险溢价","note":"asset pricing"},
+  {"source":"yield to maturity","target":"到期收益率","note":"fixed income"},
+  {"source":"duration","target":"久期","note":"fixed income; not 持续时间"},
+  {"source":"modified duration","target":"修正久期","note":"fixed income"},
+  {"source":"convexity","target":"凸性","note":"fixed income"},
+  {"source":"term structure","target":"期限结构","note":"interest rates"},
+  {"source":"credit spread","target":"信用利差","note":"credit"},
+  {"source":"free cash flow","target":"自由现金流","note":"valuation"},
+  {"source":"weighted average cost of capital","target":"加权平均资本成本","note":"valuation"},
+  {"source":"discounted cash flow","target":"现金流折现法","note":"valuation"},
+  {"source":"enterprise value","target":"企业价值","note":"valuation"},
+  {"source":"equity value","target":"股权价值","note":"valuation"},
+  {"source":"book-to-market ratio","target":"账面市值比","note":"asset pricing"},
+  {"source":"earnings yield","target":"盈利收益率","note":"valuation factor"},
+  {"source":"financial leverage","target":"财务杠杆","note":"corporate finance"},
+  {"source":"working capital","target":"营运资本","note":"accounting"},
+  {"source":"liquidity premium","target":"流动性溢价","note":"market liquidity"}
+]

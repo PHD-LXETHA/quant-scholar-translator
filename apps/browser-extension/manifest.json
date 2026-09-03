@@ -1,0 +1,91 @@
+{
+  "manifest_version": 3,
+  "name": "Quant Scholar Translator",
+  "version": "0.4.0",
+  "description": "Professional bilingual live subtitles for finance, mathematics, statistics, economics and programming learning.",
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "storage",
+    "activeTab",
+    "scripting",
+    "nativeMessaging",
+    "downloads",
+    "tabs",
+    "contextMenus",
+    "declarativeNetRequestWithHostAccess",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Quant Scholar Translator",
+    "default_icon": {
+      "16": "research/icons/icon-16.png",
+      "32": "research/icons/icon-32.png",
+      "48": "research/icons/icon-48.png",
+      "128": "research/icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "research/icons/icon-16.png",
+    "32": "research/icons/icon-32.png",
+    "48": "research/icons/icon-48.png",
+    "128": "research/icons/icon-128.png"
+  },
+  "options_page": "research/options.html",
+  "side_panel": {
+    "default_path": "learning/sidepanel.html"
+  },
+  "commands": {
+    "toggle-translation": {
+      "suggested_key": { "default": "Alt+T" },
+      "description": "切换网页原文与译文"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["youtube/timedtext-sniffer.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["research/content.js"],
+      "css": ["research/content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    },
+    {
+      "matches": ["https://www.youtube.com/*"],
+      "js": ["learning/content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "offscreen.html",
+        "research/vendor/*",
+        "research/vendor/cmaps/*",
+        "research/vendor/standard_fonts/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

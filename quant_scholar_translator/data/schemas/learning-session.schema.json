@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quant-scholar.local/schemas/learning-session.json",
+  "title": "Quant Scholar Learning Session",
+  "type": "object",
+  "required": ["schemaVersion", "id", "title", "startedAt", "domain", "segments"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string" },
+    "url": { "type": "string" },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "domain": {
+      "enum": ["auto", "academic", "finance", "quant_finance", "economics", "statistics", "mathematics", "programming"]
+    },
+    "captureMode": { "enum": ["detecting", "native-captions", "audio-asr", "pdf"] },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "translation"],
+        "properties": {
+          "id": { "type": "string" },
+          "source": { "type": "string" },
+          "translation": { "type": "string" },
+          "sourceLanguage": { "type": "string" },
+          "domain": { "type": "string" },
+          "mediaTime": { "type": ["number", "null"], "minimum": 0 },
+          "page": { "type": ["integer", "null"], "minimum": 1 },
+          "section": { "type": ["string", "null"] },
+          "provider": { "type": "string" },
+          "capturedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}
