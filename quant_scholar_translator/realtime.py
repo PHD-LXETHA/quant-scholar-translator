@@ -21,10 +21,12 @@ import json
 import logging
 import os
 import re
+import secrets
 import sys
+import threading
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 # Make pip-installed NVIDIA libs discoverable by ctranslate2 on Windows.
@@ -96,12 +98,15 @@ _register_nvidia_dll_dirs()
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import __version__
 from .config import (
     MODEL_SIZE, DEVICE, COMPUTE_TYPE, TRANSLATOR, NLLB_MODEL,
-    HOST, PORT, SAMPLE_RATE, VAD_FILTER, MAX_CHUNK_LAG_S,
+    HOST, PORT, MOBILE_ACCESS_TOKEN, SAMPLE_RATE, VAD_FILTER, MAX_CHUNK_LAG_S,
     SENTENCE_MAX_CHARS, LLM_API_BASE, LLM_API_KEY, LLM_MODEL,
     WHISPER_CACHE, LOCAL_WHISPER_TURBO, NLLB_CT2_CACHE,
 )
@@ -109,6 +114,8 @@ from .codex_bridge import CodexBridgeError, codex_status, run_codex_completion
 from .kimi_bridge import KimiBridgeError, kimi_status, run_kimi_completion
 from .translation import (
     hotwords_for_domain,
+    protect,
+    restore_checked,
     translate_codex_subscription,
     translate_kimi_subscription,
     translate_openai_compatible,
@@ -122,7 +129,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 _model = None
 _resolved_device = None   # the device whisper actually loaded on ("cuda"/"cpu")
 
-def get_model():
+def get_model(offline: bool = False):
     global _model, _resolved_device
     if _model is not None:
         return _model
@@ -154,6 +161,7 @@ def get_model():
                 device=dev,
                 compute_type=comp,
                 download_root=str(WHISPER_CACHE),
+                local_files_only=offline,
             )
             _resolved_device = dev
             if dev == "cpu" and MODEL_SIZE.startswith("large"):
@@ -234,15 +242,21 @@ _NLLB_LANG = {
 
 _nllb = None              # (translator, tokenizer) once loaded
 _nllb_failed = False      # set True after a load failure so we stop retrying
+_nllb_lock = threading.Lock()
 
 
-def _get_nllb():
+def _get_nllb(*, allow_download: bool = True):
     """Lazily load NLLB on CTranslate2 (reuses the ct2 already pulled in by
     faster-whisper — no torch at inference time). Returns (translator, tokenizer)
     or None if unavailable, in which case callers fall back to google."""
     global _nllb, _nllb_failed
     if _nllb is not None or _nllb_failed:
         return _nllb
+    if not allow_download and not all(
+        (NLLB_CT2_CACHE / name).is_file()
+        for name in ("model.bin", "tokenizer_config.json", "tokenizer.json")
+    ):
+        return None
     try:
         from pathlib import Path
         import ctranslate2
@@ -267,7 +281,10 @@ def _get_nllb():
             translator = ctranslate2.Translator(str(cache_dir), device="cpu")
             want_dev = "cpu"
         tokenizer_source = cache_dir if (cache_dir / "tokenizer_config.json").exists() else NLLB_MODEL
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_source)
+        # Keep NLLB's own tokenizer behavior. The generic Transformers
+        # `fix_mistral_regex` migration is for Mistral tokenizers and causes
+        # degenerate repeated output when forced onto this NLLB checkpoint.
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_source, local_files_only=not allow_download)
         _nllb = (translator, tokenizer)
         log.info("NLLB translator ready (device=%s)", want_dev)
     except Exception as e:
@@ -278,20 +295,33 @@ def _get_nllb():
     return _nllb
 
 
-def _translate_nllb(text: str, src: str, tgt: str) -> str:
-    bundle = _get_nllb()
+def _translate_nllb(text: str, src: str, tgt: str, *, allow_network_fallback: bool = True) -> str:
+    # The tokenizer's src_lang is mutable. Serialize shared local inference so
+    # simultaneous mobile/desktop requests cannot mix language state or loads.
+    with _nllb_lock:
+        return _translate_nllb_impl(text, src, tgt, allow_network_fallback=allow_network_fallback)
+
+
+def _translate_nllb_impl(text: str, src: str, tgt: str, *, allow_network_fallback: bool = True) -> str:
+    bundle = _get_nllb(allow_download=allow_network_fallback)
     if bundle is None:
-        return _translate_google(text, src, tgt)
+        if allow_network_fallback:
+            return _translate_google(text, src, tgt)
+        raise RuntimeError("NLLB local model is unavailable; offline mode will not use a network fallback")
     translator, tokenizer = bundle
     src_code = _NLLB_LANG.get(src)
     tgt_code = _NLLB_LANG.get(tgt)
     if tgt_code is None:
-        log.warning("NLLB has no FLORES code for target %r — using google", tgt)
-        return _translate_google(text, src, tgt)
+        if allow_network_fallback:
+            log.warning("NLLB has no FLORES code for target %r — using google", tgt)
+            return _translate_google(text, src, tgt)
+        raise ValueError(f"NLLB does not support target language {tgt!r}; offline mode will not use a network fallback")
     # NLLB needs a source language tag. If detection gave us something we don't
     # map (or "auto"), let the tokenizer default and rely on the target tag.
-    if src_code:
-        tokenizer.src_lang = src_code
+    # NLLB itself does not detect the source language. Whisper/native caption
+    # paths normally provide one; deterministic English is the safest fallback
+    # for the project's academic corpus when a manual client sends "auto".
+    tokenizer.src_lang = src_code or "eng_Latn"
     tokens = tokenizer.convert_ids_to_tokens(tokenizer.encode(text))
     results = translator.translate_batch(
         [tokens], target_prefix=[[tgt_code]], beam_size=1, max_decoding_length=256,
@@ -309,29 +339,56 @@ def _translate_google(text: str, src: str, tgt: str) -> str:
     return GoogleTranslator(source=src_arg, target=tgt).translate(text)
 
 
-def translate(text: str, src: str, tgt: str, domain: str = "auto", provider: str | None = None) -> str:
+def translate(
+    text: str,
+    src: str,
+    tgt: str,
+    domain: str = "auto",
+    provider: str | None = None,
+    context: str = "",
+    strict: bool = False,
+    offline: bool = False,
+) -> str:
     selected = (provider or TRANSLATOR).strip().lower()
     if not text.strip() or src == tgt or selected == "none":
         return text
     try:
         if selected == "nllb":
-            return _translate_nllb(text, src, tgt)
+            protected = protect(text)
+            output = _translate_nllb(
+                protected.text, src, tgt, allow_network_fallback=not offline
+            )
+            return restore_checked(output, protected.values)
         if selected == "google":
-            return _translate_google(text, src, tgt)
+            protected = protect(text)
+            return restore_checked(
+                _translate_google(protected.text, src, tgt), protected.values
+            )
         if selected == "llm":
             if not LLM_API_KEY:
                 raise RuntimeError("QS_LLM_API_KEY is required for professional LLM translation")
             return translate_openai_compatible(
                 text, src, tgt, domain,
-                api_base=LLM_API_BASE, api_key=LLM_API_KEY, model=LLM_MODEL,
+                api_base=LLM_API_BASE, api_key=LLM_API_KEY, model=LLM_MODEL, context=context,
             )
         if selected == "codex":
-            return translate_codex_subscription(text, src, tgt, domain)
+            return translate_codex_subscription(text, src, tgt, domain, context=context)
         if selected == "kimi_subscription":
-            return translate_kimi_subscription(text, src, tgt, domain)
+            return translate_kimi_subscription(text, src, tgt, domain, context=context)
+        raise ValueError(f"unsupported translation provider: {selected}")
     except Exception as e:
         log.warning("translation failed (%s -> %s): %s", src, tgt, e)
+        if strict:
+            raise
     return text
+
+
+def normalize_translation_mode(value: str | None) -> str:
+    return value if value in {"professional", "quick", "offline"} else "professional"
+
+
+def professional_provider(value: str | None) -> str:
+    return value if value in {"codex", "kimi_subscription", "llm"} else "kimi_subscription"
 
 
 # ----- session --------------------------------------------------------------
@@ -352,6 +409,9 @@ class Session:
     last_detected: str = "auto"
     domain: str = "auto"
     translator: str = TRANSLATOR
+    translation_mode: str = "professional"
+    source_context: list[str] = field(default_factory=list)
+    translation_queue: asyncio.Queue | None = None
 
 
 # Sentence-final marks across the languages we caption — Latin, Arabic (؟ ،),
@@ -368,7 +428,7 @@ def transcribe_chunk(session: Session, pcm_int16: np.ndarray) -> tuple[str, str]
     if pcm_int16.size == 0:
         return "", session.source_lang or "auto"
     audio = pcm_int16.astype(np.float32) / 32768.0
-    model = get_model()
+    model = get_model(offline=session.translation_mode == "offline")
     lang = None if session.source_lang in (None, "", "auto") else session.source_lang
     segments, info = model.transcribe(
         audio,
@@ -396,40 +456,102 @@ def transcribe_chunk(session: Session, pcm_int16: np.ndarray) -> tuple[str, str]
     return text, (info.language if info and info.language else (lang or "auto"))
 
 
-async def _render(session: Session, loop) -> str:
-    """Translate the in-progress sentence (session.pending) as a whole clause.
-    Returns the translated text (or the raw text when no translation applies)."""
-    if not session.pending:
+async def _render_source(
+    session: Session,
+    loop,
+    source: str,
+    provider: str,
+    *,
+    detected: str | None = None,
+    offline: bool = False,
+) -> str:
+    """Translate source from the authoritative transcript, never from a preview."""
+    if not source:
         return ""
-    src = session.last_detected if session.source_lang == "auto" else session.source_lang
+    src = (detected or session.last_detected) if session.source_lang == "auto" else session.source_lang
     if session.task == "translate" and session.target_lang == "en":
-        return session.pending   # whisper already produced English
+        return source   # whisper already produced English
+    context = " ".join(session.source_context[-4:])[-1600:]
     return await loop.run_in_executor(
-        None, translate, session.pending, src, session.target_lang, session.domain, session.translator
+        None,
+        translate,
+        source,
+        src,
+        session.target_lang,
+        session.domain,
+        provider,
+        context,
+        True,
+        offline,
     )
 
 
-async def _send_line(ws: WebSocket, session: Session, partial: str, is_final: bool) -> None:
+async def _send_line(
+    ws: WebSocket,
+    session: Session,
+    partial: str,
+    is_final: bool,
+    *,
+    raw: str | None = None,
+    stage: str = "final",
+    provider: str | None = None,
+    detected: str | None = None,
+    chunk_id: int | None = None,
+) -> None:
     """Push the single visible line (the current sentence, translated)."""
     await ws.send_text(json.dumps({
         "type": "transcript",
-        "text": partial, "raw": session.pending,
-        "detectedLang": session.last_detected,
-        "chunkId": session.chunk_id, "isFinal": is_final,
+        "text": partial, "raw": session.pending if raw is None else raw,
+        "detectedLang": detected or session.last_detected,
+        "chunkId": session.chunk_id if chunk_id is None else chunk_id, "isFinal": is_final,
+        "stage": stage,
+        "provider": provider or session.translator,
     }, ensure_ascii=False))
 
 
+async def _professional_translation_worker(ws: WebSocket, session: Session, loop) -> None:
+    """Translate finalized sentences sequentially while audio capture continues."""
+    assert session.translation_queue is not None
+    while True:
+        item = await session.translation_queue.get()
+        if item is None:
+            return
+        source, detected, chunk_id = item
+        provider = professional_provider(session.translator)
+        try:
+            translated = await _render_source(session, loop, source, provider, detected=detected)
+            await _send_line(
+                ws, session, translated, True,
+                raw=source, stage="professional-final", provider=provider,
+                detected=detected, chunk_id=chunk_id,
+            )
+            session.source_context.append(source)
+            session.source_context = session.source_context[-8:]
+        except Exception as error:
+            log.warning("professional translation failed for chunk #%s: %s", chunk_id, error)
+            try:
+                await ws.send_text(json.dumps({
+                    "type": "error",
+                    "message": f"professional translation failed: {error}",
+                }, ensure_ascii=False))
+            except Exception:
+                return
+
+
 async def commit_pending(ws: WebSocket, session: Session, loop) -> None:
-    """Finalize the current sentence: translate + send it as the final line,
-    then clear the buffer so the NEXT sentence replaces it on screen. The
-    overlay keeps showing this line until the next sentence arrives (or it
-    times out on its own — content.js). Used on sentence end and pauses."""
+    """Finalize a source sentence without ever feeding NLLB text to the professional model."""
     if not session.pending:
         return
-    partial = await _render(session, loop)
-    log.info("commit #%d raw=%r out=%r", session.chunk_id, session.pending, partial)
-    await _send_line(ws, session, partial, is_final=True)
+    source = session.pending
+    detected = session.last_detected
+    chunk_id = session.chunk_id
     session.pending = ""
+    if session.translation_mode == "offline":
+        translated = await _render_source(session, loop, source, "nllb", offline=True)
+        await _send_line(ws, session, translated, True, raw=source, stage="offline-final", provider="nllb")
+        return
+    assert session.translation_queue is not None
+    await session.translation_queue.put((source, detected, chunk_id))
 
 
 async def _handle_chunk(
@@ -484,27 +606,39 @@ async def _handle_chunk(
         log.info("chunk #%d: hallucination filter dropped raw=%r", cid, raw)
         return
 
-    # Append this chunk to the sentence being spoken, re-translate the WHOLE
-    # sentence (full-clause context — the fix for "translation is off"), and
-    # show it growing in real time. The translator always sees a complete
-    # phrase, never a 1s shard, but the user still gets an update every chunk.
+    # Append source chunks into a complete thought. Professional mode displays
+    # source immediately and defers model translation until commit; quick mode
+    # may show a local NLLB preview, but that preview is never passed downstream.
     session.last_detected = detected
     session.pending = merge_incremental_text(session.pending, raw)
 
-    partial = await _render(session, loop)
-    await _send_line(ws, session, partial, is_final=False)
-    log.info("chunk #%d: pending=%r out=%r", cid, session.pending, partial)
+    if session.translation_mode == "professional":
+        await _send_line(ws, session, "", False, stage="source", provider=professional_provider(session.translator))
+    else:
+        try:
+            preview = await _render_source(session, loop, session.pending, "nllb", offline=True)
+        except Exception:
+            preview = ""
+        stage = "offline-preview" if session.translation_mode == "offline" else "quick-preview"
+        await _send_line(ws, session, preview, False, stage=stage, provider="nllb")
+    log.info("chunk #%d: pending=%r mode=%s", cid, session.pending, session.translation_mode)
 
     # When the sentence completes (punctuation) or grows long, clear the buffer
     # so the next sentence starts a fresh line and replaces this one on screen.
     if ends_sentence(session.pending) or len(session.pending) >= SENTENCE_MAX_CHARS:
-        session.pending = ""
+        await commit_pending(ws, session, loop)
 
 
 # ----- websocket loop -------------------------------------------------------
 async def handle_socket(ws: WebSocket):
+    client_host = ws.client.host if ws.client else ""
+    if not _loopback_client(client_host) and not _mobile_token_valid(ws.query_params.get("token")):
+        await ws.close(code=1008, reason="LAN access requires a valid mobile token")
+        return
     await ws.accept()
     session = Session()
+    session.translation_queue = asyncio.Queue()
+    translation_worker: asyncio.Task | None = None
     log.info("client connected")
 
     try:
@@ -520,14 +654,17 @@ async def handle_socket(ws: WebSocket):
                     session.task = cfg.get("task", "transcribe") or "transcribe"
                     session.domain = cfg.get("domain", "auto") or "auto"
                     session.translator = cfg.get("translator", TRANSLATOR) or TRANSLATOR
-                    log.info("config: rate=%s src=%s tgt=%s task=%s translator=%s",
+                    session.translation_mode = normalize_translation_mode(cfg.get("translationMode"))
+                    log.info("config: rate=%s src=%s tgt=%s task=%s translator=%s mode=%s",
                              session.sample_rate, session.source_lang,
-                             session.target_lang, session.task, session.translator)
+                             session.target_lang, session.task, session.translator,
+                             session.translation_mode)
             except json.JSONDecodeError:
                 pass
 
         # Main loop: receive binary PCM chunks, transcribe, translate, push back.
         loop = asyncio.get_running_loop()
+        translation_worker = asyncio.create_task(_professional_translation_worker(ws, session, loop))
         while True:
             msg = await ws.receive()
             if msg.get("type") == "websocket.disconnect":
@@ -564,6 +701,9 @@ async def handle_socket(ws: WebSocket):
                         session.task = cfg.get("task", session.task)
                         session.domain = cfg.get("domain", session.domain)
                         session.translator = cfg.get("translator", session.translator)
+                        session.translation_mode = normalize_translation_mode(
+                            cfg.get("translationMode", session.translation_mode)
+                        )
                 except json.JSONDecodeError:
                     pass
 
@@ -576,6 +716,10 @@ async def handle_socket(ws: WebSocket):
         except Exception:
             pass
     finally:
+        if session.translation_queue is not None:
+            await session.translation_queue.put(None)
+        if translation_worker is not None:
+            translation_worker.cancel()
         log.info("client disconnected")
 
 
@@ -593,6 +737,41 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-QS-Token"],
+)
+
+
+def _loopback_client(host: str | None) -> bool:
+    return (host or "").strip().lower() in {"127.0.0.1", "::1", "localhost", "testclient"}
+
+
+def _mobile_token_valid(value: str | None) -> bool:
+    return bool(MOBILE_ACCESS_TOKEN and value and secrets.compare_digest(MOBILE_ACCESS_TOKEN, value))
+
+
+@app.middleware("http")
+async def protect_nonlocal_requests(request, call_next):
+    client_host = request.client.host if request.client else ""
+    if (
+        not _loopback_client(client_host)
+        and not request.url.path.startswith("/mobile")
+        and not _mobile_token_valid(request.headers.get("X-QS-Token"))
+    ):
+        return JSONResponse(
+            status_code=403,
+            content={"detail": "LAN access requires QS_MOBILE_TOKEN and the matching X-QS-Token header."},
+        )
+    return await call_next(request)
+
+
+MOBILE_ROOT = Path(__file__).resolve().parent / "mobile"
+if MOBILE_ROOT.is_dir():
+    app.mount("/mobile", StaticFiles(directory=MOBILE_ROOT, html=True), name="mobile")
+
 
 class TranslationRequest(BaseModel):
     text: str = Field(min_length=1, max_length=12000)
@@ -600,6 +779,8 @@ class TranslationRequest(BaseModel):
     targetLang: str = "zh"
     domain: str = "auto"
     translator: str | None = None
+    context: str = Field(default="", max_length=4000)
+    offline: bool = False
 
 
 class LocalChatMessage(BaseModel):
@@ -639,6 +820,9 @@ async def translate_endpoint(request: TranslationRequest):
         request.targetLang,
         request.domain,
         request.translator,
+        request.context,
+        True,
+        request.offline,
     )
     return {"ok": True, "text": output, "raw": request.text}
 

@@ -14,6 +14,8 @@ const els = {
   backendUrl: $('backendUrl'),
   model: $('model'),
   device: $('device'),
+  translationMode: $('translationMode'),
+  translationModeHelp: $('translationModeHelp'),
   translator: $('translator'),
   domain: $('domain'),
   preferNativeCaptions: $('preferNativeCaptions'),
@@ -40,8 +42,20 @@ const DEFAULTS = {
   task: 'translate',
   model: 'large-v3-turbo',
   device: 'auto',
+  translationMode: 'professional',
   translator: 'kimi_subscription',
 };
+
+const MODE_HELP = {
+  professional: '原文立即显示；Codex/Kimi 直接读取原文与上下文生成终稿，知识库只保存终稿。',
+  quick: 'NLLB 只作临时预览；Codex/Kimi 仍从原文独立生成终稿，避免错误锚定。',
+  offline: '完全离线使用 Whisper＋NLLB；不会调用 Codex、Kimi 或在线翻译。',
+};
+
+function renderTranslationMode(mode) {
+  els.translationModeHelp.textContent = MODE_HELP[mode] || MODE_HELP.professional;
+  els.translator.disabled = mode === 'offline';
+}
 
 // compute_type pairs naturally with device — float16 on GPU, int8 on CPU.
 // For "auto" we hint float16; the backend downgrades to int8 itself if it ends
@@ -59,9 +73,11 @@ async function loadSettings() {
   els.backendUrl.value = s.backendUrl;
   els.model.value = s.model;
   els.device.value = s.device;
+  els.translationMode.value = s.translationMode;
   els.translator.value = s.translator;
   els.domain.value = s.domain;
   els.preferNativeCaptions.checked = s.preferNativeCaptions !== false;
+  renderTranslationMode(s.translationMode);
   return s;
 }
 
@@ -77,6 +93,7 @@ async function saveSettings() {
     model: els.model.value,
     device,
     compute: computeFor(device),
+    translationMode: els.translationMode.value,
     translator: els.translator.value,
     domain: els.domain.value,
     preferNativeCaptions: els.preferNativeCaptions.checked,
@@ -150,9 +167,10 @@ async function onToggle() {
 els.fontSize.addEventListener('input', () => {
   els.fontSizeVal.textContent = els.fontSize.value;
 });
-['sourceLang','targetLang','fontSize','position','backendUrl','model','device','translator','domain','preferNativeCaptions'].forEach(k => {
+['sourceLang','targetLang','fontSize','position','backendUrl','model','device','translationMode','translator','domain','preferNativeCaptions'].forEach(k => {
   els[k].addEventListener('change', saveSettings);
 });
+els.translationMode.addEventListener('change', () => renderTranslationMode(els.translationMode.value));
 els.toggle.addEventListener('click', onToggle);
 els.exportMarkdown.addEventListener('click', async () => {
   const res = await chrome.runtime.sendMessage({ target: 'background', type: 'knowledge:export', format: 'markdown' });
@@ -195,6 +213,7 @@ els.openLearningPanel.addEventListener('click', async () => {
   if (!tab?.id) return;
   await chrome.sidePanel.setOptions({ tabId: tab.id, path: 'learning/sidepanel.html', enabled: true });
   await chrome.sidePanel.open({ tabId: tab.id });
+  await chrome.tabs.sendMessage(tab.id, { type: 'floating:close-menu' }).catch(() => {});
   window.close();
 });
 els.openLearningSettings.addEventListener('click', () => {

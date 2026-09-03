@@ -54,6 +54,7 @@ NLLB_MODEL = os.getenv("KAMI_NLLB_MODEL", "facebook/nllb-200-distilled-600M")
 
 HOST = os.getenv("KAMI_HOST", "127.0.0.1")
 PORT = int(os.getenv("KAMI_PORT", "8765"))
+MOBILE_ACCESS_TOKEN = os.getenv("QS_MOBILE_TOKEN", "").strip()
 
 # Input audio from the extension is always 16kHz mono PCM Int16.
 SAMPLE_RATE = 16000

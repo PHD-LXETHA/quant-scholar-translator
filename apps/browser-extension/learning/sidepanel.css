@@ -111,7 +111,7 @@ body {
    ============================================================ */
 .header {
   flex-shrink: 0;
-  padding: 16px 20px 0;
+  padding: 16px 20px 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
@@ -188,7 +188,7 @@ body {
   display: flex;
   gap: 4px;
   margin-top: 14px;
-  padding-bottom: 12px;
+  padding-bottom: 0;
 }
 
 .tab {
@@ -723,6 +723,18 @@ body {
 }
 
 @media (max-width: 390px) {
+  .header {
+    padding: 12px 12px 10px;
+  }
+
+  .content {
+    padding: 18px 12px 14px;
+  }
+
+  .workspace-brand small {
+    display: none;
+  }
+
   .transcript-header-main {
     align-items: flex-start;
     flex-direction: column;

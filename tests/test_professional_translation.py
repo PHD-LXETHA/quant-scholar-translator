@@ -16,6 +16,24 @@ class ProfessionalTranslationTests(unittest.TestCase):
         self.assertNotIn("`statsmodels.OLS()`", protected.text)
         self.assertEqual(MODULE.restore(protected.text, protected.values), source)
 
+    def test_numbers_formulas_and_code_cannot_disappear_from_a_final_translation(self):
+        protected = MODULE.protect("Sharpe rose from 1.2 to 1.8; evaluate $E[R_t]$ with `fit()`.")
+        self.assertGreaterEqual(len(protected.values), 4)
+        with self.assertRaises(ValueError):
+            MODULE.restore_checked("夏普比率有所上升。", protected.values)
+
+    def test_professional_context_is_separate_from_the_text_to_translate(self):
+        prompt = MODULE.contextual_user_text("power increased", "The hypothesis test rejected H0.")
+        self.assertIn("Previous source context", prompt)
+        self.assertIn("Text to translate:\npower increased", prompt)
+
+    def test_placeholder_indexes_do_not_collide(self):
+        values = [str(index * 11) for index in range(12)]
+        self.assertEqual(MODULE.restore("QS_PROTECTED_1 QS_PROTECTED_10", values), "11 110")
+
+    def test_indefinite_article_is_not_mistaken_for_an_acronym(self):
+        self.assertEqual(MODULE.protect("A stationary process").text, "A stationary process")
+
     def test_every_domain_glossary_loads(self):
         for domain in ("academic", "finance", "quant_finance", "economics", "statistics", "mathematics", "programming"):
             entries = MODULE.load_glossary(domain)

@@ -231,48 +231,34 @@ async function readBoundedAiResponse(response, onActivity) {
 // ============================================================
 
 /**
- * When the user clicks the extension icon, open the side panel.
- * Chrome's Side Panel API lets us show a persistent panel alongside the page.
+ * Keep the toolbar action dedicated to the in-page translation menu. The
+ * learning workspace is opened explicitly from that menu, so Chrome must not
+ * also map the same toolbar click to the side panel.
  */
-chrome.action.onClicked.addListener((tab) => {
-  // Re-enable + open without awaiting — preserves user gesture context
-  chrome.sidePanel.setOptions({
-    tabId: tab.id,
-    path: "sidepanel.html",
-    enabled: true,
-  });
-  chrome.sidePanel.open({ tabId: tab.id });
-});
-
-/**
- * Allow the side panel to open on any page, but it's designed for YouTube.
- */
-chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: false });
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
   if (reason === "install") chrome.tabs.create({ url: chrome.runtime.getURL("learning/options.html") });
 });
 
 /**
- * Keep the side panel scoped to YouTube tabs only.
+ * Keep the side panel available on ordinary web and local-file tabs.
  *
  * Chrome side panels are "global" by default: once opened, the panel follows
- * you to every tab. To make Quant Scholar Translator behave like a YouTube-only tool, we
- * enable the panel on YouTube tabs and disable it everywhere else. Disabling
- * on a tab makes Chrome hide/close the panel for that tab, so it never lingers
- * on a new tab or some other website.
+ * you to every tab. Disable it only on browser-internal pages where extension
+ * content cannot run.
  *
  * We have to react to BOTH things that can change "what tab you're looking at":
  *   - onUpdated: the current tab navigates to a new URL
  *   - onActivated: you switch to (or open) a different tab
  * The original code only handled onUpdated, which is why the panel stayed
- * visible when switching to an already-loaded non-YouTube tab.
+ * visible when switching to an already-loaded unsupported tab.
  */
 function updatePanelForTab(tabId, url) {
-  const isYouTube = (url || "").startsWith("https://www.youtube.com");
+  const isSupportedPage = /^(https?|file):/i.test(url || "");
   // setOptions can reject if the tab just closed — ignore that harmlessly.
   chrome.sidePanel
-    .setOptions({ tabId, path: "sidepanel.html", enabled: isYouTube })
+    .setOptions({ tabId, path: "learning/sidepanel.html", enabled: isSupportedPage })
     .catch(() => {});
 }
 
@@ -413,7 +399,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (tabId) {
       chrome.sidePanel.setOptions({
         tabId,
-        path: "sidepanel.html",
+        path: "learning/sidepanel.html",
         enabled: true,
       });
       chrome.sidePanel
@@ -437,7 +423,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           if (tabs[0]) {
             chrome.sidePanel.setOptions({
               tabId: tabs[0].id,
-              path: "sidepanel.html",
+              path: "learning/sidepanel.html",
               enabled: true,
             });
             chrome.sidePanel.open({ tabId: tabs[0].id }).catch((err) => {

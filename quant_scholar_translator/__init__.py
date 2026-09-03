@@ -7,12 +7,13 @@ from .translation import (
     load_glossary,
     protect,
     restore,
+    restore_checked,
     translate_openai_compatible,
     translate_codex_subscription,
     translate_kimi_subscription,
 )
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 
 def translate_text(text: str, source: str = "auto", target: str = "zh", domain: str = "auto") -> str:
@@ -30,6 +31,7 @@ __all__ = [
     "merge_incremental_text",
     "protect",
     "restore",
+    "restore_checked",
     "translate_openai_compatible",
     "translate_codex_subscription",
     "translate_kimi_subscription",

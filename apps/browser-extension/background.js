@@ -2,6 +2,8 @@
 // Coordinates: popup <-> offscreen (audio capture) <-> content (overlay)
 //             popup -> native host (spawns the Python backend)
 
+import { mergeCaptionSource, shouldCommitCaption } from './caption-buffer.js';
+
 const OFFSCREEN_DOC = 'offscreen.html';
 const NATIVE_HOST   = 'com.quant_scholar.translator';
 
@@ -15,6 +17,8 @@ let captureSession = null;
 let captureMode = 'idle';       // idle | native-captions | audio-asr
 let activeSettings = {};
 let captionQueue = Promise.resolve();
+let nativePending = null;
+let nativeCommitTimer = null;
 
 chrome.storage.local.get(['isCapturing', 'activeTabId', 'currentLearningSession', 'settings']).then(stored => {
   isCapturing = Boolean(stored.isCapturing);
@@ -47,6 +51,7 @@ async function currentMediaTime() {
 
 async function persistFinalSegment(msg) {
   if (!captureSession || !msg.isFinal || !(msg.raw || msg.text)) return;
+  if (msg.stage === 'source' || String(msg.stage || '').includes('preview')) return;
   const source = String(msg.raw || '').trim();
   const translation = String(msg.text || '').trim();
   const resolvedMediaTime = Number.isFinite(msg.mediaTime) ? msg.mediaTime : await currentMediaTime();
@@ -63,7 +68,8 @@ async function persistFinalSegment(msg) {
     translation,
     domain: captureSession.domain,
     mediaTime: resolvedMediaTime,
-    provider: msg.provider || captureMode
+    provider: msg.provider || captureMode,
+    stage: msg.stage || 'final'
   };
   if (!segment.source && !segment.translation) return;
   captureSession.segments.push(segment);
@@ -285,6 +291,19 @@ function stopBackend() {
   backendState = 'down';
 }
 
+// The toolbar icon opens the page-level floating workspace. Chrome's own
+// action popup is intentionally disabled so its browser-controlled anchor can
+// never compete with the draggable menu.
+chrome.action.onClicked.addListener(async tab => {
+  if (!tab?.id) return;
+  try {
+    await ensureContentScript(tab.id);
+    await chrome.tabs.sendMessage(tab.id, { type: 'floating:toggle-menu' });
+  } catch (_error) {
+    await chrome.tabs.create({ url: chrome.runtime.getURL('popup/popup.html') });
+  }
+});
+
 function translationHttpUrl(settings) {
   const wsUrl = settings.backendUrl || 'ws://127.0.0.1:8765/ws';
   const url = new URL(wsUrl.replace(/^ws:/, 'http:').replace(/^wss:/, 'https:'));
@@ -293,7 +312,23 @@ function translationHttpUrl(settings) {
   return url.toString();
 }
 
-async function translateNativeCaption(msg) {
+function normalizedTranslationMode(settings = activeSettings) {
+  return ['professional', 'quick', 'offline'].includes(settings?.translationMode)
+    ? settings.translationMode
+    : 'professional';
+}
+
+function professionalTranslator(settings = activeSettings) {
+  return ['codex', 'kimi_subscription', 'llm'].includes(settings?.translator)
+    ? settings.translator
+    : 'kimi_subscription';
+}
+
+function recentSourceContext() {
+  return (captureSession?.segments || []).slice(-4).map(item => item.source).filter(Boolean).join(' ').slice(-1600);
+}
+
+async function translateNativeCaption(msg, translator, offline = false) {
   const response = await fetch(translationHttpUrl(activeSettings), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -302,37 +337,103 @@ async function translateNativeCaption(msg) {
       sourceLang: msg.sourceLang || activeSettings.sourceLang || 'auto',
       targetLang: activeSettings.targetLang || 'zh',
       domain: activeSettings.domain || 'auto',
-      translator: activeSettings.translator || 'nllb'
+      translator,
+      context: recentSourceContext(),
+      offline
     })
   });
   if (!response.ok) throw new Error(`Translation service returned HTTP ${response.status}`);
   const result = await response.json();
-  return result.text || msg.source;
+  if (!String(result.text || '').trim()) throw new Error('Translation service returned an empty final result');
+  return result.text;
 }
 
-async function processNativeCaption(msg) {
-  if (!isCapturing || captureMode !== 'native-captions' || !msg.source) return;
-  let text = msg.source;
-  try {
-    text = await translateNativeCaption(msg);
-  } catch (error) {
-    console.warn('[quant-scholar] native caption translation unavailable:', error);
+async function processNativeCaption(msg, sessionId) {
+  const stillCurrent = () => isCapturing && captureMode === 'native-captions' && captureSession?.id === sessionId;
+  if (!stillCurrent() || !msg.source) return;
+  const mode = normalizedTranslationMode();
+  const finalProvider = mode === 'offline' ? 'nllb' : professionalTranslator();
+  if (mode === 'quick') {
+    try {
+      const preview = await translateNativeCaption(msg, 'nllb', true);
+      if (stillCurrent() && activeTabId != null) {
+        await chrome.tabs.sendMessage(activeTabId, {
+          type: 'overlay:text', text: preview, raw: msg.source, isFinal: false,
+          stage: 'quick-preview', provider: 'nllb'
+        });
+      }
+    } catch (error) {
+      console.info('[quant-scholar] local preview skipped:', error);
+    }
   }
+
+  if (!stillCurrent()) return;
+  let text;
+  try {
+    text = await translateNativeCaption(msg, finalProvider, mode === 'offline');
+  } catch (error) {
+    console.warn('[quant-scholar] final caption translation unavailable:', error);
+    if (stillCurrent() && activeTabId != null) {
+      await chrome.tabs.sendMessage(activeTabId, {
+        type: 'overlay:error',
+        message: mode === 'offline' ? '本地 NLLB 暂不可用' : '专业翻译暂不可用，未写入知识库'
+      });
+    }
+    return;
+  }
+  if (!stillCurrent()) return;
   const transcript = {
     text,
     raw: msg.source,
     detectedLang: msg.sourceLang || 'auto',
     mediaTime: msg.mediaTime,
-    provider: msg.provider || 'native-caption',
+    provider: finalProvider,
+    stage: mode === 'offline' ? 'offline-final' : 'professional-final',
     isFinal: true
   };
   await persistFinalSegment(transcript);
   if (activeTabId != null) {
-    await chrome.tabs.sendMessage(activeTabId, { type: 'overlay:text', text, raw: msg.source, isFinal: true });
+    await chrome.tabs.sendMessage(activeTabId, {
+      type: 'overlay:text', text, raw: msg.source, isFinal: true,
+      stage: transcript.stage, provider: finalProvider
+    });
   }
 }
 
+function clearNativePending() {
+  if (nativeCommitTimer) clearTimeout(nativeCommitTimer);
+  nativeCommitTimer = null;
+  nativePending = null;
+}
+
+function flushNativePending() {
+  if (!nativePending) return;
+  const pending = nativePending;
+  clearNativePending();
+  captionQueue = captionQueue.catch(() => undefined).then(() => processNativeCaption(pending, pending.sessionId));
+}
+
+async function bufferNativeCaption(msg) {
+  if (!isCapturing || captureMode !== 'native-captions' || !captureSession || !msg.source) return;
+  const now = Date.now();
+  if (!nativePending) nativePending = { ...msg, source: '', startedAt: now, sessionId: captureSession.id };
+  nativePending.source = mergeCaptionSource(nativePending.source, msg.source);
+  const pending = nativePending;
+  const display = chrome.tabs.sendMessage(activeTabId, {
+    type: 'overlay:text', text: '', raw: nativePending.source, isFinal: false,
+    stage: 'source', provider: professionalTranslator()
+  }).catch(() => {});
+  if (shouldCommitCaption(pending.source, now - pending.startedAt)) {
+    flushNativePending();
+  } else {
+    if (nativeCommitTimer) clearTimeout(nativeCommitTimer);
+    nativeCommitTimer = setTimeout(flushNativePending, 2200);
+  }
+  await display;
+}
+
 async function initializeSession(tabId, settings) {
+  clearNativePending();
   const tab = await chrome.tabs.get(tabId);
   activeTabId = tabId;
   activeSettings = settings;
@@ -346,6 +447,8 @@ async function initializeSession(tabId, settings) {
     sourceLanguage: settings.sourceLang || 'auto',
     targetLanguage: settings.targetLang || 'zh',
     domain: settings.domain || 'auto',
+    translationMode: normalizedTranslationMode(settings),
+    professionalTranslator: professionalTranslator(settings),
     captureMode: 'detecting',
     segments: []
   };
@@ -416,6 +519,7 @@ async function startCapture(tabId, settings) {
 }
 
 async function stopCapture() {
+  clearNativePending();
   if (await hasOffscreenDocument()) {
     await chrome.runtime.sendMessage({ target: 'offscreen', type: 'stop' });
   }
@@ -446,7 +550,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         case 'capture:start': {
           const tab = msg.tabId
             ? await chrome.tabs.get(msg.tabId)
-            : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
+            : (sender.tab || (await chrome.tabs.query({ active: true, currentWindow: true }))[0]);
           try {
             await startCapture(tab.id, msg.settings || {});
           } catch (error) {
@@ -478,15 +582,16 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
                 type: 'overlay:text',
                 text: msg.text,
                 raw: msg.raw,
-                isFinal: msg.isFinal
+                isFinal: msg.isFinal,
+                stage: msg.stage,
+                provider: msg.provider
               });
             } catch (e) { /* ignore */ }
           }
           break;
         }
         case 'caption:segment': {
-          captionQueue = captionQueue.catch(() => undefined).then(() => processNativeCaption(msg));
-          await captionQueue;
+          if (sender.tab?.id === activeTabId) await bufferNativeCaption(msg);
           sendResponse({ ok: true });
           break;
         }

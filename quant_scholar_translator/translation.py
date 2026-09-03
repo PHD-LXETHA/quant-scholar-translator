@@ -32,7 +32,9 @@ DOMAIN_HINTS = {
 PROTECTED_PATTERNS = re.compile(
     r"(```[\s\S]*?```|`[^`\n]+`|\$\$[\s\S]*?\$\$|\$[^$\n]+\$|"
     r"\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|https?://\S+|doi:\s*\S+|"
-    r"\[[0-9,;\-–—\s]+\]|\b[A-Z]{1,6}\d{0,4}\b|\b\w+\([^\n()]{0,80}\))"
+    r"\[[0-9,;\-–—\s]+\]|\b[A-Z]{2,6}\d{0,4}\b|\b[A-Z]\d{1,4}\b|"
+    r"\b[A-Z](?=\s*[=<>+*/])|\b\w+\([^\n()]{0,80}\)|"
+    r"(?<![\w.])[+\-]?\d+(?:[.,]\d+)*(?:\s?(?:%|bp|bps|USD|EUR|CNY|RMB))?)"
 )
 
 
@@ -53,9 +55,38 @@ def protect(text: str) -> ProtectedText:
 
 
 def restore(text: str, values: list[str]) -> str:
-    for index, value in enumerate(values):
-        text = text.replace(f"⟪QS_PROTECTED_{index}⟫", value)
-    return text
+    # Some local MT tokenizers strip the decorative brackets. Parse complete
+    # marker indexes so marker 1 cannot accidentally rewrite marker 10.
+    def replace(match: re.Match[str]) -> str:
+        index = int(match.group(1))
+        return values[index] if index < len(values) else match.group(0)
+
+    return re.sub(r"⟪?QS_PROTECTED_(\d+)⟫?", replace, text)
+
+
+def restore_checked(text: str, values: list[str]) -> str:
+    """Restore protected technical tokens and reject silent model omissions."""
+    missing = [
+        index
+        for index, value in enumerate(values)
+        if (
+            not re.search(rf"QS_PROTECTED_{index}(?!\d)", text)
+            and value not in text
+        )
+    ]
+    if missing:
+        raise ValueError(f"translation omitted {len(missing)} protected formula/number/code token(s)")
+    return restore(text, values)
+
+
+def contextual_user_text(text: str, context: str = "") -> str:
+    context = str(context or "").strip()[-1600:]
+    if not context:
+        return text
+    return (
+        "Previous source context for disambiguation only; do not translate or repeat it:\n"
+        f"{context}\n\nText to translate:\n{text}"
+    )
 
 
 def detect_domain(text: str) -> str:
@@ -120,6 +151,7 @@ def translate_openai_compatible(
     api_key: str,
     model: str,
     timeout: int = 45,
+    context: str = "",
 ) -> str:
     selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
     protected = protect(text)
@@ -137,7 +169,7 @@ Glossary:
         "temperature": 0.1,
         "messages": [
             {"role": "system", "content": system},
-            {"role": "user", "content": protected.text},
+            {"role": "user", "content": contextual_user_text(protected.text, context)},
         ],
     }).encode("utf-8")
     url = api_base.rstrip("/") + "/chat/completions"
@@ -150,7 +182,7 @@ Glossary:
     with urllib.request.urlopen(request, timeout=timeout) as response:
         result = json.loads(response.read().decode("utf-8"))
     output = result["choices"][0]["message"]["content"].strip()
-    return restore(output, protected.values)
+    return restore_checked(output, protected.values)
 
 
 def translate_codex_subscription(
@@ -160,6 +192,7 @@ def translate_codex_subscription(
     domain: str,
     *,
     timeout: int | None = None,
+    context: str = "",
 ) -> str:
     """Translate through the locally installed, ChatGPT-authenticated Codex CLI."""
     selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
@@ -176,11 +209,11 @@ Glossary:
     output = run_codex_completion(
         [
             {"role": "system", "content": system},
-            {"role": "user", "content": protected.text},
+            {"role": "user", "content": contextual_user_text(protected.text, context)},
         ],
         timeout=timeout,
     )
-    return restore(output.strip(), protected.values)
+    return restore_checked(output.strip(), protected.values)
 
 
 def translate_kimi_subscription(
@@ -190,6 +223,7 @@ def translate_kimi_subscription(
     domain: str,
     *,
     timeout: int | None = None,
+    context: str = "",
 ) -> str:
     """Translate through the locally installed, OAuth-authenticated Kimi Code CLI."""
     selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
@@ -206,8 +240,8 @@ Glossary:
     output = run_kimi_completion(
         [
             {"role": "system", "content": system},
-            {"role": "user", "content": protected.text},
+            {"role": "user", "content": contextual_user_text(protected.text, context)},
         ],
         timeout=timeout,
     )
-    return restore(output.strip(), protected.values)
+    return restore_checked(output.strip(), protected.values)

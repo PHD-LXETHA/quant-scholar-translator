@@ -22,7 +22,8 @@ html, body {
   color: var(--fg);
   font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
   font-size: 13px;
-  width: 320px;
+  width: 100%;
+  min-width: 320px;
 }
 
 header {
@@ -146,6 +147,11 @@ button.primary.stop { background: var(--err); color: #fff; }
   flex-direction: row;
   align-items: flex-start;
   line-height: 1.35;
+}
+.settings label small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
 }
 .settings input[type="checkbox"] { accent-color: var(--accent); }
 

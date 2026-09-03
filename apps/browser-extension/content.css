@@ -31,3 +31,24 @@
   color: #d1d5db;
   font-size: 0.72em;
 }
+#kami-subs-overlay .kami-subs-stage {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 2px 8px;
+  border: 1px solid rgba(54, 214, 194, 0.45);
+  border-radius: 999px;
+  color: #67e8d7;
+  background: rgba(7, 21, 33, 0.82);
+  font-size: 10px;
+  line-height: 1.2;
+  text-shadow: none;
+}
+#kami-subs-overlay[data-stage="quick-preview"] .kami-subs-stage {
+  border-color: rgba(240, 198, 109, 0.52);
+  color: #f0c66d;
+}
+#kami-subs-overlay[data-stage="source"] .kami-subs-text {
+  color: #91adba;
+  font-size: 0.58em;
+}

@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.5.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.6.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 面向技术视频、专业网页与科研 PDF 的本地优先双语学习工作台。它把实时字幕、专业翻译、论文阅读、术语保护与知识库导出放进同一套工作流，重点服务金融、量化、经济、统计、数学和编程内容。
 
-> **专业版 0.5.0** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
+> **专业版 0.6.0** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
 
 ## 为什么做这个项目
 
@@ -32,6 +32,14 @@
 - 通过统一 PDF 接口调用已安装的复杂论文版面组件；
 - 保存可回跳的媒体时间戳、字幕来源并自动去重；
 - 导出 Markdown、结构化 JSON 或双语 SRT，供其他工作台作为知识库摄取。
+
+## 三种实时模式
+
+- **专业实时（默认）**：原文立即出现；Codex 或 Kimi 直接读取原文、前文与专业术语库生成终稿，允许几秒延迟。
+- **极速预览**：NLLB 先给出约百毫秒级的本地临时译文，Codex/Kimi 同时从原文独立生成专业终稿并替换。NLLB 译文不会进入专业请求。
+- **离线模式**：Whisper＋NLLB 全程在本机运行，不调用在线翻译。
+
+只有 `professional-final` 与 `offline-final` 会进入学习会话和知识库；临时 NLLB 预览不会被导出。数值、百分比、基点、货币、公式、变量、代码、URL、引用和专业缩写在翻译前保护，恢复失败时拒绝将结果作为终稿。
 
 ## 快速开始
 
@@ -66,11 +74,13 @@ Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套�
 1. 打开 `chrome://extensions` 并启用开发者模式；
 2. 点击“加载已解压的扩展程序”；
 3. **只选择 `apps/browser-extension`**，不要选择其中的 `learning` 或 `research` 子目录；
-4. 打开视频、网页或 PDF，点击扩展开始使用。
+4. 刷新要学习的网页；点击扩展 QS 图标，网页内会打开可拖动的完整悬浮菜单。
 
 ## 项目结构
 
 - `apps/browser-extension`：Chrome Manifest V3 扩展。
+- `apps/safari-extension`：iPhone、iPad 与 macOS Safari Web Extension 源码。
+- `quant_scholar_translator/mobile`：Safari/Chrome 通用的移动知识工作台。
 - `quant_scholar_translator`：你的统一 Python 库，包含实时服务、专业翻译、稳定字幕、PDF 接口、术语库和知识数据契约。
 - `docs/MODELS.md`：已下载模型、体积、哈希、转换和剔除记录。
 - `docs/LIBRARY.md`：统一库公共接口、成品边界和依赖原则。
@@ -107,7 +117,11 @@ translated = translate_text("expected return and risk premium", domain="quant_fi
 
 默认推荐 Whisper `large-v3-turbo`；显存或算力有限时可从 `small` 或 `base` 开始。NLLB-200 600M int8 用于离线翻译，BabelDOC 作为可选的复杂论文版面运行组件。
 
-Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地转换后的 `large-v3-turbo` 权重和 faster-whisper 推理，不需要调用 OpenAI 语音 API。只有用户主动选择 Codex、Kimi 或其他云端精译功能时，相关文字才会发给所选服务；标签页音频仍留在本机。套餐 CLI 适合论文、PDF、段落精译、知识概览和笔记整理，但启动开销较高；追求逐句低延迟字幕时优先使用本地 NLLB，随后再用 Codex/Kimi 对学习记录做精译。
+Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地转换后的 `large-v3-turbo` 权重和 faster-whisper 推理，不需要调用 OpenAI 语音 API。音频以约 1 秒 PCM 内存块送入本机服务，不生成录音文件；停止时释放轨道并清空缓冲。只有用户主动选择 Codex、Kimi 或其他云端精译功能时，识别后的文字才会发给所选服务，音频仍留在本机。
+
+本机实测的 NLLB 首次模型加载约 6.6 秒，预热后含技术数值保护的 60–70 个英文字符句子平均约 0.15 秒；这只是当前电脑的测量值。Codex/Kimi 包含 CLI 启动与网络往返，通常更慢但专业语境更强，因此默认“专业实时”优先质量，“极速预览”用于降低等待感。
+
+移动端安装、配对与准确能力边界见 [`docs/MOBILE.md`](docs/MOBILE.md)。iOS Safari 可使用 Safari Web Extension 读取网页公开字幕；iOS Chrome 不能安装桌面 Chrome 扩展，可使用同一局域网内的移动知识工作台。
 
 ## 从旧版重新加载
 
@@ -116,7 +130,7 @@ Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地�
 1. 在 `chrome://extensions` 删除名为 YouTube Digest 的旧卡片；
 2. 点击“加载已解压的扩展程序”；
 3. 选择本仓库的 `apps/browser-extension` 目录；
-4. 确认卡片名称为 **Quant Scholar Translator 0.5.0**，再刷新已打开的视频或论文页面。
+4. 确认卡片名称为 **Quant Scholar Translator 0.6.0**，再刷新已打开的视频或论文页面。
 
 ## 已知边界
 

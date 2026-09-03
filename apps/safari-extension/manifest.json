@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Quant Scholar Translator for Safari",
+  "version": "0.6.0",
+  "description": "Professional source-caption translation for Safari on iPhone and iPad.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "在网页中打开 Quant Scholar"},
+  "content_scripts": [
+    {"matches": ["http://*/*", "https://*/*"], "js": ["content.js"], "run_at": "document_idle"}
+  ]
+}

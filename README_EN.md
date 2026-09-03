@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.5.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.6.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 A local-first bilingual learning workspace for technical videos, professional webpages, and research PDFs. Quant Scholar Translator brings live captions, domain-aware translation, paper reading, terminology protection, and knowledge export into one workflow, with special attention to finance, quantitative research, economics, statistics, mathematics, and programming.
 
-> **Professional Edition 0.5.0** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
+> **Professional Edition 0.6.0** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
 
 ## Why this project exists
 
@@ -29,6 +29,14 @@ General-purpose translation tools often damage formulas, variables, statistical 
 - Provides a side-panel workspace for transcripts, bilingual reading, overviews, explanations, and notes.
 - Includes structured webpage translation and a PDF.js research-paper reader.
 - Exports Markdown, structured JSON, and bilingual SRT for downstream knowledge bases.
+
+## Three live modes
+
+- **Professional live (default):** source text appears immediately; Codex or Kimi translates directly from the source, source context, and domain glossary.
+- **Fast preview:** local NLLB provides a temporary preview while Codex/Kimi independently creates the final translation from source text. The preview is never included in the professional request.
+- **Offline:** Whisper and NLLB run locally without an online translation service.
+
+Only professional or offline final records enter the knowledge base. Numbers, percentages, basis points, currencies, formulas, variables, code, URLs, citations, and acronyms are protected and validated before a result is accepted as final.
 
 ## Quick start
 
@@ -59,7 +67,7 @@ Choose **Codex plan** or **Kimi membership** in the extension. The backend queri
 1. Open `chrome://extensions` and enable Developer mode.
 2. Select **Load unpacked**.
 3. Choose only `apps/browser-extension`; do not load its `learning` or `research` subdirectories.
-4. Open a video, webpage, or PDF and launch Quant Scholar Translator.
+4. Refresh the target page, then click the QS extension icon to open the complete draggable in-page menu.
 
 ## Layout-preserving PDF translation
 
@@ -87,7 +95,9 @@ translated = translate_text(
 
 Whisper is an open-source multilingual speech-recognition model from OpenAI. This project runs converted `large-v3-turbo` weights locally through faster-whisper, so it does not need the OpenAI speech API. Use `small` or `base` on lower-powered machines. NLLB-200 600M int8 provides offline translation, while BabelDOC is an optional separately installed runtime for complex paper layouts.
 
-Audio remains local on the bundled Whisper path. Text is sent only to the selected Codex, Kimi, or other cloud provider when the user explicitly invokes translation, overview, explanation, or note features. CLI plan modes suit refined translation and research workflows; local NLLB remains the recommended low-latency path for sentence-by-sentence captions.
+Audio remains local on the bundled Whisper path and is processed as roughly one-second in-memory PCM chunks; no recording file is created. Text is sent only to the selected Codex, Kimi, or other cloud provider when the user explicitly invokes cloud-backed features. On the current development machine, NLLB took about 6.6 seconds to cold-load and averaged about 0.15 seconds for warm 60–70 character English sentences with technical-value protection; this is a machine-specific measurement.
+
+See [`docs/MOBILE.md`](docs/MOBILE.md) for iPhone/iPad setup and capability boundaries. The Safari Web Extension can translate webpage-accessible captions. iOS Chrome cannot install desktop Chrome extensions, so it uses the shared mobile knowledge workspace instead.
 
 ## Known limitations
 

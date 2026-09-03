@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Quant Scholar Translator",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Professional bilingual live subtitles for finance, mathematics, statistics, economics and programming learning.",
   "permissions": [
     "tabCapture",
@@ -24,7 +24,6 @@
     "type": "module"
   },
   "action": {
-    "default_popup": "popup/popup.html",
     "default_title": "Quant Scholar Translator",
     "default_icon": {
       "16": "research/icons/icon-16.png",
@@ -81,6 +80,9 @@
     {
       "resources": [
         "offscreen.html",
+        "popup/popup.html",
+        "popup/popup.css",
+        "popup/popup.js",
         "research/vendor/*",
         "research/vendor/cmaps/*",
         "research/vendor/standard_fonts/*"

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071521">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Quant Scholar Mobile</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <header class="hero">
+    <span class="mark">QS</span>
+    <div><h1>Quant Scholar</h1><p>iPhone / iPad 专业翻译与知识库</p></div>
+  </header>
+  <main>
+    <details class="card connection">
+      <summary>连接电脑翻译服务</summary>
+      <label>服务地址<input id="backend" inputmode="url" placeholder="http://电脑局域网IP:8765"></label>
+      <label>配对令牌<input id="token" type="password" autocomplete="off" placeholder="QS_MOBILE_TOKEN"></label>
+      <small>本机服务默认不开放局域网；移动连接必须使用配对令牌。令牌只保存在当前浏览器。</small>
+    </details>
+
+    <section class="card">
+      <div class="row two">
+        <label>原文语言（离线请选）<select id="sourceLang"><option value="auto">自动识别（专业引擎）</option><option value="en">English</option><option value="zh">中文</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="de">Deutsch</option><option value="fr">Français</option><option value="es">Español</option></select></label>
+        <label>专业领域<select id="domain"><option value="auto">自动判断</option><option value="finance">金融学</option><option value="quant_finance">量化金融</option><option value="economics">经济学</option><option value="statistics">统计与计量</option><option value="mathematics">数学</option><option value="programming">编程与计算机</option></select></label>
+        <label>翻译引擎<select id="provider"><option value="kimi_subscription">Kimi 套餐</option><option value="codex">Codex 套餐</option><option value="nllb">NLLB 离线</option></select></label>
+      </div>
+      <label>原文<textarea id="source" rows="9" placeholder="粘贴论文段落、字幕或学习材料。专业模型只读取这里的原文与前文，不引用 NLLB 译文。"></textarea></label>
+      <div class="actions"><button id="translate" class="primary">生成专业译文</button><button id="clear">清空</button></div>
+      <p id="status" class="status">准备就绪</p>
+      <label>译文<textarea id="translation" rows="9" readonly placeholder="译文将在这里显示"></textarea></label>
+      <button id="save" class="wide" disabled>保存到移动知识库</button>
+    </section>
+
+    <section class="card">
+      <div class="section-head"><div><h2>移动知识库</h2><small>仅保存最终译文，不保存音频或临时 NLLB 预览</small></div><span id="count">0</span></div>
+      <div id="records" class="records"></div>
+      <div class="actions"><button id="exportMarkdown">导出 Markdown</button><button id="exportJson">导出 JSON</button></div>
+    </section>
+
+    <aside class="notice">
+      Safari 安装扩展后可在网页视频中读取可访问的原字幕；iOS Chrome 不支持桌面 Chrome 扩展，因此使用本移动工作台。受 iOS 权限限制，无字幕视频不能通用捕获其他标签页音频。
+    </aside>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

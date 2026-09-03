@@ -64,7 +64,7 @@
         </label>
 
         <label>
-          字幕字号 <span id="fontSizeVal">28</span>px
+          <span>字幕字号 <span id="fontSizeVal">28</span> px</span>
           <input type="range" id="fontSize" min="14" max="56" step="2" value="28" />
         </label>
 
@@ -98,17 +98,24 @@
         </label>
 
         <label>
-          翻译引擎
+          翻译模式
+          <select id="translationMode">
+            <option value="professional" selected>专业实时（原文先显示，专业终稿随后替换）</option>
+            <option value="quick">极速预览（NLLB 临时译文＋专业终稿）</option>
+            <option value="offline">离线模式（Whisper＋NLLB）</option>
+          </select>
+          <small id="translationModeHelp">知识库只保存 Codex/Kimi 基于原文生成的专业终稿。</small>
+        </label>
+
+        <label>
+          专业翻译引擎
           <select id="translator">
             <optgroup label="套餐登录（无需 API Key）">
-              <option value="codex">Codex 套餐精译（较慢，非实时推荐）</option>
-              <option value="kimi_subscription" selected>Kimi 套餐精译（较慢，非实时推荐）</option>
+              <option value="codex">Codex 套餐专业翻译</option>
+              <option value="kimi_subscription" selected>Kimi 套餐专业翻译</option>
             </optgroup>
-            <optgroup label="高级／本地模式">
+            <optgroup label="API 备用">
               <option value="llm">Kimi / OpenAI 兼容 API（按量备用）</option>
-              <option value="nllb">NLLB 本地翻译（离线）</option>
-              <option value="google">Google 在线翻译</option>
-              <option value="none">仅转写，不翻译</option>
             </optgroup>
           </select>
         </label>
@@ -137,7 +144,7 @@
     </main>
 
     <footer>
-      <span class="hint">Codex 与 Kimi 均可使用本机套餐登录；逐句实时字幕优先选 NLLB，论文、PDF 和学习整理优先选套餐精译。</span>
+      <span class="hint">音频仅以约 1 秒内存块发送到本机 Whisper，不生成录音文件；Codex/Kimi 只接收识别后的文字。</span>
     </footer>
 
     <script src="popup.js"></script>

@@ -85,7 +85,8 @@ function openSocket() {
       targetLang: (settings && settings.targetLang) || 'ar',
       task: (settings && settings.task) || 'translate',
       domain: (settings && settings.domain) || 'auto',
-      translator: (settings && settings.translator) || 'nllb'
+      translator: (settings && settings.translator) || 'kimi_subscription',
+      translationMode: (settings && settings.translationMode) || 'professional'
     }));
     chrome.runtime.sendMessage({ target: 'background', type: 'ws:state', state: 'connected' });
   });
@@ -101,7 +102,9 @@ function openSocket() {
           raw: data.raw || '',
           detectedLang: data.detectedLang || 'auto',
           chunkId: data.chunkId,
-          isFinal: !!data.isFinal
+          isFinal: !!data.isFinal,
+          stage: data.stage || (data.isFinal ? 'final' : 'source'),
+          provider: data.provider || ''
         });
       } else if (data.type === 'error') {
         chrome.runtime.sendMessage({
