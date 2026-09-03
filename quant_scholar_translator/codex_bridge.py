@@ -39,8 +39,39 @@ class CodexStatus:
 
 
 def _command() -> str:
-    configured = os.getenv("QS_CODEX_COMMAND", "codex").strip() or "codex"
-    return shutil.which(configured) or configured
+    """Resolve Codex from PATH or the known Windows desktop-app locations."""
+    configured = os.getenv("QS_CODEX_COMMAND", "").strip()
+    if configured:
+        return shutil.which(configured) or configured
+
+    on_path = shutil.which("codex")
+    if on_path:
+        return on_path
+
+    if sys.platform == "win32":
+        candidates: list[Path] = []
+        install_dir = os.getenv("CODEX_INSTALL_DIR", "").strip()
+        if install_dir:
+            candidates.append(Path(install_dir) / "codex.exe")
+
+        local_app_data = os.getenv("LOCALAPPDATA", "").strip()
+        if local_app_data:
+            local_root = Path(local_app_data)
+            # Official standalone default, followed by the desktop app's
+            # versioned private binary directory used by current releases.
+            candidates.extend([
+                local_root / "Programs" / "OpenAI" / "Codex" / "bin" / "codex.exe",
+                local_root / "OpenAI" / "Codex" / "bin" / "codex.exe",
+            ])
+            desktop_bin = local_root / "OpenAI" / "Codex" / "bin"
+            if desktop_bin.is_dir():
+                candidates.extend(desktop_bin.glob("*/codex.exe"))
+
+        existing = [path for path in candidates if path.is_file()]
+        if existing:
+            return str(max(existing, key=lambda path: path.stat().st_mtime))
+
+    return "codex"
 
 
 def _clean_environment() -> dict[str, str]:

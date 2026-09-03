@@ -1,11 +1,28 @@
+import os
 import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from quant_scholar_translator import codex_bridge as MODULE
 
 
 class CodexBridgeTests(unittest.TestCase):
+    def test_command_finds_versioned_windows_desktop_binary(self):
+        with tempfile.TemporaryDirectory() as temp:
+            executable = Path(temp) / "OpenAI" / "Codex" / "bin" / "build-id" / "codex.exe"
+            executable.parent.mkdir(parents=True)
+            executable.touch()
+            with (
+                mock.patch.object(MODULE.sys, "platform", "win32"),
+                mock.patch.object(MODULE.shutil, "which", return_value=None),
+                mock.patch.dict(os.environ, {"LOCALAPPDATA": temp}, clear=False),
+            ):
+                os.environ.pop("QS_CODEX_COMMAND", None)
+                os.environ.pop("CODEX_INSTALL_DIR", None)
+                self.assertEqual(MODULE._command(), str(executable))
+
     @mock.patch.object(MODULE.subprocess, "run")
     def test_status_accepts_chatgpt_login(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout="Logged in using ChatGPT\n", stderr="")
