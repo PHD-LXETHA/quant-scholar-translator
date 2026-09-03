@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.4.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.5.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 A local-first bilingual learning workspace for technical videos, professional webpages, and research PDFs. Quant Scholar Translator brings live captions, domain-aware translation, paper reading, terminology protection, and knowledge export into one workflow, with special attention to finance, quantitative research, economics, statistics, mathematics, and programming.
 
-> **Professional Edition 0.4.0** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Kimi K3 · Research PDF
+> **Professional Edition 0.5.0** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
 
 ## Why this project exists
 
@@ -23,7 +23,8 @@ General-purpose translation tools often damage formulas, variables, statistical 
 - Runs faster-whisper locally and displays aligned source/translation overlays.
 - Detects finance, quantitative finance, economics, statistics, mathematics, and programming domains.
 - Protects formulas, code, URLs, references, units, values, and symbols during translation.
-- Supports Kimi K3 professional translation, local NLLB translation, and Google Translate.
+- Offers Codex-plan and Kimi-membership professional translation without storing API keys in the extension.
+- Keeps Kimi/OpenAI-compatible APIs, local NLLB, and Google Translate as advanced or low-latency alternatives.
 - Saves structured learning sessions with source provenance and seekable timestamps.
 - Provides a side-panel workspace for transcripts, bilingual reading, overviews, explanations, and notes.
 - Includes structured webpage translation and a PDF.js research-paper reader.
@@ -41,17 +42,17 @@ Add `-WithPdf` when you need the optional layout-preserving PDF component. Model
 
 ### 2. Start the backend
 
-Local Whisper transcription and NLLB translation do not require a cloud API key. To use Kimi professional translation, set the following values in your current terminal:
+Local Whisper transcription and NLLB translation do not require a cloud API key. Professional translation can use either subscription login:
 
 ```powershell
-$env:KAMI_TRANSLATOR='llm'
-$env:QS_LLM_API_BASE='https://api.moonshot.cn/v1'
-$env:QS_LLM_MODEL='kimi-k3'
-$env:QS_LLM_API_KEY='enter-your-key-locally'
+# Choose either login; skip one that is already authenticated.
+codex login
+kimi login --region mainland-cn
+
 .\scripts\start-backend.ps1
 ```
 
-Never commit an API key or paste it into an issue, screenshot, prompt, or public message.
+Choose **Codex plan** or **Kimi membership** in the extension. The backend queries only the official CLIs for status and never reads or stores login credentials. Subscription mode removes ambient API-key variables to prevent accidental pay-as-you-go routing. Kimi Code shares the Kimi membership allowance; disable Extra Usage in the Kimi account if you want to rule out charges after that allowance is exhausted.
 
 ### 3. Load the Chrome extension
 
@@ -86,7 +87,7 @@ translated = translate_text(
 
 Whisper is an open-source multilingual speech-recognition model from OpenAI. This project runs converted `large-v3-turbo` weights locally through faster-whisper, so it does not need the OpenAI speech API. Use `small` or `base` on lower-powered machines. NLLB-200 600M int8 provides offline translation, while BabelDOC is an optional separately installed runtime for complex paper layouts.
 
-Audio remains local on the bundled Whisper path. Text is sent to Kimi only when the user explicitly invokes a Kimi-powered translation, overview, explanation, or note feature.
+Audio remains local on the bundled Whisper path. Text is sent only to the selected Codex, Kimi, or other cloud provider when the user explicitly invokes translation, overview, explanation, or note features. CLI plan modes suit refined translation and research workflows; local NLLB remains the recommended low-latency path for sentence-by-sentence captions.
 
 ## Known limitations
 

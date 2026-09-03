@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.4.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.5.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 面向技术视频、专业网页与科研 PDF 的本地优先双语学习工作台。它把实时字幕、专业翻译、论文阅读、术语保护与知识库导出放进同一套工作流，重点服务金融、量化、经济、统计、数学和编程内容。
 
-> **专业版 0.4.0** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Kimi K3 · 科研 PDF
+> **专业版 0.5.0** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
 
 ## 为什么做这个项目
 
@@ -24,7 +24,8 @@
 - 原文与译文双语字幕浮层；
 - 专业领域选择和自动领域识别；
 - 公式、代码、URL、引用与符号占位保护；
-- Kimi K3 专业翻译、NLLB 本地翻译和 Google 翻译入口；
+- Codex 套餐与 Kimi 套餐双通道专业精译，无需在扩展中保存 API Key；
+- Kimi/OpenAI 兼容 API、NLLB 本地翻译和 Google 翻译作为高级或实时备用；
 - 将最终字幕段保存为结构化学习会话；
 - 通用学习侧栏：实时查看、按时间回跳、原文/中文/双语、摘要与笔记；
 - 网页全文/选区翻译与内置 PDF.js 论文阅读器；
@@ -46,15 +47,19 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 
 ### 2. 启动服务
 
-纯本地转写和 NLLB 翻译不要求云端 API Key。使用 Kimi 专业翻译时，在当前终端设置：
+纯本地转写和 NLLB 翻译不要求云端 API Key。专业精译可以选择两个套餐入口：
 
 ```powershell
-$env:KAMI_TRANSLATOR='llm'
-$env:QS_LLM_API_BASE='https://api.moonshot.cn/v1'
-$env:QS_LLM_MODEL='kimi-k3'
-$env:QS_LLM_API_KEY='请在本机终端自行填写'
+# 二选一登录；已有登录可以跳过
+codex login
+kimi login --region mainland-cn
+
 .\scripts\start-backend.ps1
 ```
+
+插件设置中选择 **Codex 套餐**或 **Kimi 套餐**。本地服务只通过官方 CLI 检查登录状态，不读取、复制或保存登录凭据；套餐模式还会清除进程中的 API Key 环境变量，避免误切换到按量 API。Codex 当前必须显示 ChatGPT 登录；Kimi 当前必须显示 `managed:kimi-code` 与 `source=oauth`。
+
+Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套餐额度耗尽后可能继续扣余额；希望严格不产生套餐外费用时，请在 Kimi 账户中关闭 Extra Usage。
 
 ### 3. 加载 Chrome 扩展
 
@@ -102,7 +107,7 @@ translated = translate_text("expected return and risk premium", domain="quant_fi
 
 默认推荐 Whisper `large-v3-turbo`；显存或算力有限时可从 `small` 或 `base` 开始。NLLB-200 600M int8 用于离线翻译，BabelDOC 作为可选的复杂论文版面运行组件。
 
-Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地转换后的 `large-v3-turbo` 权重和 faster-whisper 推理，不需要调用 OpenAI 语音 API；只有用户主动选择 Kimi 云端翻译、概览或笔记功能时，相关文本才会发往 Kimi。Kimi API Key 需要用户在 Kimi 开放平台自行创建，并且不要写入仓库。
+Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地转换后的 `large-v3-turbo` 权重和 faster-whisper 推理，不需要调用 OpenAI 语音 API。只有用户主动选择 Codex、Kimi 或其他云端精译功能时，相关文字才会发给所选服务；标签页音频仍留在本机。套餐 CLI 适合论文、PDF、段落精译、知识概览和笔记整理，但启动开销较高；追求逐句低延迟字幕时优先使用本地 NLLB，随后再用 Codex/Kimi 对学习记录做精译。
 
 ## 从旧版重新加载
 
@@ -111,7 +116,7 @@ Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地�
 1. 在 `chrome://extensions` 删除名为 YouTube Digest 的旧卡片；
 2. 点击“加载已解压的扩展程序”；
 3. 选择本仓库的 `apps/browser-extension` 目录；
-4. 确认卡片名称为 **Quant Scholar Translator 0.4.0**，再刷新已打开的视频或论文页面。
+4. 确认卡片名称为 **Quant Scholar Translator 0.5.0**，再刷新已打开的视频或论文页面。
 
 ## 已知边界
 

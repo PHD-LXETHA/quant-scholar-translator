@@ -95,16 +95,24 @@ def _register_nvidia_dll_dirs() -> None:
 _register_nvidia_dll_dirs()
 
 import numpy as np
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
 
+from . import __version__
 from .config import (
     MODEL_SIZE, DEVICE, COMPUTE_TYPE, TRANSLATOR, NLLB_MODEL,
     HOST, PORT, SAMPLE_RATE, VAD_FILTER, MAX_CHUNK_LAG_S,
     SENTENCE_MAX_CHARS, LLM_API_BASE, LLM_API_KEY, LLM_MODEL,
     WHISPER_CACHE, LOCAL_WHISPER_TURBO, NLLB_CT2_CACHE,
 )
-from .translation import hotwords_for_domain, translate_openai_compatible
+from .codex_bridge import CodexBridgeError, codex_status, run_codex_completion
+from .kimi_bridge import KimiBridgeError, kimi_status, run_kimi_completion
+from .translation import (
+    hotwords_for_domain,
+    translate_codex_subscription,
+    translate_kimi_subscription,
+    translate_openai_compatible,
+)
 from .streaming import merge_incremental_text
 
 log = logging.getLogger("quant-scholar-translator")
@@ -301,21 +309,26 @@ def _translate_google(text: str, src: str, tgt: str) -> str:
     return GoogleTranslator(source=src_arg, target=tgt).translate(text)
 
 
-def translate(text: str, src: str, tgt: str, domain: str = "auto") -> str:
-    if not text.strip() or src == tgt or TRANSLATOR == "none":
+def translate(text: str, src: str, tgt: str, domain: str = "auto", provider: str | None = None) -> str:
+    selected = (provider or TRANSLATOR).strip().lower()
+    if not text.strip() or src == tgt or selected == "none":
         return text
     try:
-        if TRANSLATOR == "nllb":
+        if selected == "nllb":
             return _translate_nllb(text, src, tgt)
-        if TRANSLATOR == "google":
+        if selected == "google":
             return _translate_google(text, src, tgt)
-        if TRANSLATOR == "llm":
+        if selected == "llm":
             if not LLM_API_KEY:
                 raise RuntimeError("QS_LLM_API_KEY is required for professional LLM translation")
             return translate_openai_compatible(
                 text, src, tgt, domain,
                 api_base=LLM_API_BASE, api_key=LLM_API_KEY, model=LLM_MODEL,
             )
+        if selected == "codex":
+            return translate_codex_subscription(text, src, tgt, domain)
+        if selected == "kimi_subscription":
+            return translate_kimi_subscription(text, src, tgt, domain)
     except Exception as e:
         log.warning("translation failed (%s -> %s): %s", src, tgt, e)
     return text
@@ -338,6 +351,7 @@ class Session:
     pending: str = ""
     last_detected: str = "auto"
     domain: str = "auto"
+    translator: str = TRANSLATOR
 
 
 # Sentence-final marks across the languages we caption — Latin, Arabic (؟ ،),
@@ -391,7 +405,7 @@ async def _render(session: Session, loop) -> str:
     if session.task == "translate" and session.target_lang == "en":
         return session.pending   # whisper already produced English
     return await loop.run_in_executor(
-        None, translate, session.pending, src, session.target_lang, session.domain
+        None, translate, session.pending, src, session.target_lang, session.domain, session.translator
     )
 
 
@@ -505,9 +519,10 @@ async def handle_socket(ws: WebSocket):
                     session.target_lang = cfg.get("targetLang", "ar") or "ar"
                     session.task = cfg.get("task", "transcribe") or "transcribe"
                     session.domain = cfg.get("domain", "auto") or "auto"
-                    log.info("config: rate=%s src=%s tgt=%s task=%s",
+                    session.translator = cfg.get("translator", TRANSLATOR) or TRANSLATOR
+                    log.info("config: rate=%s src=%s tgt=%s task=%s translator=%s",
                              session.sample_rate, session.source_lang,
-                             session.target_lang, session.task)
+                             session.target_lang, session.task, session.translator)
             except json.JSONDecodeError:
                 pass
 
@@ -548,6 +563,7 @@ async def handle_socket(ws: WebSocket):
                         session.target_lang = cfg.get("targetLang", session.target_lang)
                         session.task = cfg.get("task", session.task)
                         session.domain = cfg.get("domain", session.domain)
+                        session.translator = cfg.get("translator", session.translator)
                 except json.JSONDecodeError:
                     pass
 
@@ -571,7 +587,11 @@ async def lifespan(_app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    title="Quant Scholar Translator",
+    version=__version__,
+    lifespan=lifespan,
+)
 
 
 class TranslationRequest(BaseModel):
@@ -579,12 +599,26 @@ class TranslationRequest(BaseModel):
     sourceLang: str = "auto"
     targetLang: str = "zh"
     domain: str = "auto"
+    translator: str | None = None
+
+
+class LocalChatMessage(BaseModel):
+    role: str = "user"
+    content: str = Field(min_length=1, max_length=120000)
+
+
+class LocalChatRequest(BaseModel):
+    model: str = "codex-subscription"
+    messages: list[LocalChatMessage] = Field(min_length=1, max_length=40)
+    max_tokens: int | None = None
+    temperature: float | None = None
 
 
 @app.get("/")
 async def root():
     return {
         "ok": True,
+        "version": __version__,
         "model": MODEL_SIZE,
         "device": DEVICE,
         "compute": COMPUTE_TYPE,
@@ -604,8 +638,67 @@ async def translate_endpoint(request: TranslationRequest):
         request.sourceLang,
         request.targetLang,
         request.domain,
+        request.translator,
     )
     return {"ok": True, "text": output, "raw": request.text}
+
+
+@app.get("/codex/status")
+async def codex_status_endpoint():
+    loop = asyncio.get_running_loop()
+    status = await loop.run_in_executor(None, codex_status)
+    return {"ok": status.subscription, **status.to_dict()}
+
+
+@app.post("/codex/v1/chat/completions")
+async def codex_chat_completions(request: LocalChatRequest):
+    """Small OpenAI-compatible surface for the extension's local Codex mode."""
+    loop = asyncio.get_running_loop()
+    try:
+        output = await loop.run_in_executor(
+            None,
+            run_codex_completion,
+            [message.model_dump() for message in request.messages],
+        )
+    except CodexBridgeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return {
+        "id": f"codex-local-{int(time.time() * 1000)}",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": request.model,
+        "billing_mode": "chatgpt-subscription",
+        "choices": [{"index": 0, "message": {"role": "assistant", "content": output}, "finish_reason": "stop"}],
+    }
+
+
+@app.get("/kimi/status")
+async def kimi_status_endpoint():
+    loop = asyncio.get_running_loop()
+    status = await loop.run_in_executor(None, kimi_status)
+    return {"ok": status.subscription, **status.to_dict()}
+
+
+@app.post("/kimi/v1/chat/completions")
+async def kimi_chat_completions(request: LocalChatRequest):
+    """OpenAI-compatible local surface backed by the user's Kimi membership."""
+    loop = asyncio.get_running_loop()
+    try:
+        output = await loop.run_in_executor(
+            None,
+            run_kimi_completion,
+            [message.model_dump() for message in request.messages],
+        )
+    except KimiBridgeError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    return {
+        "id": f"kimi-local-{int(time.time() * 1000)}",
+        "object": "chat.completion",
+        "created": int(time.time()),
+        "model": request.model,
+        "billing_mode": "kimi-subscription",
+        "choices": [{"index": 0, "message": {"role": "assistant", "content": output}, "finish_reason": "stop"}],
+    }
 
 
 @app.websocket("/ws")

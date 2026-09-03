@@ -1,4 +1,5 @@
 import unittest
+from unittest import mock
 
 from quant_scholar_translator import translation as MODULE
 
@@ -26,6 +27,11 @@ class ProfessionalTranslationTests(unittest.TestCase):
         self.assertIn("maximum drawdown", quant)
         self.assertIn("maximum drawdown", combined)
         self.assertIn("runtime", combined)
+
+    @mock.patch.object(MODULE, "run_kimi_completion", return_value="收益率为 $r_t$。")
+    def test_kimi_subscription_translation_preserves_formula(self, _run):
+        output = MODULE.translate_kimi_subscription("Return is $r_t$.", "en", "zh", "finance")
+        self.assertEqual(output, "收益率为 $r_t$。")
 
 
 if __name__ == "__main__":

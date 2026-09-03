@@ -4,7 +4,7 @@
  * This is the "brain" of the extension. It runs in the background and handles:
  * 1. Opening the side panel when the user clicks the extension icon
  * 2. Reading transcripts captured by Quant Scholar locally
- * 3. Calling Kimi to analyze the transcript
+ * 3. Calling the selected Codex/Kimi plan or optional API provider
  * 4. Sending results back to the side panel
  *
  * Think of it like a backend server — it does the heavy lifting
@@ -22,6 +22,10 @@ const AI_PROVIDER_MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
 const debugLog = (...args) => {
   if (DEBUG) console.log(...args);
 };
+
+function providerNeedsApiKey(settings) {
+  return settings.provider === "kimi_api";
+}
 
 // In the unified extension, the video overlay restores non-secret settings
 // from local storage after page navigation, so storage access remains at the
@@ -76,7 +80,7 @@ async function requestAiCompletion({
   responseFormat,
 }) {
   const settings = await getSettings();
-  if (!settings.aiApiKey) {
+  if (settings.provider === "kimi_api" && !settings.aiApiKey) {
     const error = new Error(
       "Kimi API key not configured. Open Quant Scholar Translator Settings.",
     );
@@ -94,7 +98,7 @@ async function requestAiCompletion({
   }
   // Kimi K3 supports an explicit reasoning effort. Low keeps interactive
   // translation responsive while retaining its professional language quality.
-  body.reasoning_effort = "low";
+  if (settings.provider === "kimi_api") body.reasoning_effort = "low";
 
   const controller = new AbortController();
   let timeoutKind = "";
@@ -120,13 +124,12 @@ async function requestAiCompletion({
   resetIdleTimeout();
   try {
     const response = await fetch(
-      YTD_SETTINGS.chatCompletionsUrl(),
+      YTD_SETTINGS.chatCompletionsUrl(settings),
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${settings.aiApiKey}`,
-        },
+        headers: settings.aiApiKey
+          ? { "Content-Type": "application/json", Authorization: `Bearer ${settings.aiApiKey}` }
+          : { "Content-Type": "application/json" },
         body: JSON.stringify(body),
         signal: controller.signal,
       },
@@ -385,7 +388,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     getSettings()
       .then((settings) =>
         sendResponse({
-          hasAiKey: !!settings.aiApiKey,
+          hasAiKey: !providerNeedsApiKey(settings) || !!settings.aiApiKey,
+          provider: settings.provider,
         }),
       )
       .catch((error) => sendResponse({ error: error.message }));
@@ -687,11 +691,11 @@ function parseLooseJson(text) {
 }
 
 // ============================================================
-// KIMI ANALYSIS
+// PROFESSIONAL ANALYSIS
 // ============================================================
 
 /**
- * Sends the transcript to Kimi for analysis.
+ * Sends the transcript to the selected professional provider for analysis.
  *
  * The prompt asks the model to produce chapters covering the whole video
  * and 3-5 key quotes with timestamps.
@@ -710,7 +714,7 @@ async function handleAnalyzeTranscript(
 ) {
   try {
     const settings = await getSettings();
-    if (!settings.aiApiKey) {
+    if (providerNeedsApiKey(settings) && !settings.aiApiKey) {
       return {
         success: false,
         error: "NO_AI_KEY",
@@ -1087,7 +1091,7 @@ async function cleanupNoteText(
   videoTitle,
 ) {
   const settings = await getSettings();
-  if (!settings.aiApiKey) {
+  if (providerNeedsApiKey(settings) && !settings.aiApiKey) {
     return [beforeText, targetText, afterText].filter(Boolean).join(" ");
   }
 
@@ -1210,7 +1214,7 @@ async function handleExplainSelection(
 ) {
   try {
     const settings = await getSettings();
-    if (!settings.aiApiKey) {
+    if (providerNeedsApiKey(settings) && !settings.aiApiKey) {
       return {
         success: false,
         error: "NO_AI_KEY",
@@ -1381,7 +1385,7 @@ async function handleTranslateContent(
     }
 
     const settings = await getSettings();
-    if (!settings.aiApiKey) {
+    if (providerNeedsApiKey(settings) && !settings.aiApiKey) {
       return { success: false, error: "Kimi API key not configured" };
     }
 

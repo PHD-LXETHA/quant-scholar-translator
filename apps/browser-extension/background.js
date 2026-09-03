@@ -301,7 +301,8 @@ async function translateNativeCaption(msg) {
       text: msg.source,
       sourceLang: msg.sourceLang || activeSettings.sourceLang || 'auto',
       targetLang: activeSettings.targetLang || 'zh',
-      domain: activeSettings.domain || 'auto'
+      domain: activeSettings.domain || 'auto',
+      translator: activeSettings.translator || 'nllb'
     })
   });
   if (!response.ok) throw new Error(`Translation service returned HTTP ${response.status}`);

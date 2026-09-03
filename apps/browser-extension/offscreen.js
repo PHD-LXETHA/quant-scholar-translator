@@ -84,7 +84,8 @@ function openSocket() {
       sourceLang: (settings && settings.sourceLang) || 'auto',
       targetLang: (settings && settings.targetLang) || 'ar',
       task: (settings && settings.task) || 'translate',
-      domain: (settings && settings.domain) || 'auto'
+      domain: (settings && settings.domain) || 'auto',
+      translator: (settings && settings.translator) || 'nllb'
     }));
     chrome.runtime.sendMessage({ target: 'background', type: 'ws:state', state: 'connected' });
   });

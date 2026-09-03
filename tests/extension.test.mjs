@@ -8,7 +8,7 @@ test('extension manifest is valid MV3 and exposes capture plus knowledge export 
   const manifest = JSON.parse(fs.readFileSync(new URL('manifest.json', root), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Quant Scholar Translator');
-  assert.equal(manifest.version, '0.4.0');
+  assert.equal(manifest.version, '0.5.0');
   for (const permission of ['tabCapture', 'offscreen', 'storage', 'downloads']) {
     assert.ok(manifest.permissions.includes(permission));
   }
@@ -32,11 +32,13 @@ test('live transcript preserves source and translation and can export knowledge'
   assert.match(background, /\/translate/);
 });
 
-test('learning workspace uses local transcripts and Kimi without an external transcript API', () => {
+test('learning workspace supports Codex and Kimi subscriptions without an external transcript API', () => {
   const settings = fs.readFileSync(new URL('learning/settings.js', root), 'utf8');
   const background = fs.readFileSync(new URL('learning/background.js', root), 'utf8');
   assert.match(settings, /https:\/\/api\.moonshot\.cn\/v1/);
   assert.match(settings, /kimi-k3/);
+  assert.match(settings, /127\.0\.0\.1:8765\/codex\/v1/);
+  assert.match(settings, /127\.0\.0\.1:8765\/kimi\/v1/);
   assert.match(background, /currentLearningSession/);
   assert.doesNotMatch(`${settings}\n${background}`, /x-api-key|\/v1\/transcript/i);
 });

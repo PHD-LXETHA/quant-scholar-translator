@@ -100,10 +100,16 @@
         <label>
           翻译引擎
           <select id="translator">
-            <option value="llm" selected>Kimi 专业翻译（云端）</option>
-            <option value="nllb">NLLB 本地翻译（离线）</option>
-            <option value="google">Google 在线翻译</option>
-            <option value="none">仅转写，不翻译</option>
+            <optgroup label="套餐登录（无需 API Key）">
+              <option value="codex">Codex 套餐精译（较慢，非实时推荐）</option>
+              <option value="kimi_subscription" selected>Kimi 套餐精译（较慢，非实时推荐）</option>
+            </optgroup>
+            <optgroup label="高级／本地模式">
+              <option value="llm">Kimi / OpenAI 兼容 API（按量备用）</option>
+              <option value="nllb">NLLB 本地翻译（离线）</option>
+              <option value="google">Google 在线翻译</option>
+              <option value="none">仅转写，不翻译</option>
+            </optgroup>
           </select>
         </label>
 
@@ -117,7 +123,7 @@
         <button id="translatePage">翻译当前网页</button>
         <button id="togglePageTranslation">切换网页原文 / 译文</button>
         <button id="openPdfReader">在专业 PDF 阅读器中打开</button>
-        <button id="openResearchSettings">API、Prompt 与术语设置</button>
+        <button id="openResearchSettings">套餐、API、Prompt 与术语设置</button>
         <button id="openLearningPanel">打开学习工作台侧栏</button>
         <button id="openLearningSettings">学习摘要模型设置</button>
       </section>
@@ -131,7 +137,7 @@
     </main>
 
     <footer>
-      <span class="hint">原字幕优先；没有字幕时自动启用本地 Whisper。只有使用 Kimi 云端能力才需要 API Key。</span>
+      <span class="hint">Codex 与 Kimi 均可使用本机套餐登录；逐句实时字幕优先选 NLLB，论文、PDF 和学习整理优先选套餐精译。</span>
     </footer>
 
     <script src="popup.js"></script>

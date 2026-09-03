@@ -35,26 +35,37 @@
             </button>
           </div>
         </div>
-        <h1 data-i18n="heading">配置 Kimi 专业学习模型</h1>
+        <h1 data-i18n="heading">选择专业学习方案</h1>
         <p class="lede" data-i18n="lede">
-          Kimi API Key 仅保存在当前 Chrome 配置中。字幕由网页原字幕或本地 Whisper 提供，无需额外注册字幕服务。
+          可选择现有 ChatGPT/Codex 套餐或 Kimi 套餐；字幕仍来自网页原字幕或本地 Whisper。
         </p>
       </header>
 
       <form id="settingsForm">
         <section class="card">
           <h2 data-i18n="aiProvider">AI provider</h2>
+          <label for="aiProvider" data-i18n="providerModeLabel">使用方案</label>
+          <select id="aiProvider" name="provider">
+            <optgroup label="套餐登录">
+              <option value="codex" data-i18n="codexOption">Codex 套餐（ChatGPT 登录）</option>
+              <option value="kimi_subscription" data-i18n="kimiOption">Kimi 套餐（Kimi Code 登录）</option>
+            </optgroup>
+            <optgroup label="高级备用">
+              <option value="kimi_api" data-i18n="kimiApiOption">Kimi API（独立计费）</option>
+            </optgroup>
+          </select>
           <div
             class="provider-summary"
             aria-label="Supported AI provider"
             data-i18n-aria-label="providerSummaryLabel"
           >
-            <span class="provider-name">Kimi K3</span>
+            <span id="providerName" class="provider-name">Kimi · Membership</span>
             <span class="provider-badge" data-i18n="providerBadge"
               >Supported in this version</span
             >
           </div>
 
+          <div id="apiKeyFields">
           <label for="aiApiKey" data-i18n="kimiApiKeyLabel"
             >Kimi API Key</label
           >
@@ -78,8 +89,9 @@
               >创建 Kimi API Key</a
             ><span data-i18n="kimiHelpSuffix">。</span>
           </p>
+          </div>
           <div class="privacy-note" data-i18n="privacyNote">
-            只有主动使用云端功能时，相关文本才会发送给 Kimi；本地 Whisper 转写不会上传音频。
+            两种套餐模式都调用本机官方 CLI，不读取登录凭据；只有主动使用翻译或学习功能时才发送文字。
           </div>
         </section>
 

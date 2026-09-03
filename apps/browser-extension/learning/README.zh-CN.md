@@ -5,6 +5,6 @@ Chrome 扩展。
 
 请在 Chrome 中只加载上一级 `apps/browser-extension` 目录。字幕来自统一扩展
 捕获的网页字幕，或本地 Whisper 服务。知识概览、专业解释和笔记润色等可选功能
-使用用户自己的 Kimi API Key。
+使用本机官方 Codex 或 Kimi Code 套餐登录。Kimi API Key 仅在另行选择高级 API 模式时需要。
 
 项目说明、安装方法、许可证和来源署名统一维护在仓库根目录。

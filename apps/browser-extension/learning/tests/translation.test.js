@@ -60,7 +60,7 @@ function loadSidepanelHelpers({
 
 function loadBackgroundHelpers({
   settings = {
-    provider: "kimi",
+    provider: "kimi_api",
     aiApiKey: "test-key",
     aiBaseUrl: "https://api.moonshot.cn/v1",
     aiModel: "kimi-k3",
@@ -103,7 +103,7 @@ function loadBackgroundHelpers({
     YTD_SETTINGS: {
       STORAGE_KEY: "ytd_settings",
       normalize: (value) => value,
-      chatCompletionsUrl: (baseUrl) => `${baseUrl}/chat/completions`,
+      chatCompletionsUrl: (value) => `${value.aiBaseUrl}/chat/completions`,
     },
   };
   sandbox.globalThis = sandbox;
@@ -329,7 +329,7 @@ test("background rejects unsupported language fallthrough and malformed batches"
   );
 });
 
-test("all AI product requests use Kimi low-reasoning and JSON behavior", async () => {
+test("Kimi API requests use low-reasoning and JSON behavior", async () => {
   const kimiRequests = [];
   const successfulFetch = (requests) => async (_url, options) => {
     requests.push(JSON.parse(options.body));
@@ -371,6 +371,29 @@ test("all AI product requests use Kimi low-reasoning and JSON behavior", async (
       backgroundSource,
       new RegExp(`async function ${callPath}\\([\\s\\S]*?requestAiCompletion\\(\\{`),
     );
+  }
+});
+
+test("subscription providers call their local bridge without an API key", async () => {
+  for (const [provider, base] of [
+    ["codex", "http://127.0.0.1:8765/codex/v1"],
+    ["kimi_subscription", "http://127.0.0.1:8765/kimi/v1"],
+  ]) {
+    const requests = [];
+    const helpers = loadBackgroundHelpers({
+      settings: { provider, aiApiKey: "", aiBaseUrl: base, aiModel: `${provider}-model` },
+      fetchImpl: async (url, options) => {
+        requests.push({ url, options });
+        return { ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) };
+      },
+    });
+    const result = await helpers.requestAiCompletion({
+      maxTokens: 64,
+      messages: [{ role: "user", content: "Hello." }],
+    });
+    assert.equal(result.text, "ok");
+    assert.equal(requests[0].url, `${base}/chat/completions`);
+    assert.equal(requests[0].options.headers.Authorization, undefined);
   }
 });
 

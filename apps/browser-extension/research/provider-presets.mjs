@@ -1,4 +1,6 @@
 export const PROVIDER_PRESETS = Object.freeze({
+  codex: { label: "Codex（ChatGPT 套餐）", apiStyle: "chat", endpoint: "http://127.0.0.1:8765/codex/v1/chat/completions", model: "codex-subscription", group: "套餐模式", keyRequired: false, note: "使用本机 Codex CLI 的 ChatGPT 套餐额度，不使用 OpenAI API Key。请先运行 codex login 并启动本地服务；适合精译、论文和知识整理，不建议逐句实时字幕。" },
+  kimi_subscription: { label: "Kimi（会员套餐）", apiStyle: "chat", endpoint: "http://127.0.0.1:8765/kimi/v1/chat/completions", model: "kimi-subscription", group: "套餐模式", keyRequired: false, note: "使用本机 Kimi Code CLI 的会员额度，不使用开放平台 API Key。请先运行 kimi login 并启动本地服务；如不希望产生套餐外费用，请在 Kimi 账户中关闭 Extra Usage。" },
   deepseek: { label: "DeepSeek", apiStyle: "chat", endpoint: "https://api.deepseek.com/chat/completions", model: "deepseek-v4-flash", group: "国内云端", keyRequired: true },
   qwen: { label: "阿里云百炼 / 通义千问", apiStyle: "chat", endpoint: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions", model: "qwen-plus", group: "国内云端", keyRequired: true, note: "北京地域通用兼容地址；工作空间专属地址可在下方手动替换。" },
   kimi: { label: "Kimi / Moonshot", apiStyle: "chat", endpoint: "https://api.moonshot.cn/v1/chat/completions", model: "kimi-k3", group: "国内云端", keyRequired: true, note: "Quant Scholar 默认服务；Kimi 官方当前推荐从 K3 开始。" },

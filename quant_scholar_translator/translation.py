@@ -13,6 +13,9 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
+from .codex_bridge import run_codex_completion
+from .kimi_bridge import run_kimi_completion
+
 
 ROOT = Path(os.getenv("QS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 GLOSSARY_DIR = Path(__file__).resolve().parent / "data" / "glossaries"
@@ -148,3 +151,63 @@ Glossary:
         result = json.loads(response.read().decode("utf-8"))
     output = result["choices"][0]["message"]["content"].strip()
     return restore(output, protected.values)
+
+
+def translate_codex_subscription(
+    text: str,
+    source_lang: str,
+    target_lang: str,
+    domain: str,
+    *,
+    timeout: int | None = None,
+) -> str:
+    """Translate through the locally installed, ChatGPT-authenticated Codex CLI."""
+    selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
+    protected = protect(text)
+    system = f"""You are a professional translator for {selected_domain} learning material.
+Translate from {source_lang or 'auto-detected language'} to {target_lang}.
+Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
+variable names, citations, ticker symbols and code. Prefer established Chinese
+academic terminology. Do not add explanations. Use the glossary contextually;
+do not perform blind word replacement. Return translation text only.
+
+Glossary:
+{glossary_prompt(load_glossary(selected_domain))}"""
+    output = run_codex_completion(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": protected.text},
+        ],
+        timeout=timeout,
+    )
+    return restore(output.strip(), protected.values)
+
+
+def translate_kimi_subscription(
+    text: str,
+    source_lang: str,
+    target_lang: str,
+    domain: str,
+    *,
+    timeout: int | None = None,
+) -> str:
+    """Translate through the locally installed, OAuth-authenticated Kimi Code CLI."""
+    selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
+    protected = protect(text)
+    system = f"""You are a professional translator for {selected_domain} learning material.
+Translate from {source_lang or 'auto-detected language'} to {target_lang}.
+Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
+variable names, citations, ticker symbols and code. Prefer established Chinese
+academic terminology. Do not add explanations. Use the glossary contextually;
+do not perform blind word replacement. Return translation text only.
+
+Glossary:
+{glossary_prompt(load_glossary(selected_domain))}"""
+    output = run_kimi_completion(
+        [
+            {"role": "system", "content": system},
+            {"role": "user", "content": protected.text},
+        ],
+        timeout=timeout,
+    )
+    return restore(output.strip(), protected.values)

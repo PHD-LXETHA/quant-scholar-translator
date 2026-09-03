@@ -4,10 +4,10 @@ import { providerNeedsApiKey } from "./provider-presets.mjs";
 import { isLikelyUntranslated, isSourcePreservingContent } from "./translation-quality.mjs";
 
 const DEFAULTS = {
-  provider: "kimi",
-  endpoint: "https://api.moonshot.cn/v1/chat/completions",
+  provider: "kimi_subscription",
+  endpoint: "http://127.0.0.1:8765/kimi/v1/chat/completions",
   apiKey: "",
-  model: "kimi-k3",
+  model: "kimi-subscription",
   apiStyle: "chat",
   targetLanguage: "简体中文",
   batchChars: 6500,
@@ -574,7 +574,7 @@ async function translateWithSettings(texts, settings, retryDepth, roles = []) {
     const error = new Error(`API 返回的不是 JSON（HTTP ${response.status}）`); error.status=response.status; error.retryable=response.ok||isRetryableApiStatus(response.status); error.code="MALFORMED_API_RESPONSE"; error.partialTranslations=Array(texts.length).fill(""); error.cause=cause; throw error;
   }
   if (!response.ok) {
-    const error = new Error(data?.error?.message || `API 请求失败（HTTP ${response.status}）`);
+    const error = new Error(data?.error?.message || data?.detail || `API 请求失败（HTTP ${response.status}）`);
     error.status = response.status; error.retryable = isRetryableApiStatus(response.status); throw error;
   }
 
@@ -770,7 +770,7 @@ async function requestPlainTranslation(text, settings, mode = "normal") {
   try { data = JSON.parse(raw); }
   catch { const error = new Error(`API 返回的不是 JSON（HTTP ${response.status}）`); error.status = response.status; error.retryable = response.ok || isRetryableApiStatus(response.status); throw error; }
   if (!response.ok) {
-    const error = new Error(data?.error?.message || `API 请求失败（HTTP ${response.status}）`);
+    const error = new Error(data?.error?.message || data?.detail || `API 请求失败（HTTP ${response.status}）`);
     error.status = response.status; error.retryable = isRetryableApiStatus(response.status); throw error;
   }
   const content = extractTranslationContent(data, settings.apiStyle);

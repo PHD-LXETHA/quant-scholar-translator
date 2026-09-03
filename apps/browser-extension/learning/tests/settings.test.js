@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 
 const settings = require("../settings.js");
 
-test("Kimi defaults use K3 without transcript-service credentials", () => {
+test("Kimi membership is the default without API credentials", () => {
   const normalized = settings.normalize({
     provider: "unexpected",
     aiApiKey: "  example-key  ",
@@ -11,9 +11,9 @@ test("Kimi defaults use K3 without transcript-service credentials", () => {
     aiModel: "example-model",
   });
 
-  assert.equal(normalized.provider, "kimi");
-  assert.equal(normalized.aiBaseUrl, "https://api.moonshot.cn/v1");
-  assert.equal(normalized.aiModel, "kimi-k3");
+  assert.equal(normalized.provider, "kimi_subscription");
+  assert.equal(normalized.aiBaseUrl, "http://127.0.0.1:8765/kimi/v1");
+  assert.equal(normalized.aiModel, "kimi-subscription");
   assert.equal(normalized.aiApiKey, "");
   assert.deepEqual(Object.keys(normalized).sort(), [
     "aiApiKey",
@@ -23,7 +23,7 @@ test("Kimi defaults use K3 without transcript-service credentials", () => {
   ]);
   assert.equal(
     settings.chatCompletionsUrl(),
-    "https://api.moonshot.cn/v1/chat/completions",
+    "http://127.0.0.1:8765/kimi/v1/chat/completions",
   );
 });
 
@@ -37,7 +37,7 @@ test("legacy custom migration clears only the AI key and is idempotent", () => {
   const first = settings.migrateLegacyCustom(legacy);
 
   assert.equal(first.migrated, true);
-  assert.equal(first.settings.provider, "kimi");
+  assert.equal(first.settings.provider, "kimi_subscription");
   assert.equal(first.settings.aiBaseUrl, settings.DEFAULTS.aiBaseUrl);
   assert.equal(first.settings.aiModel, settings.DEFAULTS.aiModel);
   assert.equal(first.settings.aiApiKey, "");
@@ -47,10 +47,20 @@ test("legacy custom migration clears only the AI key and is idempotent", () => {
   assert.deepEqual(second.settings, first.settings);
 
   const configuredKimi = settings.normalize({
-    ...first.settings,
+    provider: "kimi_api",
     aiApiKey: "new-kimi-key",
   });
+  assert.equal(configuredKimi.provider, "kimi_api");
   assert.equal(configuredKimi.aiApiKey, "new-kimi-key");
+});
+
+test("Codex and Kimi membership use local no-key endpoints", () => {
+  for (const provider of ["codex", "kimi_subscription"]) {
+    const normalized = settings.normalize({ provider, aiApiKey: "must-not-survive" });
+    assert.equal(normalized.provider, provider);
+    assert.equal(normalized.aiApiKey, "");
+    assert.match(normalized.aiBaseUrl, /^http:\/\/127\.0\.0\.1:8765\//);
+  }
 });
 
 test("YouTube identifiers are canonicalized for local session matching", () => {

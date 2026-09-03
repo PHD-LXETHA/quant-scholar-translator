@@ -7,10 +7,14 @@ const YTD_OPTIONS = (() => {
     en: {
       pageTitle: "Quant Scholar Translator Settings",
       languageGroupLabel: "Interface language",
-      heading: "Configure the Kimi learning model",
+      heading: "Choose a professional learning mode",
       lede:
-        "Your Kimi API Key stays in this Chrome profile. Captions come from the webpage or local Whisper, with no separate transcript-service account.",
+        "Choose your existing ChatGPT/Codex plan or Kimi membership. Captions still come from the webpage or local Whisper.",
       aiProvider: "AI provider",
+      providerModeLabel: "Usage mode",
+      codexOption: "Codex plan (ChatGPT login)",
+      kimiOption: "Kimi membership (Kimi Code login)",
+      kimiApiOption: "Kimi API (separate billing)",
       providerSummaryLabel: "Supported AI provider",
       providerBadge: "Supported in this version",
       kimiApiKeyLabel: "Kimi API Key",
@@ -19,7 +23,7 @@ const YTD_OPTIONS = (() => {
       kimiLink: "Create a Kimi API Key",
       kimiHelpSuffix: ".",
       privacyNote:
-        "Only text for cloud features is sent to Kimi. Local Whisper transcription never uploads audio.",
+        "Both plan modes use official local CLIs without reading credentials. Text is sent only when you request translation or learning features.",
       saveSettings: "Save settings",
       localRemix: "Local remix",
       customizationTitle: "Want to use another AI model?",
@@ -70,10 +74,14 @@ const YTD_OPTIONS = (() => {
     "zh-CN": {
       pageTitle: "Quant Scholar Translator 设置",
       languageGroupLabel: "界面语言",
-      heading: "配置 Kimi 专业学习模型",
+      heading: "选择专业学习方案",
       lede:
-        "Kimi API Key 仅保存在当前 Chrome 配置中。字幕来自网页原字幕或本地 Whisper，无需额外注册字幕服务。",
+        "可选择现有 ChatGPT/Codex 套餐或 Kimi 套餐；字幕仍来自网页原字幕或本地 Whisper。",
       aiProvider: "AI 服务",
+      providerModeLabel: "使用方案",
+      codexOption: "Codex 套餐（ChatGPT 登录）",
+      kimiOption: "Kimi 套餐（Kimi Code 登录）",
+      kimiApiOption: "Kimi API（独立计费）",
       providerSummaryLabel: "支持的 AI 服务",
       providerBadge: "当前版本支持",
       kimiApiKeyLabel: "Kimi API Key",
@@ -82,7 +90,7 @@ const YTD_OPTIONS = (() => {
       kimiLink: "创建 Kimi API Key",
       kimiHelpSuffix: "。",
       privacyNote:
-        "只有主动使用云端功能时，相关文本才会发送给 Kimi；本地 Whisper 转写不会上传音频。",
+        "两种套餐模式都调用本机官方 CLI 且不读取登录凭据；只有主动使用翻译或学习功能时才发送文字。",
       saveSettings: "保存设置",
       localRemix: "本地改造",
       customizationTitle: "想使用其他 AI 模型？",
@@ -335,7 +343,10 @@ const YTD_OPTIONS = (() => {
       getSafeLocalStorage(root),
     );
     const form = doc.getElementById("settingsForm");
+    const aiProviderInput = doc.getElementById("aiProvider");
     const aiApiKeyInput = doc.getElementById("aiApiKey");
+    const apiKeyFields = doc.getElementById("apiKeyFields");
+    const providerName = doc.getElementById("providerName");
     const customizationPrompt = doc.getElementById("customizationPrompt");
     const copyCustomizationPromptBtn = doc.getElementById(
       "copyCustomizationPromptBtn",
@@ -347,6 +358,17 @@ const YTD_OPTIONS = (() => {
     const statusStates = new Map();
     const promptDrafts = createPromptDrafts();
     let currentLanguage = "en";
+
+    function renderProvider(provider) {
+      const apiMode = provider === "kimi_api";
+      apiKeyFields.hidden = !apiMode;
+      aiApiKeyInput.disabled = !apiMode;
+      providerName.textContent = provider === "codex"
+        ? "Codex · ChatGPT plan"
+        : apiMode
+          ? "Kimi · Platform API"
+          : "Kimi · Membership";
+    }
 
     function renderStatus(element) {
       const state = statusStates.get(element);
@@ -406,7 +428,9 @@ const YTD_OPTIONS = (() => {
         );
         const settings = migration.settings;
 
+        aiProviderInput.value = settings.provider;
         aiApiKeyInput.value = settings.aiApiKey;
+        renderProvider(settings.provider);
         if (migration.migrated) {
           await storage.set({ [settingsApi.STORAGE_KEY]: settings });
           setStatus(saveStatus, "migrationWarning");
@@ -430,10 +454,11 @@ const YTD_OPTIONS = (() => {
       setStatus(saveStatus, "saving");
 
       const settings = settingsApi.normalize({
+        provider: aiProviderInput.value,
         aiApiKey: aiApiKeyInput.value,
       });
 
-      if (!settings.aiApiKey) {
+      if (settings.provider === "kimi_api" && !settings.aiApiKey) {
         setStatus(saveStatus, "addKimiKey");
         return;
       }
@@ -484,6 +509,7 @@ const YTD_OPTIONS = (() => {
     }
 
     form.addEventListener("submit", saveSettings);
+    aiProviderInput.addEventListener("change", () => renderProvider(aiProviderInput.value));
     copyCustomizationPromptBtn.addEventListener(
       "click",
       copyCustomizationPrompt,

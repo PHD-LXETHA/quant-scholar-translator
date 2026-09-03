@@ -40,7 +40,7 @@ const DEFAULTS = {
   task: 'translate',
   model: 'large-v3-turbo',
   device: 'auto',
-  translator: 'llm',
+  translator: 'kimi_subscription',
 };
 
 // compute_type pairs naturally with device — float16 on GPU, int8 on CPU.

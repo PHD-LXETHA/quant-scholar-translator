@@ -1,14 +1,15 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><link rel="stylesheet" href="ui.css"><title>Quant Scholar 设置</title></head>
 <body class="options"><div class="options-shell"><header><img class="logo" src="icons/icon-128.png" alt=""><div><h1>Quant Scholar 专业翻译设置</h1><p>密钥只保存在本机浏览器扩展存储中</p></div></header>
 <main class="card"><label>服务商<select id="provider">
-  <optgroup label="国内云端"><option value="kimi" selected>Kimi / Moonshot（默认）</option><option value="deepseek">DeepSeek</option><option value="qwen">阿里云百炼 / 通义千问</option><option value="zhipu">智谱 GLM</option><option value="doubao">火山方舟 / 豆包</option><option value="hunyuan">腾讯混元</option><option value="qianfan">百度千帆</option><option value="minimax">MiniMax</option><option value="siliconflow">硅基流动 SiliconFlow</option><option value="ai302">302.AI 聚合接口</option></optgroup>
+  <optgroup label="套餐登录（无需 API Key）"><option value="codex">Codex 套餐（ChatGPT 登录）</option><option value="kimi_subscription" selected>Kimi 套餐（Kimi Code 登录）</option></optgroup>
+  <optgroup label="国内 API（高级备用）"><option value="kimi">Kimi / Moonshot API</option><option value="deepseek">DeepSeek</option><option value="qwen">阿里云百炼 / 通义千问</option><option value="zhipu">智谱 GLM</option><option value="doubao">火山方舟 / 豆包</option><option value="hunyuan">腾讯混元</option><option value="qianfan">百度千帆</option><option value="minimax">MiniMax</option><option value="siliconflow">硅基流动 SiliconFlow</option><option value="ai302">302.AI 聚合接口</option></optgroup>
   <optgroup label="国际云端"><option value="openai">OpenAI</option><option value="anthropic">Anthropic Claude</option><option value="gemini">Google Gemini</option><option value="openrouter">OpenRouter</option><option value="mistral">Mistral AI</option><option value="groq">Groq</option><option value="xai">xAI / Grok</option></optgroup>
   <optgroup label="本地模型"><option value="ollama">Ollama（本机）</option><option value="lmstudio">LM Studio（本机）</option></optgroup>
   <optgroup label="自定义"><option value="custom">其他 OpenAI 兼容接口</option></optgroup>
 </select><small id="provider-note">选择服务商后会自动填入官方接口预设，模型名仍可自行修改。</small></label>
 <label>API 接口类型<select id="apiStyle"><option value="chat">Chat Completions</option><option value="responses">OpenAI Responses API</option><option value="anthropic">Anthropic Messages API</option></select></label>
 <label>API 地址<input id="endpoint" type="url" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions"></label>
-<label>API Key<div class="secret"><input id="apiKey" type="password" spellcheck="false"><button id="reveal" type="button">显示</button></div><small id="api-key-note">密钥只保存在本机；不同服务商会分别记忆各自的密钥。</small></label>
+<label>API Key（套餐模式无需填写）<div class="secret"><input id="apiKey" type="password" spellcheck="false"><button id="reveal" type="button">显示</button></div><small id="api-key-note">密钥只保存在本机；不同服务商会分别记忆各自的密钥。</small></label>
 <label>模型名<input id="model" spellcheck="false" placeholder="gpt-4.1-mini"></label>
 <label>目标语言<input id="targetLanguage" value="简体中文"></label>
 <label>科研翻译提示词<textarea id="prompt" rows="9"></textarea><small>可使用 <code>{targetLanguage}</code> 占位符。扩展会自动附加带唯一编号的输出协议，不需要自行编写 JSON 格式要求。</small></label>
@@ -30,5 +31,5 @@
   <div class="glossary-table-wrap"><table class="glossary-table"><thead><tr><th>英文原词 / 缩写</th><th>标准译法 / 保留要求</th><th><span class="sr-only">操作</span></th></tr></thead><tbody id="glossary-body"></tbody></table></div>
   <p class="glossary-empty" id="glossary-empty">还没有术语。可以添加自己的术语，或载入锂/钠电池预置。</p>
 </section>
-<div class="actions"><button id="save" class="primary">保存设置</button><button id="test">测试接口</button><span id="status" class="status"></span></div>
+<div class="actions"><button id="save" class="primary">保存设置</button><button id="test">测试所选方案</button><span id="status" class="status"></span></div>
 </main></div><script type="module" src="options.js"></script></body></html>

@@ -13,7 +13,7 @@ const ids = ["provider", "apiStyle", "endpoint", "apiKey", "model", "targetLangu
 const $ = id => document.getElementById(id);
 const body = $("glossary-body");
 let providerKeys = {};
-let activeProvider = "kimi";
+let activeProvider = "kimi_subscription";
 
 await load();
 
@@ -21,7 +21,7 @@ async function load() {
   const data = await chrome.storage.local.get([...ids, "providerKeys", "glossaryTerms"]);
   for (const id of ids) if (data[id] !== undefined) $(id).value = data[id];
   providerKeys = data.providerKeys && typeof data.providerKeys === "object" ? { ...data.providerKeys } : {};
-  activeProvider = $("provider").value || "kimi";
+  activeProvider = $("provider").value || "kimi_subscription";
   if (data.apiKey && !providerKeys[activeProvider]) providerKeys[activeProvider] = data.apiKey;
   $("apiKey").value = providerKeys[activeProvider] || "";
   renderProviderHelp();
@@ -87,7 +87,11 @@ $("provider").onchange = () => {
   for (const key of ["apiStyle", "endpoint", "model"]) $(key).value = preset[key] || "";
   $("apiKey").value = providerKeys[activeProvider] || "";
   renderProviderHelp();
-  status(providerNeedsApiKey(activeProvider) ? "已填入预设，请填写该服务商的 API Key 后测试" : "已填入本地接口预设，请确认本地模型服务已经启动");
+  status(providerNeedsApiKey(activeProvider)
+    ? "已填入预设，请填写该服务商的 API Key 后测试"
+    : activeProvider === "codex" || activeProvider === "kimi_subscription"
+      ? `已选择套餐模式：请确认本地服务已启动，并已运行 ${activeProvider === "codex" ? "codex login" : "kimi login"}`
+      : "已填入本地接口预设，请确认本地模型服务已经启动");
 };
 
 $("add-term").onclick = () => {
@@ -143,9 +147,15 @@ function renderProviderHelp() {
   const preset = getProviderPreset($("provider").value);
   $("provider-note").textContent = preset.note || "已预设官方接口地址和推荐模型；模型名可按账号实际可用模型修改。";
   const needsKey = providerNeedsApiKey($("provider").value);
-  $("apiKey").placeholder = needsKey ? "填写该服务商的 API Key" : "本地模型通常无需填写";
+  $("apiKey").disabled = !needsKey;
+  $("reveal").disabled = !needsKey;
+  $("apiKey").placeholder = needsKey ? "填写该服务商的 API Key" : "无需 API Key";
   $("api-key-note").textContent = needsKey
     ? "密钥只保存在本机；不同服务商会分别记忆各自的密钥。"
-    : "本地接口不会附带云端 API Key；请先启动本地模型服务器。";
+    : $("provider").value === "codex"
+      ? "Codex 套餐模式只使用官方 CLI 的 ChatGPT 登录；检测到 API Key 登录时会主动停止，避免另行计费。"
+      : $("provider").value === "kimi_subscription"
+        ? "Kimi 套餐模式只使用官方 Kimi Code OAuth 登录；如需杜绝套餐外费用，请在 Kimi 账户中关闭 Extra Usage。"
+      : "本地接口不会附带云端 API Key；请先启动本地模型服务器。";
 }
 function status(text, error = false) { $("status").textContent = text; $("status").classList.toggle("error", error); }

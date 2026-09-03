@@ -7,26 +7,49 @@
 var YTD_SETTINGS = (() => {
   const STORAGE_KEY = "ytd_settings";
   const DEFAULTS = Object.freeze({
-    provider: "kimi",
+    provider: "kimi_subscription",
     aiApiKey: "",
-    aiBaseUrl: "https://api.moonshot.cn/v1",
-    aiModel: "kimi-k3",
+    aiBaseUrl: "http://127.0.0.1:8765/kimi/v1",
+    aiModel: "kimi-subscription",
+  });
+  const PROVIDERS = Object.freeze({
+    kimi_subscription: Object.freeze({
+      provider: "kimi_subscription",
+      aiBaseUrl: "http://127.0.0.1:8765/kimi/v1",
+      aiModel: "kimi-subscription",
+      keyRequired: false,
+    }),
+    codex: Object.freeze({
+      provider: "codex",
+      aiBaseUrl: "http://127.0.0.1:8765/codex/v1",
+      aiModel: "codex-subscription",
+      keyRequired: false,
+    }),
+    kimi_api: Object.freeze({
+      provider: "kimi_api",
+      aiBaseUrl: "https://api.moonshot.cn/v1",
+      aiModel: "kimi-k3",
+      keyRequired: true,
+    }),
   });
 
   function isLegacyProvider(input) {
-    return !!input && input.provider && input.provider !== DEFAULTS.provider;
+    return !!input && input.provider && input.provider !== "kimi" && !PROVIDERS[input.provider];
   }
 
   function normalize(input = {}) {
+    const requested = input.provider === "kimi" ? "kimi_api" : input.provider;
+    const provider = PROVIDERS[requested] ? requested : DEFAULTS.provider;
+    const preset = PROVIDERS[provider];
     return {
-      provider: DEFAULTS.provider,
-      aiApiKey: isLegacyProvider(input)
+      provider,
+      aiApiKey: isLegacyProvider(input) || !preset.keyRequired
         ? ""
         : typeof input.aiApiKey === "string"
           ? input.aiApiKey.trim()
           : "",
-      aiBaseUrl: DEFAULTS.aiBaseUrl,
-      aiModel: DEFAULTS.aiModel,
+      aiBaseUrl: preset.aiBaseUrl,
+      aiModel: preset.aiModel,
     };
   }
 
@@ -37,8 +60,8 @@ var YTD_SETTINGS = (() => {
     };
   }
 
-  function chatCompletionsUrl() {
-    return `${DEFAULTS.aiBaseUrl}/chat/completions`;
+  function chatCompletionsUrl(settings = DEFAULTS) {
+    return `${settings.aiBaseUrl}/chat/completions`;
   }
 
   function canonicalYouTubeUrl(videoId) {
@@ -52,6 +75,7 @@ var YTD_SETTINGS = (() => {
   return {
     STORAGE_KEY,
     DEFAULTS,
+    PROVIDERS,
     isLegacyProvider,
     normalize,
     migrateLegacyCustom,

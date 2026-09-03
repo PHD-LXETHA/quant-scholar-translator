@@ -8,9 +8,11 @@ from .translation import (
     protect,
     restore,
     translate_openai_compatible,
+    translate_codex_subscription,
+    translate_kimi_subscription,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 
 def translate_text(text: str, source: str = "auto", target: str = "zh", domain: str = "auto") -> str:
@@ -29,5 +31,7 @@ __all__ = [
     "protect",
     "restore",
     "translate_openai_compatible",
+    "translate_codex_subscription",
+    "translate_kimi_subscription",
     "translate_text",
 ]
