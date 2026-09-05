@@ -39,11 +39,14 @@ try {
     }
   }
 
-  & git archive --format=zip --output=(Join-Path $dist $names[0]) HEAD
+  $professional = Join-Path $dist $names[0]
+  $browser = Join-Path $dist $names[1]
+  $safari = Join-Path $dist $names[2]
+  & git archive '--format=zip' "--output=$professional" 'HEAD'
   if ($LASTEXITCODE -ne 0) { throw 'Failed to build professional source package.' }
-  & git archive --format=zip --output=(Join-Path $dist $names[1]) HEAD:apps/browser-extension
+  & git archive '--format=zip' "--output=$browser" 'HEAD:apps/browser-extension'
   if ($LASTEXITCODE -ne 0) { throw 'Failed to build browser extension package.' }
-  & git archive --format=zip --output=(Join-Path $dist $names[2]) HEAD:apps/safari-extension
+  & git archive '--format=zip' "--output=$safari" 'HEAD:apps/safari-extension'
   if ($LASTEXITCODE -ne 0) { throw 'Failed to build Safari extension package.' }
   & $python -m pip wheel . --no-deps --no-build-isolation --wheel-dir $dist
   if ($LASTEXITCODE -ne 0) { throw 'Failed to build Python wheel.' }
