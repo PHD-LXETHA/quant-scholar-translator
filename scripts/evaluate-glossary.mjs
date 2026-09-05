@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { PROFESSIONAL_GLOSSARY_PRESET, selectGlossaryTerms } from '../apps/browser-extension/research/glossary.mjs';
+import { PROFESSIONAL_GLOSSARY_PRESET, selectGlossaryTerms, normalizeTerm } from '../apps/browser-extension/research/glossary.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -20,13 +20,14 @@ export function evaluateGlossary(spec = loadGlossaryEvaluation(), terms = PROFES
     const required = ['source', 'target', 'note', 'domain'].filter(key => !String(term[key] || '').trim());
     if (required.length) failures.push(`schema:${term.source || '<blank>'}:${required.join(',')}`);
     if (term.aliases && (!Array.isArray(term.aliases) || term.aliases.some(alias => !String(alias).trim()))) failures.push(`aliases:${term.source}`);
+    if (term.targetVariants && (!Array.isArray(term.targetVariants) || term.targetVariants.some(alias => !String(alias).trim()))) failures.push(`target-variants:${term.source}`);
     aliases += term.aliases?.length || 0;
     byDomain.set(term.domain, (byDomain.get(term.domain) || 0) + 1);
-    const sourceKey = `${term.domain}\0${term.source.toLowerCase()}`;
+    const sourceKey = `${term.domain}\0${normalizeTerm(term.source)}`;
     if (domainSourceKeys.has(sourceKey)) failures.push(`duplicate-source:${sourceKey}`);
     domainSourceKeys.add(sourceKey);
     for (const alias of [term.source, ...(term.aliases || [])]) {
-      const aliasKey = `${term.domain}\0${alias.toLowerCase()}`;
+      const aliasKey = `${term.domain}\0${normalizeTerm(alias)}`;
       if (!aliasDomainKeys.has(aliasKey)) aliasDomainKeys.set(aliasKey, new Set());
       aliasDomainKeys.get(aliasKey).add(term.target);
     }
@@ -54,7 +55,14 @@ export function evaluateGlossary(spec = loadGlossaryEvaluation(), terms = PROFES
   spec.ambiguity.forEach(item => evaluateCase(item, 'ambiguity'));
   spec.negative.forEach(item => evaluateCase(item, 'negative'));
 
-  const checks = spec.coverage.length + spec.ambiguity.length + spec.negative.length;
+  for (const check of spec.conceptChecks || []) {
+    const term = terms.find(term => term.domain === check.domain && normalizeTerm(term.source) === normalizeTerm(check.source));
+    if (!term) failures.push(`concept:missing:${check.domain}:${check.source}`);
+    else for (const fragment of check.noteIncludes || []) {
+      if (!term.note?.includes(fragment)) failures.push(`concept:missing-boundary:${check.source}:${fragment}`);
+    }
+  }
+  const checks = spec.coverage.length + spec.ambiguity.length + spec.negative.length + (spec.conceptChecks?.length || 0);
   return {
     standard: spec.standard,
     passed: failures.length === 0,

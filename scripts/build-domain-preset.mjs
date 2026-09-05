@@ -14,6 +14,7 @@ for (const file of files) {
   for (const item of JSON.parse(fs.readFileSync(path.join(glossaryDir, file), 'utf8'))) {
     if (!item.source?.trim() || !item.target?.trim() || !item.note?.trim()) throw new Error(`Invalid glossary entry in ${file}`);
     if (item.aliases && (!Array.isArray(item.aliases) || item.aliases.some(a => typeof a !== 'string' || !a.trim()))) throw new Error(`Invalid aliases in ${file}`);
+    if (item.targetVariants && (!Array.isArray(item.targetVariants) || item.targetVariants.some(a => typeof a !== 'string' || !a.trim()))) throw new Error(`Invalid target variants in ${file}`);
     const key = `${domain}:${String(item.source).trim().toLowerCase()}`;
     if (seen.has(key)) throw new Error(`Duplicate glossary entry: ${key}`);
     seen.add(key);

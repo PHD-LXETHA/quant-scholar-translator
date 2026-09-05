@@ -192,6 +192,67 @@ test('V7 migration adds CQF curriculum terms without replacing an existing custo
   assert.ok(saved.glossaryTerms.some(t => t.source === 'temporal-difference learning'));
 });
 
+test('V9 upgrades V8 libraries without overwriting custom terms or restoring an empty library', async () => {
+  for (const empty of [false, true]) {
+    const saved = {quantScholarMaterialTermsRemovedV1: true};
+    for (let version = 2; version <= 8; version++) saved[`quantScholarContextualGlossaryV${version}`] = true;
+    const custom = {source: 'amortised cost', target: '我的摊余成本', domain: 'finance', note: '保留'};
+    saved.glossaryTerms = empty ? [] : [custom];
+    const storage = {get: async () => saved, set: async value => Object.assign(saved, value)};
+    await migrateProfessionalGlossary(storage);
+    assert.equal(saved.quantScholarContextualGlossaryV9, true);
+    if (empty) assert.deepEqual(saved.glossaryTerms, []);
+    else {
+      assert.deepEqual(saved.glossaryTerms.filter(t => t.source === 'amortised cost'), [custom]);
+      for (const source of ['forward error', 'Holm correction', 'risk factor eligibility test', 'effective interest method', 'Lucas critique', 'hashability', 'replicability']) {
+        assert.ok(saved.glossaryTerms.some(t => t.source === source), source);
+      }
+    }
+    const before = JSON.stringify(saved);
+    await migrateProfessionalGlossary(storage);
+    assert.equal(JSON.stringify(saved), before);
+  }
+});
+
+test('V10 upgrades V9 libraries once and exposes applied-reading terminology', async () => {
+  const saved = {quantScholarMaterialTermsRemovedV1: true};
+  for (let version = 2; version <= 9; version++) saved[`quantScholarContextualGlossaryV${version}`] = true;
+  const custom = {source: 'conformal prediction', target: '我的保形预测', domain: 'statistics', note: '保留'};
+  saved.glossaryTerms = [custom];
+  const storage = {get: async () => saved, set: async value => Object.assign(saved, value)};
+  await migrateProfessionalGlossary(storage);
+  assert.equal(saved.quantScholarContextualGlossaryV10, true);
+  assert.deepEqual(saved.glossaryTerms.filter(t => t.source === 'conformal prediction'), [custom]);
+  for (const source of ['Lévy characterization theorem', 'marginal coverage', 'SVI parameterization', 'business model test', 'Beveridge curve', 'activation checkpointing', 'multiverse analysis']) {
+    assert.ok(saved.glossaryTerms.some(t => t.source === source), source);
+  }
+  const before = JSON.stringify(saved);
+  await migrateProfessionalGlossary(storage);
+  assert.equal(JSON.stringify(saved), before);
+});
+
+test('V11 upgrades V10 libraries once and exposes professional-gate terminology', async () => {
+  const saved = {quantScholarMaterialTermsRemovedV1: true};
+  for (let version = 2; version <= 10; version++) saved[`quantScholarContextualGlossaryV${version}`] = true;
+  const custom = {source: 'almost sure convergence', target: '我的自定义译法', domain: 'mathematics', note: '保留'};
+  saved.glossaryTerms = [custom];
+  const storage = {get: async () => saved, set: async value => Object.assign(saved, value)};
+  await migrateProfessionalGlossary(storage);
+  assert.equal(saved.quantScholarContextualGlossaryV11, true);
+  assert.deepEqual(saved.glossaryTerms.filter(t => t.source === 'almost sure convergence'), [custom]);
+  for (const source of ['finite-sample bias', 'operational measure', 'vector autoregression', 'reinvestment risk', 'exception handling']) {
+    assert.ok(saved.glossaryTerms.some(t => t.source === source), source);
+  }
+  const before = JSON.stringify(saved);
+  await migrateProfessionalGlossary(storage);
+  assert.equal(JSON.stringify(saved), before);
+});
+
+test('normalization retains accepted target variants used by the professional gate', () => {
+  const [entry] = normalizeGlossaryTerms([{source: 'inflation', target: '通货膨胀', targetVariants: ['通胀', '通胀', '']}]);
+  assert.deepEqual(entry.targetVariants, ['通胀']);
+});
+
 test('library is domain-qualified, documented and free of conflicting duplicates within each domain', () => {
   const keys = new Set();
   for (const entry of PROFESSIONAL_GLOSSARY_PRESET) {
@@ -201,4 +262,26 @@ test('library is domain-qualified, documented and free of conflicting duplicates
   }
   const matched = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, PROFESSIONAL_GLOSSARY_PRESET.map(t => t.source).join(' '), 40);
   assert.equal(matched.length, 40);
+});
+
+test('V8 upgrades V7 libraries once, preserves user edits and respects an empty library', async () => {
+  for (const empty of [false, true]) {
+    const saved = {quantScholarMaterialTermsRemovedV1: true};
+    for (let version = 2; version <= 7; version++) saved[`quantScholarContextualGlossaryV${version}`] = true;
+    const custom = {source: 'cross-fitting', target: '我的交叉拟合', note: '保留个人注释'};
+    saved.glossaryTerms = empty ? [] : [custom];
+    const storage = {get: async () => saved, set: async value => Object.assign(saved, value)};
+    await migrateProfessionalGlossary(storage);
+    assert.equal(saved.quantScholarContextualGlossaryV8, true);
+    if (empty) assert.deepEqual(saved.glossaryTerms, []);
+    else {
+      assert.deepEqual(saved.glossaryTerms.filter(t => t.source === 'cross-fitting'), [custom]);
+      for (const source of ['uniform integrability', 'missing not at random', 'deflated Sharpe ratio', 'other comprehensive income', 'local projection', 'gradient clipping', 'replication package']) {
+        assert.ok(saved.glossaryTerms.some(t => t.source === source), source);
+      }
+    }
+    const before = JSON.stringify(saved);
+    await migrateProfessionalGlossary(storage);
+    assert.equal(JSON.stringify(saved), before);
+  }
 });

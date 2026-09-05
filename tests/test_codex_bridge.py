@@ -9,6 +9,24 @@ from quant_scholar_translator import codex_bridge as MODULE
 
 
 class CodexBridgeTests(unittest.TestCase):
+    @mock.patch.dict(MODULE.os.environ, {
+        "USERPROFILE": r"C:\Users\reader",
+        "OPENAI_API_KEY": "must-not-leak",
+        "CODEX_API_KEY": "must-not-leak",
+    }, clear=True)
+    def test_clean_environment_pins_persistent_codex_home(self):
+        env = MODULE._clean_environment()
+        self.assertEqual(env["CODEX_HOME"], r"C:\Users\reader\.codex")
+        self.assertNotIn("OPENAI_API_KEY", env)
+        self.assertNotIn("CODEX_API_KEY", env)
+
+    @mock.patch.dict(MODULE.os.environ, {
+        "USERPROFILE": r"C:\Users\reader",
+        "CODEX_HOME": r"D:\CodexProfile",
+    }, clear=True)
+    def test_clean_environment_preserves_explicit_codex_home(self):
+        self.assertEqual(MODULE._clean_environment()["CODEX_HOME"], r"D:\CodexProfile")
+
     @mock.patch.object(MODULE, "codex_status")
     @mock.patch.object(MODULE.subprocess, "run")
     def test_pins_sol_and_medium_or_high_without_changing_billing(self, run, status):

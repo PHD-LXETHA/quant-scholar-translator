@@ -82,10 +82,20 @@ def _command() -> str:
 
 
 def _clean_environment() -> dict[str, str]:
-    """Prevent an ambient Platform key from changing the billing route."""
+    """Return a stable subscription-only environment for background calls.
+
+    The desktop extension service can be launched without ``CODEX_HOME`` even
+    though the interactive CLI stores its persistent ChatGPT login under the
+    user's conventional ``.codex`` directory.  Pin that directory explicitly
+    so desktop-app binary upgrades do not appear to log the user out.
+    """
     env = os.environ.copy()
     for name in ("OPENAI_API_KEY", "CODEX_API_KEY"):
         env.pop(name, None)
+    if not env.get("CODEX_HOME", "").strip():
+        user_profile = env.get("USERPROFILE", "").strip()
+        if user_profile:
+            env["CODEX_HOME"] = str(Path(user_profile) / ".codex")
     return env
 
 

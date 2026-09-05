@@ -38,6 +38,39 @@ class AdaptiveReasoningTests(unittest.TestCase):
         self.assertEqual([cue["id"] for cue in payload["cues"]], ["b"])
 
     @patch("quant_scholar_translator.caption_translation.run_codex_completion")
+    def test_strict_glossary_mismatch_triggers_high_review(self, run):
+        run.side_effect = [response([("n", "临近预测使用当前指标。")]),
+                           response([("n", "即时预测使用当前指标。")])]
+        result = translate_cues([{"id": "n", "text": "Nowcasting uses current indicators."}],
+                                "en", "zh", "economics", "codex_subscription")
+        self.assertEqual(result[0]["text"], "即时预测使用当前指标。")
+        self.assertEqual([call.kwargs["reasoning_effort"] for call in run.call_args_list], ["medium", "high"])
+        payload = json.loads(run.call_args.args[0][1]["content"])
+        self.assertEqual(payload["requiredTerminology"]["n"][0]["requiredTarget"], "即时预测")
+
+    @patch("quant_scholar_translator.caption_translation.run_codex_completion")
+    def test_unresolved_strict_glossary_mismatch_is_rejected(self, run):
+        run.side_effect = [response([("n", "临近预测。")]), response([("n", "临近预测。")])]
+        with self.assertRaisesRegex(ValueError, "强制专业术语"):
+            translate_cues([{"id": "n", "text": "Nowcasting."}],
+                           "en", "zh", "economics", "codex_subscription")
+
+    @patch("quant_scholar_translator.caption_translation.run_codex_completion")
+    def test_high_review_is_chunked_to_keep_alignment_reliable(self, run):
+        cues = [{"id": str(index), "text": "Nowcasting."} for index in range(6)]
+        run.side_effect = [
+            response([(cue["id"], "临近预测。") for cue in cues]),
+            response([(cue["id"], "即时预测。") for cue in cues[:5]]),
+            response([(cues[5]["id"], "即时预测。")]),
+        ]
+        result = translate_cues(cues, "en", "zh", "economics", "codex_subscription")
+        self.assertEqual(len(result), 6)
+        self.assertEqual(run.call_count, 3)
+        high_payload_sizes = [len(json.loads(call.args[0][1]["content"])["cues"])
+                              for call in run.call_args_list[1:]]
+        self.assertEqual(high_payload_sizes, [5, 1])
+
+    @patch("quant_scholar_translator.caption_translation.run_codex_completion")
     def test_broken_alignment_gets_one_high_retry(self, run):
         run.side_effect = ["not JSON", response([("b", "结论。"), ("a", "风险。")])]
         self.assertEqual([row["id"] for row in self.translate()], ["a", "b"])

@@ -1,0 +1,44 @@
+{
+  "mathematics": [
+    "quadratic variation",
+    "stochastic differential equation",
+    "partial differential equation",
+    "singular value decomposition"
+  ],
+  "statistics": [
+    "maximum likelihood estimation",
+    "ordinary least squares",
+    "confidence interval",
+    "standard deviation"
+  ],
+  "quant_finance": [
+    "risk-neutral measure",
+    "delta hedging",
+    "maximum drawdown",
+    "risk parity"
+  ],
+  "finance": [
+    "Macaulay duration",
+    "net present value",
+    "internal rate of return",
+    "discounted cash flow"
+  ],
+  "economics": [
+    "gross domestic product",
+    "consumer price index",
+    "purchasing power parity",
+    "opportunity cost"
+  ],
+  "programming": [
+    "return value",
+    "garbage collection",
+    "race condition",
+    "gradient descent"
+  ],
+  "academic": [
+    "causal inference",
+    "systematic review",
+    "publication bias",
+    "peer review"
+  ]
+}

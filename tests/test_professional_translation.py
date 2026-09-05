@@ -1,10 +1,36 @@
 import unittest
+import json
+from pathlib import Path
 from unittest import mock
 
 from quant_scholar_translator import translation as MODULE
 
 
 class ProfessionalTranslationTests(unittest.TestCase):
+    def test_seven_domain_cases_reach_backend_prompts(self):
+        spec = json.loads((Path(__file__).parent / 'glossary-evaluation.json').read_text(encoding='utf-8'))
+        cases = [case for case in spec['coverage'] if case.get('suite', '').startswith('seven-domain-v')]
+        self.assertEqual({case['domain'] for case in cases}, {'mathematics', 'statistics', 'quant_finance', 'finance', 'economics', 'programming', 'academic'})
+        for case in cases:
+            with self.subTest(text=case['text']):
+                for domain in ('auto', case['domain']):
+                    selected = MODULE.relevant_glossary(case['text'], domain)
+                    targets = {item['target'] for item in selected}
+                    self.assertTrue(set(case['expectedTargets']).issubset(targets), set(case['expectedTargets']) - targets)
+                    prompt = MODULE.glossary_prompt(selected)
+                    for target in case['expectedTargets']:
+                        self.assertIn(target, prompt)
+
+    def test_seven_domain_v5_negative_cases_do_not_inject_terms(self):
+        spec = json.loads((Path(__file__).parent / 'glossary-evaluation.json').read_text(encoding='utf-8'))
+        for case in spec['negative']:
+            if not case.get('suite', '').startswith('seven-domain-v'):
+                continue
+            for domain in ('auto', case['domain']):
+                with self.subTest(text=case['text'], domain=domain):
+                    sources = {term['source'] for term in MODULE.relevant_glossary(case['text'], domain)}
+                    self.assertFalse(sources.intersection(case['forbiddenSources']))
+
     def test_domain_detection_distinguishes_programming_and_quant_finance(self):
         self.assertEqual(MODULE.detect_domain("The function return value is handled by the runtime"), "programming")
         self.assertEqual(MODULE.detect_domain("Factor exposure and maximum drawdown in a portfolio backtest"), "quant_finance")

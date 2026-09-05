@@ -25,6 +25,7 @@
 - 专业领域选择和自动领域识别；
 - 公式、代码、URL、引用与符号占位保护；
 - Codex 套餐与 Kimi 套餐双通道专业精译，无需在扩展中保存 API Key；
+- 1,424 条七领域语境词条与 703 个别名；Codex 默认中等推理，疑难段落高等复译，Kimi 对明确术语漏译执行小批量纠偏；
 - Kimi/OpenAI 兼容 API、NLLB 本地翻译和 Google 翻译作为高级或实时备用；
 - 将最终字幕段保存为结构化学习会话；
 - 通用学习侧栏：实时查看、按时间回跳、原文/中文/双语、摘要与笔记；
@@ -40,6 +41,8 @@
 - **离线模式**：Whisper＋NLLB 全程在本机运行，不调用在线翻译。
 
 只有 `professional-final` 与 `offline-final` 会进入学习会话和知识库；临时 NLLB 预览不会被导出。数值、百分比、基点、货币、公式、变量、代码、URL、引用和专业缩写在翻译前保护，恢复失败时拒绝将结果作为终稿。
+
+当前版本已通过项目内部 Professional Translation Gate v7：140 条实际 Codex 应用句的术语准确率为 422/423（99.76%），逻辑信号、字幕对齐和受保护字面量完整率均为 100%。这是可复现的内部工程门槛，不是外部专家认证；逐领域分母与限制见 [`docs/PROFESSIONAL_TRANSLATION_EVALUATION.md`](docs/PROFESSIONAL_TRANSLATION_EVALUATION.md)。
 
 ## 快速开始
 
@@ -86,6 +89,7 @@ Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套�
 - `quant_scholar_translator`：你的统一 Python 库，包含实时服务、专业翻译、稳定字幕、PDF 接口、术语库和知识数据契约。
 - `docs/MODELS.md`：已下载模型、体积、哈希、转换和剔除记录。
 - `docs/LIBRARY.md`：统一库公共接口、成品边界和依赖原则。
+- `docs/PROFESSIONAL_TRANSLATION_EVALUATION.md`：七领域真实 Codex 推理评测、门槛与适用边界。
 - `docs`：架构、来源审计和路线图。
 
 ## 进阶配置
@@ -136,8 +140,8 @@ Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地�
 ## 测试
 
 ```powershell
-node --test tests/extension.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js
-python -m unittest discover -s tests -p "test_*.py"
+node --test tests/*.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js
+.venv\Scripts\python.exe -m unittest discover -s tests -q
 python -m py_compile quant_scholar_translator/*.py
 ```
 

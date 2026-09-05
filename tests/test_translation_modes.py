@@ -26,7 +26,7 @@ class TranslationModeTests(unittest.TestCase):
     @mock.patch.object(
         MODULE,
         "_translate_nllb",
-        return_value="Sharpe 比率为 QS_PROTECTED_0，最大回撤为 QS_PROTECTED_1。",
+        return_value="Sharpe 比率为 QS_PROTECTED_0，QS_PROTECTED_2 为 QS_PROTECTED_1。",
     )
     def test_nllb_restores_numbers_and_units_after_tokenizer_strips_brackets(self, nllb):
         result = MODULE.translate(
@@ -39,6 +39,7 @@ class TranslationModeTests(unittest.TestCase):
         )
         self.assertIn("1.42", result)
         self.assertIn("8.3%", result)
+        self.assertIn("最大回撤", result)
         self.assertNotIn("QS_PROTECTED", result)
         self.assertIn("⟪QS_PROTECTED_0⟫", nllb.call_args.args[0])
 

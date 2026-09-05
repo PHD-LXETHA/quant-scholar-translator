@@ -114,6 +114,7 @@ from .config import (
 )
 from .codex_bridge import CODEX_MODEL, CODEX_DEFAULT_EFFORT, CodexBridgeError, codex_status, run_codex_completion
 from .kimi_bridge import KimiBridgeError, kimi_status, run_kimi_completion
+from .nllb_glossary import protect_terms, restore_terms
 from .translation import (
     hotwords_for_domain,
     protect,
@@ -244,6 +245,7 @@ _NLLB_LANG = {
 _nllb = None              # (translator, tokenizer) once loaded
 _nllb_failed = False      # set True after a load failure so we stop retrying
 _nllb_lock = threading.Lock()
+_nllb_glossary_disabled = threading.Event()
 
 
 def _get_nllb(*, allow_download: bool = True):
@@ -356,9 +358,20 @@ def translate(
     try:
         if selected == "nllb":
             protected = protect(text)
+            use_terms = os.getenv('QS_NLLB_GLOSSARY', 'on').lower() not in {'0', 'off', 'false'} and not _nllb_glossary_disabled.is_set()
+            enriched = protect_terms(protected, src or '', tgt or '') if use_terms else protected
             output = _translate_nllb(
-                protected.text, src, tgt, allow_network_fallback=not offline
+                enriched.text, src, tgt, allow_network_fallback=not offline
             )
+            if enriched is not protected:
+                try:
+                    return restore_terms(output, enriched, len(protected.values))
+                except ValueError:
+                    # One plain retry; then bypass terminology for this process
+                    # so a model that corrupts markers cannot double every call.
+                    _nllb_glossary_disabled.set()
+                    log.warning('NLLB terminology markers were not preserved; using plain previews until service restart')
+                    output = _translate_nllb(protected.text, src, tgt, allow_network_fallback=not offline)
             return restore_checked(output, protected.values)
         if selected == "google":
             protected = protect(text)

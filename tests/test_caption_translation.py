@@ -12,16 +12,34 @@ class CaptionTranslationTests(unittest.TestCase):
             return result, codex, kimi
 
     def test_per_cue_restore_and_reordered_response(self):
-        result, codex, _ = self.call(json.dumps({"cues": [{"id": "b", "text": "风险。"}, {"id": "a", "text": "⟪QS_PROTECTED_0⟫ 为 ⟪QS_PROTECTED_1⟫。"}], "review": []}))
-        self.assertEqual(result, [{"id": "a", "text": "GDP 为 3%。"}, {"id": "b", "text": "风险。"}])
+        result, codex, _ = self.call(json.dumps({"cues": [{"id": "b", "text": "风险。"}, {"id": "a", "text": "国内生产总值（⟪QS_PROTECTED_0⟫）为 ⟪QS_PROTECTED_1⟫。"}], "review": []}))
+        self.assertEqual(result, [{"id": "a", "text": "国内生产总值（GDP）为 3%。"}, {"id": "b", "text": "风险。"}])
         messages = codex.call_args.args[0]
         self.assertIn("Read ALL cues", messages[0]["content"])
         self.assertIn("Previous original context", messages[1]["content"])
+        payload = json.loads(messages[1]["content"])
+        self.assertEqual(payload["cues"][0]["protectedTokens"], {
+            "⟪QS_PROTECTED_0⟫": "GDP", "⟪QS_PROTECTED_1⟫": "3%",
+        })
 
     def test_kimi_uses_same_contract(self):
-        _, codex, kimi = self.call('{"cues":[{"id":"a","text":"GDP 为 3%。"},{"id":"b","text":"风险。"}]}', "kimi_subscription")
+        _, codex, kimi = self.call('{"cues":[{"id":"a","text":"国内生产总值（GDP）为 3%。"},{"id":"b","text":"风险。"}]}', "kimi_subscription")
         codex.assert_not_called()
         kimi.assert_called_once()
+
+    def test_kimi_corrects_missing_required_terminology_once(self):
+        outputs = [
+            '{"cues":[{"id":"a","text":"GDP 为 3%。"},{"id":"b","text":"风险。"}]}',
+            '{"cues":[{"id":"a","text":"国内生产总值（⟪QS_PROTECTED_0⟫）为 ⟪QS_PROTECTED_1⟫。"}]}',
+        ]
+        with patch("quant_scholar_translator.caption_translation.run_kimi_completion", side_effect=outputs) as kimi:
+            result = translate_cues(
+                [{"id": "a", "text": "GDP is 3%."}, {"id": "b", "text": "Risk."}],
+                "en", "zh", "economics", "kimi_subscription",
+            )
+        self.assertEqual(result[0]["text"], "国内生产总值（GDP）为 3%。")
+        self.assertEqual(result[1]["text"], "风险。")
+        self.assertEqual(kimi.call_count, 2)
 
     def test_omissions_wrong_ids_duplicates_empty_and_lost_numbers_rejected(self):
         bad = ["not JSON", '{"cues":[]}',

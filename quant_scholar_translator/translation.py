@@ -80,14 +80,25 @@ def restore_checked(text: str, values: list[str]) -> str:
     return restore(text, values)
 
 
-def contextual_user_text(text: str, context: str = "") -> str:
+def contextual_user_text(text: str, context: str = "", protected_values: list[str] | None = None) -> str:
     context = str(context or "").strip()[-1600:]
-    if not context:
-        return text
-    return (
-        "Previous source context for disambiguation only; do not translate or repeat it:\n"
-        f"{context}\n\nText to translate:\n{text}"
-    )
+    token_map = {
+        f"⟪QS_PROTECTED_{index}⟫": value
+        for index, value in enumerate(protected_values or [])
+    }
+    sections = []
+    if context:
+        sections.append(
+            "Previous source context for disambiguation only; do not translate or repeat it:\n"
+            f"{context}"
+        )
+    if token_map:
+        sections.append(
+            "Protected token map for terminology interpretation only; reproduce each marker exactly:\n"
+            + json.dumps(token_map, ensure_ascii=False)
+        )
+    sections.append(f"Text to translate:\n{text}")
+    return "\n\n".join(sections)
 
 
 def detect_domain(text: str) -> str:
@@ -224,6 +235,7 @@ def glossary_prompt(entries: list[dict], limit: int = 40) -> str:
         f"- {item['source']} => {item['target']} [{item.get('domain', '')}]"
         f" ({item.get('note', '')})"
         + (f"; aliases: {', '.join(item['aliases'])}" if item.get('aliases') else "")
+        + (f"; accepted target variants: {', '.join(item['targetVariants'])}" if item.get('targetVariants') else "")
         for item in entries[:limit]
     )
 
@@ -248,6 +260,10 @@ Translate from {source_lang or 'auto-detected language'} to {target_lang}.
 Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
 variable names, citations, ticker symbols and code. Prefer established Chinese
 academic terminology. Do not add explanations. Use the glossary contextually;
+for an unambiguous glossary match, use its preferred Chinese target exactly.
+at the first occurrence of a recognized technical acronym, write the preferred
+Chinese term followed by the source acronym in parentheses. Do not leave a
+glossary-recognized acronym unexplained; preserve standard symbols and code.
 do not perform blind word replacement. Return translation text only.
 
 Glossary:
@@ -257,7 +273,7 @@ Glossary:
         "temperature": 0.1,
         "messages": [
             {"role": "system", "content": system},
-            {"role": "user", "content": contextual_user_text(protected.text, context)},
+            {"role": "user", "content": contextual_user_text(protected.text, context, protected.values)},
         ],
     }).encode("utf-8")
     url = api_base.rstrip("/") + "/chat/completions"
@@ -311,6 +327,10 @@ Translate from {source_lang or 'auto-detected language'} to {target_lang}.
 Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
 variable names, citations, ticker symbols and code. Prefer established Chinese
 academic terminology. Do not add explanations. Use the glossary contextually;
+for an unambiguous glossary match, use its preferred Chinese target exactly.
+at the first occurrence of a recognized technical acronym, write the preferred
+Chinese term followed by the source acronym in parentheses. Do not leave a
+glossary-recognized acronym unexplained; preserve standard symbols and code.
 do not perform blind word replacement. Return translation text only.
 
 Glossary:
@@ -318,7 +338,7 @@ Glossary:
     output = run_kimi_completion(
         [
             {"role": "system", "content": system},
-            {"role": "user", "content": contextual_user_text(protected.text, context)},
+            {"role": "user", "content": contextual_user_text(protected.text, context, protected.values)},
         ],
         timeout=timeout,
     )

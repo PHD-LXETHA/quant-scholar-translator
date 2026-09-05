@@ -24,6 +24,7 @@ General-purpose translation tools often damage formulas, variables, statistical 
 - Detects finance, quantitative finance, economics, statistics, mathematics, and programming domains.
 - Protects formulas, code, URLs, references, units, values, and symbols during translation.
 - Offers Codex-plan and Kimi-membership professional translation without storing API keys in the extension.
+- Includes 1,424 contextual terms and 703 aliases across seven domains; Codex uses medium reasoning by default and high reasoning for difficult cues, while Kimi applies a bounded corrective pass for explicit terminology misses.
 - Keeps Kimi/OpenAI-compatible APIs, local NLLB, and Google Translate as advanced or low-latency alternatives.
 - Saves structured learning sessions with source provenance and seekable timestamps.
 - Provides a side-panel workspace for transcripts, bilingual reading, overviews, explanations, and notes.
@@ -37,6 +38,8 @@ General-purpose translation tools often damage formulas, variables, statistical 
 - **Offline:** Whisper and NLLB run locally without an online translation service.
 
 Only professional or offline final records enter the knowledge base. Numbers, percentages, basis points, currencies, formulas, variables, code, URLs, citations, and acronyms are protected and validated before a result is accepted as final.
+
+The current build passes the project's internal Professional Translation Gate v7. Across 140 real Codex inference cases, terminology accuracy was 422/423 (99.76%); logical-signal retention, cue alignment, and protected-literal integrity were all 100%. This is a reproducible internal engineering gate, not external expert certification. See [`docs/PROFESSIONAL_TRANSLATION_EVALUATION.md`](docs/PROFESSIONAL_TRANSLATION_EVALUATION.md) for per-domain denominators and limitations.
 
 ## Quick start
 
@@ -112,8 +115,8 @@ See [`docs/MOBILE.md`](docs/MOBILE.md) for iPhone/iPad setup and capability boun
 ## Tests
 
 ```powershell
-node --test tests/extension.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js
-python -m unittest discover -s tests -p "test_*.py"
+node --test tests/*.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js
+.venv\Scripts\python.exe -m unittest discover -s tests -q
 ```
 
 ## License and attribution

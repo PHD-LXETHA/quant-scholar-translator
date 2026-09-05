@@ -45,7 +45,11 @@ export async function migrateProfessionalGlossary(storage) {
     await upgradeProfessionalGlossaryV4(storage);
     await upgradeProfessionalGlossaryV5(storage);
     await upgradeProfessionalGlossaryV6(storage);
-    return upgradeProfessionalGlossaryV7(storage);
+    await upgradeProfessionalGlossaryV7(storage);
+    await upgradeProfessionalGlossaryV8(storage);
+    await upgradeProfessionalGlossaryV9(storage);
+    await upgradeProfessionalGlossaryV10(storage);
+    return upgradeProfessionalGlossaryV11(storage);
   }
   const update = { [key]: true };
   if (Array.isArray(saved.glossaryTerms)) {
@@ -65,6 +69,10 @@ export async function migrateProfessionalGlossary(storage) {
   await upgradeProfessionalGlossaryV5(storage);
   await upgradeProfessionalGlossaryV6(storage);
   await upgradeProfessionalGlossaryV7(storage);
+  await upgradeProfessionalGlossaryV8(storage);
+  await upgradeProfessionalGlossaryV9(storage);
+  await upgradeProfessionalGlossaryV10(storage);
+  await upgradeProfessionalGlossaryV11(storage);
 }
 
 async function upgradeProfessionalGlossary(storage) {
@@ -107,6 +115,22 @@ async function upgradeProfessionalGlossaryV7(storage) {
   return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV7');
 }
 
+async function upgradeProfessionalGlossaryV8(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV8');
+}
+
+async function upgradeProfessionalGlossaryV9(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV9');
+}
+
+async function upgradeProfessionalGlossaryV10(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV10');
+}
+
+async function upgradeProfessionalGlossaryV11(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV11');
+}
+
 async function mergeMissingProfessionalDefaults(storage, key) {
   const saved = await storage.get([key, 'glossaryTerms']);
   if (saved[key]) return;
@@ -145,6 +169,10 @@ export function normalizeGlossaryTerms(value) {
     if (!Array.isArray(item) && Array.isArray(item?.aliases)) {
       const aliases = [...new Set(item.aliases.filter(a => typeof a === 'string' && a.trim()).map(a => a.trim()))];
       if (aliases.length) entry.aliases = aliases;
+    }
+    if (!Array.isArray(item) && Array.isArray(item?.targetVariants)) {
+      const targetVariants = [...new Set(item.targetVariants.filter(a => typeof a === 'string' && a.trim()).map(a => a.trim()))];
+      if (targetVariants.length) entry.targetVariants = targetVariants;
     }
     if (!Array.isArray(item) && item?.requiresContext === true) entry.requiresContext = true;
     result.push(entry);
