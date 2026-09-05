@@ -8,6 +8,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $repository = 'PHD-LXETHA/quant-scholar-translator'
 $apiBase = "https://api.github.com/repos/$repository"
 $tag = 'v0.7.0'
+$releaseName = 'Quant Scholar Translator 0.7.0 - Professional Translation'
 $env:GIT_TERMINAL_PROMPT = '0'
 $env:GCM_INTERACTIVE = 'never'
 
@@ -56,7 +57,7 @@ try {
     $release = $releases | Where-Object { $_.tag_name -eq $tag } | Select-Object -First 1
     $body = (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.7.0.md') -Raw -Encoding utf8) + "`n`n---`n`n" + (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.7.0_EN.md') -Raw -Encoding utf8)
     if (-not $release) {
-      $payload = @{ tag_name=$tag; target_commitish=((& git rev-parse HEAD).Trim()); name='Quant Scholar Translator 0.7.0 · Professional Translation'; body=$body; draft=$true; prerelease=$false } | ConvertTo-Json -Depth 4
+      $payload = @{ tag_name=$tag; target_commitish=((& git rev-parse HEAD).Trim()); name=$releaseName; body=$body; draft=$true; prerelease=$false } | ConvertTo-Json -Depth 4
       $release = Invoke-RestMethod -Method Post -Uri "$apiBase/releases" -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($payload))
     }
     if (-not $release.draft) { throw 'Release already published; inspect it instead of overwriting assets.' }
