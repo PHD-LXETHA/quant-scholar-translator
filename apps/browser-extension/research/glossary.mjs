@@ -41,7 +41,8 @@ export async function migrateProfessionalGlossary(storage) {
   const saved = await storage.get([key, "glossaryTerms"]);
   if (saved[key]) {
     await upgradeProfessionalGlossary(storage);
-    return upgradeProfessionalGlossaryV3(storage);
+    await upgradeProfessionalGlossaryV3(storage);
+    return upgradeProfessionalGlossaryV4(storage);
   }
   const update = { [key]: true };
   if (Array.isArray(saved.glossaryTerms)) {
@@ -57,6 +58,7 @@ export async function migrateProfessionalGlossary(storage) {
   await storage.set(update);
   await upgradeProfessionalGlossary(storage);
   await upgradeProfessionalGlossaryV3(storage);
+  await upgradeProfessionalGlossaryV4(storage);
 }
 
 async function upgradeProfessionalGlossary(storage) {
@@ -80,7 +82,14 @@ async function upgradeProfessionalGlossary(storage) {
 }
 
 async function upgradeProfessionalGlossaryV3(storage) {
-  const key = 'quantScholarContextualGlossaryV3';
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV3');
+}
+
+async function upgradeProfessionalGlossaryV4(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV4');
+}
+
+async function mergeMissingProfessionalDefaults(storage, key) {
   const saved = await storage.get([key, 'glossaryTerms']);
   if (saved[key]) return;
   const update = { [key]: true };
@@ -134,36 +143,38 @@ export function selectGlossaryTerms(value, text, limit = 60) {
   if (!String(text || '').trim()) return terms.slice(0, limit);
   const input = normalizeTerm(text);
   const ranked = terms.map((item, index) => {
-    const score = Math.max(0, ...[item.source, ...(item.aliases || [])].map(alias => {
-      const term = normalizeTerm(alias), escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      return term && new RegExp(`(^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`).test(input) ? term.length : 0;
-    }));
-    return { item, index, score };
+    const matches = [item.source, ...(item.aliases || [])].map(normalizeTerm).filter(term => {
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return term && new RegExp(`(^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`).test(input);
+    });
+    const score = Math.max(0, ...matches.map(term => term.length));
+    return { item, index, score, matches };
   }).filter(row => row.score).sort((a, b) => b.score - a.score || a.index - b.index);
   // Generic user overrides take precedence over domain-qualified defaults.
-  const overrides = new Set(ranked.filter(r => !r.item.domain).map(r => r.item.source.toLowerCase()));
-  const filtered = ranked.filter(r => !r.item.domain || !overrides.has(r.item.source.toLowerCase()));
-  const groups = new Map();
+  const overrides = new Set(ranked.filter(r => !r.item.domain).map(r => normalizeTerm(r.item.source)));
+  const filtered = ranked.filter(r => !r.item.domain || !overrides.has(normalizeTerm(r.item.source)));
+  const aliasGroups = new Map();
   for (const row of filtered) {
-    const key = normalizeTerm(row.item.source);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(row);
+    for (const key of row.matches) {
+      if (!aliasGroups.has(key)) aliasGroups.set(key, []);
+      aliasGroups.get(key).push(row);
+    }
   }
   const domainEvidence = new Map();
   for (const row of filtered) {
     if (!row.item.domain) continue;
     domainEvidence.set(row.item.domain, (domainEvidence.get(row.item.domain) || 0) + row.score);
   }
-  const allowed = new Set();
-  for (const rows of groups.values()) {
+  const allowed = new Set(filtered);
+  for (const rows of aliasGroups.values()) {
     const targets = new Set(rows.map(row => row.item.target));
-    if (targets.size <= 1 || rows.some(row => !row.item.domain)) {
-      rows.forEach(row => allowed.add(row));
-      continue;
-    }
+    if (targets.size <= 1 || rows.some(row => !row.item.domain)) continue;
     const scores = rows.map(row => domainEvidence.get(row.item.domain) || 0);
     const best = Math.max(...scores);
-    if (scores.filter(score => score === best).length === 1) allowed.add(rows[scores.indexOf(best)]);
+    if (scores.filter(score => score === best).length === 1) {
+      const winner = rows[scores.indexOf(best)];
+      rows.filter(row => row !== winner).forEach(row => allowed.delete(row));
+    } else rows.forEach(row => allowed.delete(row));
     // A tie means the surrounding text cannot disambiguate safely. Omit both
     // hints and let the translation model retain or infer the source sense.
   }

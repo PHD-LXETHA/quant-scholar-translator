@@ -29,7 +29,7 @@ test("formats glossary as an explicit high-priority prompt section", () => {
   const prompt = formatGlossaryPrompt([{ source: "unbiased estimator", target: "无偏估计量" }]);
   assert.match(prompt, /用户术语表/);
   assert.match(prompt, /unbiased estimator => 无偏估计量/);
-  assert.ok(PROFESSIONAL_GLOSSARY_PRESET.length >= 480);
+  assert.ok(PROFESSIONAL_GLOSSARY_PRESET.length >= 700);
   assert.equal(PROFESSIONAL_GLOSSARY_PRESET.some(item => item.source === "layered oxide" || item.source === "oxygen redox"), false);
 });
 
@@ -89,6 +89,8 @@ test('cross-domain homonyms use surrounding evidence and omit unsafe ties', () =
   const statistics = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'The statistical power of the hypothesis test.');
   const mathematics = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'The matrix power follows from the eigenvalue.');
   const bare = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'return');
+  const bareCi = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'CI');
+  const bareGenerator = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'generator');
   const pairs = rows => new Set(rows.map(row => `${row.source}\0${row.target}`));
 
   assert.ok(pairs(programming).has('return\0返回'));
@@ -97,6 +99,20 @@ test('cross-domain homonyms use surrounding evidence and omit unsafe ties', () =
   assert.ok(pairs(statistics).has('power\0检验功效'));
   assert.ok(pairs(mathematics).has('power\0幂'));
   assert.equal(bare.some(row => row.source.toLowerCase() === 'return'), false);
+  assert.equal(bareCi.some(row => ['confidence interval', 'continuous integration'].includes(row.source)), false);
+  assert.equal(bareGenerator.some(row => ['infinitesimal generator', 'generator'].includes(row.source)), false);
+});
+
+test('conflicting aliases are resolved by nearby domain terms', () => {
+  const programming = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'CI pipeline and package manager');
+  const statistics = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, '95% CI for an unbiased estimator');
+  const mathematics = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'infinitesimal generator of a Markov process');
+  assert.ok(programming.some(row => row.target === '持续集成'));
+  assert.equal(programming.some(row => row.target === '置信区间'), false);
+  assert.ok(statistics.some(row => row.target === '置信区间'));
+  assert.equal(statistics.some(row => row.target === '持续集成'), false);
+  assert.ok(mathematics.some(row => row.target === '无穷小生成元'));
+  assert.equal(mathematics.some(row => row.target === '生成器'), false);
 });
 
 test('older nonempty library gains missing defaults without replacing customized translations or metadata', async () => {
@@ -112,17 +128,18 @@ test('older nonempty library gains missing defaults without replacing customized
   assert.equal(saved.glossaryTerms, previous);
 });
 
-test('V3 migration upgrades users who already completed V2 and keeps both qualified senses', async () => {
+test('V4 migration upgrades users who already completed V3 and keeps both qualified senses', async () => {
   const existing = PROFESSIONAL_GLOSSARY_PRESET.find(t => t.source === 'duration');
   const saved = {
     quantScholarMaterialTermsRemovedV1: true,
     quantScholarContextualGlossaryV2: true,
+    quantScholarContextualGlossaryV3: true,
     glossaryTerms: [existing]
   };
   const storage = { get: async () => saved, set: async value => Object.assign(saved, value) };
   await migrateProfessionalGlossary(storage);
-  assert.equal(saved.quantScholarContextualGlossaryV3, true);
-  assert.ok(saved.glossaryTerms.some(t => t.source === 'non-modellable risk factor'));
+  assert.equal(saved.quantScholarContextualGlossaryV4, true);
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'Longstaff-Schwartz method'));
   const power = saved.glossaryTerms.filter(t => t.source === 'power');
   assert.deepEqual(new Set(power.map(t => t.domain)), new Set(['mathematics', 'statistics']));
 });

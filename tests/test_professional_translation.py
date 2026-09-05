@@ -46,7 +46,7 @@ class ProfessionalTranslationTests(unittest.TestCase):
                 and all(isinstance(alias, str) and alias.strip() for alias in item.get("aliases", []))
                 for item in entries
             ))
-        self.assertGreaterEqual(total, 480)
+        self.assertGreaterEqual(total, 700)
 
     def test_cross_domain_homonyms_are_disambiguated_before_prompting(self):
         programming = MODULE.relevant_glossary("The function return value has a type annotation.", "programming")
@@ -61,8 +61,24 @@ class ProfessionalTranslationTests(unittest.TestCase):
         self.assertIn(("power", "幂"), {(item["source"], item["target"]) for item in mathematics})
 
     def test_bare_ambiguous_term_does_not_inject_contradictory_hints(self):
-        entries = MODULE.relevant_glossary("return", "auto")
-        self.assertEqual([item for item in entries if item["source"].lower() == "return"], [])
+        for text, conflicting_sources in (
+            ("return", {"return"}),
+            ("CI", {"confidence interval", "continuous integration"}),
+            ("generator", {"infinitesimal generator", "generator"}),
+        ):
+            entries = MODULE.relevant_glossary(text, "auto")
+            self.assertEqual([item for item in entries if item["source"].lower() in conflicting_sources], [])
+
+    def test_alias_conflicts_use_context_without_sending_both_meanings(self):
+        programming = MODULE.relevant_glossary("CI pipeline and package manager", "auto")
+        statistics = MODULE.relevant_glossary("95% CI for an unbiased estimator", "auto")
+        math = MODULE.relevant_glossary("infinitesimal generator of a Markov process", "auto")
+        self.assertIn("持续集成", {item["target"] for item in programming})
+        self.assertNotIn("置信区间", {item["target"] for item in programming})
+        self.assertIn("置信区间", {item["target"] for item in statistics})
+        self.assertNotIn("持续集成", {item["target"] for item in statistics})
+        self.assertIn("无穷小生成元", {item["target"] for item in math})
+        self.assertNotIn("生成器", {item["target"] for item in math})
 
     def test_new_professional_coverage_spans_all_learning_domains(self):
         cases = {

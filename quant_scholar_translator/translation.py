@@ -167,40 +167,44 @@ def relevant_glossary(text: str, domain: str, limit: int = 40) -> list[dict]:
         seen_names.add(name)
         candidates.extend({**item, "domain": name} for item in load_glossary(name))
     ranked = select_glossary(candidates, text, len(candidates))
-    groups: dict[str, list[dict]] = {}
-    for item in ranked:
-        groups.setdefault(normalize_term(item["source"]), []).append(item)
+    normalized_text = normalize_term(text)
 
-    def matched_score(item: dict) -> int:
-        normalized = normalize_term(text)
-        return max((
-            len(term)
-            for alias in [item["source"], *item.get("aliases", [])]
+    def matched_terms(item: dict) -> list[str]:
+        return [
+            term for alias in [item["source"], *item.get("aliases", [])]
             if (term := normalize_term(alias))
-            and re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", normalized)
-        ), default=0)
+            and re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", normalized_text)
+        ]
+
+    matches = {id(item): matched_terms(item) for item in ranked}
+    alias_groups: dict[str, list[dict]] = {}
+    for item in ranked:
+        for term in matches[id(item)]:
+            alias_groups.setdefault(term, []).append(item)
 
     evidence: dict[str, int] = {}
     for item in ranked:
-        evidence[item["domain"]] = evidence.get(item["domain"], 0) + matched_score(item)
+        evidence[item["domain"]] = evidence.get(item["domain"], 0) + max(map(len, matches[id(item)]), default=0)
 
-    allowed: set[int] = set()
-    for rows in groups.values():
+    allowed = {id(item) for item in ranked}
+    for rows in alias_groups.values():
         targets = {item["target"] for item in rows}
         if len(targets) <= 1:
-            allowed.add(id(rows[0]))
             continue
         # An explicitly selected domain is authoritative. In automatic mode,
         # use other matched terminology as evidence. If still tied, omit every
         # conflicting hint rather than feeding the model contradictory rules.
-        preferred = next((item for item in rows if item["domain"] == requested_domain), None)
-        if preferred:
-            allowed.add(id(preferred))
+        preferred = [item for item in rows if item["domain"] == requested_domain]
+        if len(preferred) == 1:
+            allowed.difference_update(id(item) for item in rows if item is not preferred[0])
             continue
         scores = [evidence.get(item["domain"], 0) for item in rows]
         best = max(scores)
         if scores.count(best) == 1:
-            allowed.add(id(rows[scores.index(best)]))
+            winner = rows[scores.index(best)]
+            allowed.difference_update(id(item) for item in rows if item is not winner)
+        else:
+            allowed.difference_update(id(item) for item in rows)
 
     return [item for item in ranked if id(item) in allowed][:limit]
 
