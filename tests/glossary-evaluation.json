@@ -1,16 +1,16 @@
 {
-  "standard": "Quant Scholar Professional Glossary Gate v2 (CFA/FRM)",
+  "standard": "Quant Scholar Professional Glossary Gate v3 (CQF/CFA/FRM)",
   "minimums": {
-    "totalTerms": 1150,
-    "totalAliases": 430,
+    "totalTerms": 1280,
+    "totalAliases": 515,
     "perDomain": {
       "academic": 95,
       "economics": 100,
       "finance": 230,
-      "mathematics": 145,
-      "programming": 140,
-      "quant_finance": 260,
-      "statistics": 145
+      "mathematics": 170,
+      "programming": 170,
+      "quant_finance": 310,
+      "statistics": 175
     }
   },
   "coverage": [
@@ -66,7 +66,23 @@
     {"domain":"quant_finance","text":"Incremental VaR, marginal VaR, and component VaR support risk-adjusted return on capital.","expectedTargets":["增量风险价值","边际风险价值","成分风险价值","风险调整资本收益率"]},
     {"domain":"quant_finance","text":"A credit support annex defines collateral for the netting set, while EPE measures counterparty credit risk.","expectedTargets":["信用支持附件","抵押品","净额结算集合","预期正敞口","交易对手信用风险"]},
     {"domain":"quant_finance","text":"RCSA and a key risk indicator support operational resilience and the business continuity plan.","expectedTargets":["风险与控制自我评估","关键风险指标","操作韧性","业务连续性计划"]},
-    {"domain":"quant_finance","text":"The liquidity coverage ratio requires HQLA, while the net stable funding ratio addresses maturity mismatch.","expectedTargets":["流动性覆盖率","优质流动性资产","净稳定资金比例","期限错配"]}
+    {"domain":"quant_finance","text":"The liquidity coverage ratio requires HQLA, while the net stable funding ratio addresses maturity mismatch.","expectedTargets":["流动性覆盖率","优质流动性资产","净稳定资金比例","期限错配"]},
+
+    {"domain":"mathematics","text":"A lognormal random walk leads to a transition density function governed by the Kolmogorov forward equation.","expectedTargets":["对数正态随机游走","转移密度函数","柯尔莫哥洛夫前向方程"]},
+    {"domain":"mathematics","text":"Compare the central difference and Douglas ADI scheme with von Neumann stability analysis.","expectedTargets":["中心差分","道格拉斯格式","冯·诺依曼稳定性分析"]},
+    {"domain":"quant_finance","text":"The GMVP and tangency portfolio lie in the investment opportunity set, while CAPM gives the CML and SML.","expectedTargets":["全局最小方差组合","切点组合","投资机会集","资本市场线","证券市场线"]},
+    {"domain":"quant_finance","text":"The ISDA Master Agreement and MTA govern initial margin and variation margin.","expectedTargets":["ISDA 主协议","最低转移金额","初始保证金","变动保证金"]},
+    {"domain":"quant_finance","text":"Derive the Black-Scholes PDE, apply Black's formula, and calibrate the volatility surface.","expectedTargets":["布莱克–斯科尔斯偏微分方程","布莱克公式","波动率曲面"]},
+    {"domain":"quant_finance","text":"Static hedging and discrete hedging leave different exposure to volatility arbitrage and feedback effects.","expectedTargets":["静态对冲","离散对冲","波动率套利","反馈效应"]},
+    {"domain":"statistics","text":"ERM compares lasso regression, ridge regression, elastic net, SVM, and random forests under the bias-variance tradeoff.","expectedTargets":["经验风险最小化","Lasso 回归","岭回归","弹性网","支持向量机","随机森林","偏差–方差权衡"]},
+    {"domain":"statistics","text":"K means clustering, HAC, t-SNE, and UMAP address different unsupervised learning tasks.","expectedTargets":["k 均值聚类","层次凝聚聚类","t 分布随机邻域嵌入","统一流形近似与投影"]},
+    {"domain":"programming","text":"An autoencoder, LSTM, CNN, GAN, and Word2Vec support deep learning and NLP workflows.","expectedTargets":["自编码器","长短期记忆网络","卷积神经网络","生成对抗网络","Word2Vec 词向量模型"]},
+    {"domain":"programming","text":"A Markov decision problem uses a value function, Bellman equations, and TD learning for deep reinforcement learning.","expectedTargets":["马尔可夫决策过程","价值函数","贝尔曼方程","时序差分学习","深度强化学习"]},
+    {"domain":"quant_finance","text":"Covariance denoising, covariance detoning, and NCO improve robust portfolio optimization.","expectedTargets":["协方差矩阵去噪","协方差矩阵去市场模态","嵌套聚类优化"]},
+    {"domain":"quant_finance","text":"Model calibration for the HJM model and LMM uses weighted Monte Carlo and the pathwise derivative method.","expectedTargets":["模型校准","希思–贾罗–莫顿模型","LIBOR 市场模型","加权蒙特卡洛","路径导数法"]},
+    {"domain":"quant_finance","text":"The Black-Cox model and an affine intensity model imply different default arrival times for a risky bond.","expectedTargets":["布莱克–考克斯模型","仿射强度模型","违约到达时刻","含信用风险债券"]},
+    {"domain":"quant_finance","text":"SBA, KVA, stressed correlation matrices, and multifactor Vasicek models appear in advanced risk management.","expectedTargets":["敏感度法","资本估值调整","压力相关矩阵","多因子 Vasicek 模型"]},
+    {"domain":"auto","text":"Qiskit builds a quantum circuit from qubits and quantum gates, while RAG enables an AI agent to use tool calling.","expectedTargets":["Qiskit 量子计算框架","量子线路","量子比特","量子门","检索增强生成","AI 智能体","工具调用"]}
   ],
   "ambiguity": [
     {"domain":"auto","text":"The function return value has a type annotation.","expectedTargets":["返回"],"forbiddenTargets":["收益率"]},

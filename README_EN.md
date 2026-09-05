@@ -69,7 +69,7 @@ Codex authentication is independent of the translation service process: closing 
 1. Open `chrome://extensions` and enable Developer mode.
 2. Select **Load unpacked**.
 3. Choose only `apps/browser-extension`; do not load its `learning` or `research` subdirectories.
-4. Refresh the target page, then click the QS extension icon to open the complete draggable in-page menu.
+4. Refresh the target page. Click the extension icon to show the bottom-right launcher, then click that launcher to open the complete in-page menu. Click the extension icon again to close the menu and hide the launcher.
 
 ## Layout-preserving PDF translation
 

@@ -4211,6 +4211,157 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "mathematics"
   },
   {
+    "source": "lognormal random walk",
+    "target": "对数正态随机游走",
+    "note": "价格水平由对数增量驱动的随机游走；注意与收益率服从正态分布的表述区分",
+    "domain": "mathematics"
+  },
+  {
+    "source": "transition density function",
+    "target": "转移密度函数",
+    "note": "给定初始状态后未来状态的条件概率密度；常与 Kolmogorov 方程和 Fokker–Planck 方程联系",
+    "aliases": [
+      "transition density"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "backward difference",
+    "target": "后向差分",
+    "note": "以当前点和前一网格点近似导数的单边差分",
+    "domain": "mathematics"
+  },
+  {
+    "source": "forward difference",
+    "target": "前向差分",
+    "note": "以当前点和后一网格点近似导数的单边差分",
+    "domain": "mathematics"
+  },
+  {
+    "source": "central difference",
+    "target": "中心差分",
+    "note": "利用当前点两侧网格值近似导数，通常具有更高对称精度",
+    "domain": "mathematics"
+  },
+  {
+    "source": "von Neumann stability analysis",
+    "target": "冯·诺依曼稳定性分析",
+    "note": "通过傅里叶模态放大因子分析线性差分格式稳定性",
+    "aliases": [
+      "von Neumann analysis"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Douglas scheme",
+    "target": "道格拉斯格式",
+    "note": "多维抛物型偏微分方程常用的交替方向隐式分裂格式",
+    "aliases": [
+      "Douglas ADI scheme"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "uniform random variate",
+    "target": "均匀随机变量样本",
+    "note": "从均匀分布生成的随机数；在模拟语境中 variate 指一次生成值",
+    "domain": "mathematics"
+  },
+  {
+    "source": "non-uniform random variate",
+    "target": "非均匀随机变量样本",
+    "note": "通过逆变换、拒绝采样等方法生成的非均匀分布随机数",
+    "domain": "mathematics"
+  },
+  {
+    "source": "radial basis function",
+    "target": "径向基函数",
+    "note": "仅依赖点到中心距离的基函数，常用于插值、逼近和数值 PDE",
+    "aliases": [
+      "RBF"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Gershgorin circle theorem",
+    "target": "格尔什戈林圆盘定理",
+    "note": "利用矩阵行或列元素给出特征值所在圆盘的定理",
+    "aliases": [
+      "Gershgorin theorem"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Newton-Raphson method",
+    "target": "牛顿–拉夫森法",
+    "note": "利用函数值和导数迭代求根；需关注初值和收敛条件",
+    "aliases": [
+      "Newton method",
+      "Newton's method"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "bisection method",
+    "target": "二分法",
+    "note": "在异号区间内反复折半的稳健求根方法",
+    "domain": "mathematics"
+  },
+  {
+    "source": "trapezoidal rule",
+    "target": "梯形求积公式",
+    "note": "用分段线性插值近似定积分的数值求积公式",
+    "aliases": [
+      "trapezium rule"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Simpson rule",
+    "target": "辛普森求积公式",
+    "note": "用分段二次多项式近似定积分的数值求积公式",
+    "aliases": [
+      "Simpson's rule"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Runge-Kutta method",
+    "target": "龙格–库塔法",
+    "note": "通过多个阶段斜率推进常微分方程数值解的方法族",
+    "aliases": [
+      "Runge-Kutta methods"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "LU decomposition",
+    "target": "LU 分解",
+    "note": "将矩阵分解为下三角矩阵与上三角矩阵之积",
+    "aliases": [
+      "LU factorization"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "successive over-relaxation",
+    "target": "逐次超松弛法",
+    "note": "对高斯–赛德尔迭代引入松弛因子的线性方程组迭代法",
+    "aliases": [
+      "SOR"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "cubic spline",
+    "target": "三次样条",
+    "note": "分段三次且具有规定光滑连续性的插值或拟合函数",
+    "aliases": [
+      "cubic spline interpolation"
+    ],
+    "domain": "mathematics"
+  },
+  {
     "source": "return value",
     "target": "返回值",
     "note": "programming",
@@ -5173,6 +5324,226 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "note": "请求审查并合并分支改动的协作对象；GitHub 常缩写 PR",
     "aliases": [
       "PR"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "accelerated gradient descent",
+    "target": "加速梯度下降",
+    "note": "利用动量或估计序列改善一阶优化收敛速度的方法族",
+    "domain": "programming"
+  },
+  {
+    "source": "feature selection",
+    "target": "特征选择",
+    "note": "从候选变量中选择与任务相关的子集；区别于构造新特征",
+    "domain": "programming"
+  },
+  {
+    "source": "Boruta",
+    "target": "Boruta 特征选择算法",
+    "note": "基于随机森林和影子特征比较的重要性筛选方法",
+    "aliases": [
+      "Boruta algorithm"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "sentiment analysis",
+    "target": "情感分析",
+    "note": "从文本识别观点倾向、情绪或语调的自然语言处理任务",
+    "domain": "programming"
+  },
+  {
+    "source": "autoencoder",
+    "target": "自编码器",
+    "note": "通过编码器与解码器重构输入以学习低维表征的神经网络",
+    "aliases": [
+      "autoencoders"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "perceptron",
+    "target": "感知机",
+    "note": "使用线性判别和阈值激活的基础神经元模型",
+    "aliases": [
+      "perceptron model"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "feedforward neural network",
+    "target": "前馈神经网络",
+    "note": "连接不形成循环、信息由输入层向输出层传播的神经网络",
+    "aliases": [
+      "feed-forward neural network"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "recurrent neural network",
+    "target": "循环神经网络",
+    "note": "通过循环状态处理序列依赖的神经网络",
+    "aliases": [
+      "RNN"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "long short-term memory",
+    "target": "长短期记忆网络",
+    "note": "通过门控机制缓解长序列梯度消失的循环神经网络结构",
+    "aliases": [
+      "LSTM"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "convolutional neural network",
+    "target": "卷积神经网络",
+    "note": "使用卷积核提取局部结构和共享参数的神经网络",
+    "aliases": [
+      "CNN"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "generative adversarial network",
+    "target": "生成对抗网络",
+    "note": "由生成器和判别器进行对抗训练的生成模型",
+    "aliases": [
+      "GAN"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "word vectorization",
+    "target": "词向量化",
+    "note": "把词项映射为数值向量表示的过程",
+    "aliases": [
+      "word vectorisation"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "Word2Vec",
+    "target": "Word2Vec 词向量模型",
+    "note": "通过上下文预测学习静态词嵌入的模型族",
+    "domain": "programming"
+  },
+  {
+    "source": "Markov decision process",
+    "target": "马尔可夫决策过程",
+    "note": "以状态、动作、转移概率和奖励描述序贯决策的问题框架",
+    "aliases": [
+      "MDP",
+      "Markov decision problem"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "value function",
+    "target": "价值函数",
+    "note": "强化学习中给定状态或状态–动作对的期望累计回报",
+    "requiresContext": true,
+    "domain": "programming"
+  },
+  {
+    "source": "Bellman equation",
+    "target": "贝尔曼方程",
+    "note": "将当前价值表示为即时奖励与后续价值递推关系的方程",
+    "aliases": [
+      "Bellman equations"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "temporal-difference learning",
+    "target": "时序差分学习",
+    "note": "结合自举估计与采样经验更新价值函数的强化学习方法",
+    "aliases": [
+      "TD learning"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "deep reinforcement learning",
+    "target": "深度强化学习",
+    "note": "用深度神经网络近似策略、价值函数或环境模型的强化学习",
+    "domain": "programming"
+  },
+  {
+    "source": "qubit",
+    "target": "量子比特",
+    "note": "量子计算的基本信息单元，可处于基态叠加",
+    "aliases": [
+      "qubits",
+      "quantum bit",
+      "quantum bits"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "quantum gate",
+    "target": "量子门",
+    "note": "作用于量子态的可逆酉变换",
+    "aliases": [
+      "quantum gates"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "quantum circuit",
+    "target": "量子线路",
+    "note": "按顺序组织量子门与测量操作的计算模型",
+    "aliases": [
+      "quantum circuits"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "Qiskit",
+    "target": "Qiskit 量子计算框架",
+    "note": "IBM 推出的开源量子计算软件开发工具包",
+    "domain": "programming"
+  },
+  {
+    "source": "experiment tracking",
+    "target": "实验跟踪",
+    "note": "记录训练运行的参数、指标、数据版本和模型产物以支持复现",
+    "domain": "programming"
+  },
+  {
+    "source": "multivariate LSTM",
+    "target": "多变量 LSTM",
+    "note": "同时使用多个时间序列特征的长短期记忆网络",
+    "domain": "programming"
+  },
+  {
+    "source": "retrieval-augmented generation",
+    "target": "检索增强生成",
+    "note": "先检索外部知识再将相关上下文提供给生成模型的方法",
+    "aliases": [
+      "RAG"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "AI agent",
+    "target": "AI 智能体",
+    "note": "能够感知状态、规划并调用工具完成目标的软件系统",
+    "aliases": [
+      "AI agents"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "tool calling",
+    "target": "工具调用",
+    "note": "模型以结构化参数请求外部函数或服务执行操作的机制",
+    "aliases": [
+      "function calling"
     ],
     "domain": "programming"
   },
@@ -6992,6 +7363,441 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "quant_finance"
   },
   {
+    "source": "state price deflator",
+    "target": "状态价格平减因子",
+    "note": "把未来状态依存支付贴现为当前价格的状态价格过程；与随机贴现因子密切相关",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "opportunity set",
+    "target": "投资机会集",
+    "note": "给定可投资资产和约束下所有可行风险收益组合的集合",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "global minimum variance portfolio",
+    "target": "全局最小方差组合",
+    "note": "可行集中方差最低的投资组合，与给定目标收益的最小方差组合区分",
+    "aliases": [
+      "GMVP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "tangency portfolio",
+    "target": "切点组合",
+    "note": "资本配置线与有效前沿相切、在给定无风险利率下夏普比率最高的风险资产组合",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "capital market line",
+    "target": "资本市场线",
+    "note": "均衡下无风险资产与市场组合形成的有效组合风险收益关系",
+    "aliases": [
+      "CML"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "security market line",
+    "target": "证券市场线",
+    "note": "CAPM 中预期收益与系统性风险 Beta 的线性关系",
+    "aliases": [
+      "SML"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "minimum transfer amount",
+    "target": "最低转移金额",
+    "note": "抵押品协议中触发追加或返还抵押品转移的最低金额",
+    "aliases": [
+      "MTA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "initial margin",
+    "target": "初始保证金",
+    "note": "为覆盖潜在未来暴露而预先缴纳或交换的保证金",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "variation margin",
+    "target": "变动保证金",
+    "note": "根据逐日盯市损益交换、覆盖当前暴露的保证金",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "ISDA master agreement",
+    "target": "ISDA 主协议",
+    "note": "规范场外衍生品交易关系、净额结算和违约处理的标准主协议",
+    "aliases": [
+      "ISDA Master Agreement"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Black-Scholes PDE",
+    "target": "布莱克–斯科尔斯偏微分方程",
+    "note": "由无套利动态复制推导的期权定价偏微分方程",
+    "aliases": [
+      "Black-Scholes equation"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Black formula",
+    "target": "布莱克公式",
+    "note": "以远期价格和贴现因子定价欧式期权的公式；常用于期货、互换期权和利率产品",
+    "aliases": [
+      "Black's formula",
+      "Black 76 formula",
+      "Black-76"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "volatility surface",
+    "target": "波动率曲面",
+    "note": "隐含波动率关于行权价或货币性与到期时间的二维结构",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "volatility arbitrage",
+    "target": "波动率套利",
+    "note": "交易隐含波动率与预期或实现波动率之间差异的策略；仍承担模型、跳跃和对冲风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "static hedging",
+    "target": "静态对冲",
+    "note": "建立后无需或很少动态调整的复制或风险缓释组合",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "discrete hedging",
+    "target": "离散对冲",
+    "note": "仅在离散时点再平衡的动态对冲，会产生再平衡误差",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "feedback effect",
+    "target": "反馈效应",
+    "note": "对冲或交易行为反过来影响价格和波动率的市场反馈机制",
+    "aliases": [
+      "feedback effects"
+    ],
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "dynamic asset allocation",
+    "target": "动态资产配置",
+    "note": "随市场状态、预测信号或投资者状态变化而调整资产权重",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "vectorized backtesting",
+    "target": "向量化回测",
+    "note": "以数组批量运算计算信号、持仓和收益的回测方式；需防止前视偏差",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "empirical SDE",
+    "target": "经验随机微分方程",
+    "note": "从数据估计漂移和扩散函数得到的随机动力模型",
+    "aliases": [
+      "empirical stochastic differential equation"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "model-free pricing",
+    "target": "无模型定价",
+    "note": "尽量不依赖特定参数化动态模型、由可观测价格或无套利关系推导定价界或价格",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "covariance matrix denoising",
+    "target": "协方差矩阵去噪",
+    "note": "削弱有限样本噪声特征值对协方差估计和组合优化的影响",
+    "aliases": [
+      "covariance denoising"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "covariance matrix detoning",
+    "target": "协方差矩阵去市场模态",
+    "note": "移除主导市场共同因子对应特征模态，以突出相对相关结构",
+    "aliases": [
+      "covariance detoning"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "nested clustered optimization",
+    "target": "嵌套聚类优化",
+    "note": "利用层次聚类和簇内簇间分解改善组合优化稳定性",
+    "aliases": [
+      "NCO",
+      "nested cluster optimization"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "short-rate model",
+    "target": "短期利率模型",
+    "note": "直接描述瞬时短期无风险利率动态的利率模型",
+    "aliases": [
+      "short rate model"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "one-factor model",
+    "target": "单因子模型",
+    "note": "仅以一个随机因子驱动资产或利率动态的模型",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "two-factor model",
+    "target": "双因子模型",
+    "note": "以两个随机因子描述收益率曲线或资产动态的模型",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "model calibration",
+    "target": "模型校准",
+    "note": "选择模型参数使模型价格、曲线或统计量匹配市场观测",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "curve fitting",
+    "target": "曲线拟合",
+    "note": "由离散市场报价估计连续曲线；需说明插值、平滑和无套利约束",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Heath-Jarrow-Morton model",
+    "target": "希思–贾罗–莫顿模型",
+    "note": "直接建模整条瞬时远期利率曲线并施加无套利漂移约束的框架",
+    "aliases": [
+      "HJM",
+      "HJM model",
+      "HJM framework"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Brace-Gatarek-Musiela model",
+    "target": "布雷斯–加塔雷克–穆谢拉模型",
+    "note": "在相应远期测度下建模远期 LIBOR 动态的市场模型",
+    "aliases": [
+      "BGM model"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "LIBOR market model",
+    "target": "LIBOR 市场模型",
+    "note": "直接建模一组可观察远期利率的无套利利率模型",
+    "aliases": [
+      "LMM"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "factor reduction",
+    "target": "因子降维",
+    "note": "用主成分等方法减少驱动收益率曲线或风险因子的维数",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "efficiency ratio",
+    "target": "模拟效率比",
+    "note": "蒙特卡洛方差缩减语境下比较估计方差与计算成本的效率指标",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "weighted Monte Carlo",
+    "target": "加权蒙特卡洛",
+    "note": "重新赋予模拟路径权重以匹配市场约束或目标分布的蒙特卡洛方法",
+    "aliases": [
+      "WMC"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "pathwise derivative method",
+    "target": "路径导数法",
+    "note": "沿模拟路径对支付函数求导以估计价格敏感度的方法",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "likelihood ratio method",
+    "target": "似然比法",
+    "note": "通过对概率密度求导构造蒙特卡洛敏感度估计的方法",
+    "aliases": [
+      "score function method"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Black-Cox model",
+    "target": "布莱克–考克斯模型",
+    "note": "以公司资产价值首次触及违约边界刻画违约的结构化信用风险模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "inhomogeneous Poisson process",
+    "target": "非齐次泊松过程",
+    "note": "到达强度随时间变化的泊松过程，信用模型中可用于违约到达",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "default arrival time",
+    "target": "违约到达时刻",
+    "note": "强度模型中由随机到达机制定义的违约时点",
+    "aliases": [
+      "default arrival times"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risky bond",
+    "target": "含信用风险债券",
+    "note": "存在发行人违约及回收不确定性的债券",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "affine intensity model",
+    "target": "仿射强度模型",
+    "note": "违约强度动态和债券价格具有仿射结构的约化式信用模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "upfront premium",
+    "target": "前端保费",
+    "note": "CDS 成交时一次性支付以配合标准票息的金额；符号取决于合约方向",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "accrual on default",
+    "target": "违约应计保费",
+    "note": "CDS 在违约结算时支付从上一付息日至违约日累计的保费",
+    "aliases": [
+      "accrued premium on default"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "compound correlation",
+    "target": "复合相关性",
+    "note": "CDO 分层定价中使单一分层模型价格匹配市场的相关参数",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "base correlation",
+    "target": "基础相关性",
+    "note": "以权益分层从零至某脱离点标定的相关性曲面",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "rank correlation",
+    "target": "秩相关",
+    "note": "基于排序而非原始数值的依赖度量，常用于 Copula 校准",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "capital valuation adjustment",
+    "target": "资本估值调整",
+    "note": "反映交易存续期内监管或经济资本融资成本的估值调整",
+    "aliases": [
+      "KVA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "sensitivities-based approach",
+    "target": "敏感度法",
+    "note": "FRTB 标准法中以 Delta、Vega 和曲率敏感度聚合市场风险资本的方法",
+    "aliases": [
+      "SBA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "multifactor Vasicek model",
+    "target": "多因子 Vasicek 模型",
+    "note": "以多个均值回复高斯因子描述利率或信用变量的 Vasicek 扩展",
+    "aliases": [
+      "multifactor Vasicek models"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "stressed correlation matrix",
+    "target": "压力相关矩阵",
+    "note": "反映压力期依赖结构的相关矩阵；需检查半正定性和一致性",
+    "aliases": [
+      "stressed correlation matrices"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "dynamic portfolio optimization",
+    "target": "动态投资组合优化",
+    "note": "跨多个决策期在状态演化和约束下优化资产配置的随机控制问题",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Kalman filter",
+    "target": "卡尔曼滤波",
+    "note": "在线性高斯状态空间模型中递推估计隐状态的算法",
+    "aliases": [
+      "Kalman filtering"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk budgeting",
+    "target": "风险预算",
+    "note": "将组合总风险分配给资产、策略或风险因子并据此构建组合",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "over-optimization",
+    "target": "过度优化",
+    "note": "策略对历史样本和参数搜索过度拟合，导致样本外失效",
+    "aliases": [
+      "overoptimization"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "volatility risk premium",
+    "target": "波动率风险溢价",
+    "note": "期权隐含波动率对应风险中性预期与实际预期实现波动率之间的补偿差异",
+    "aliases": [
+      "VRP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "gamma trading",
+    "target": "Gamma 交易",
+    "note": "通过动态 Delta 对冲交易期权凸性与实现波动率的策略；收益受成本和跳跃影响",
+    "domain": "quant_finance"
+  },
+  {
     "source": "statistical power",
     "target": "统计功效",
     "note": "hypothesis testing",
@@ -8103,6 +8909,232 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "identification scheme",
     "target": "识别方案",
     "note": "在结构模型中施加短期、长期、符号或异方差等限制以识别结构冲击的方案",
+    "domain": "statistics"
+  },
+  {
+    "source": "stylized fact",
+    "target": "典型事实",
+    "note": "跨样本反复观察到、用于约束模型的经验规律；不是严格普适定律",
+    "aliases": [
+      "stylized facts"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "empirical risk minimization",
+    "target": "经验风险最小化",
+    "note": "最小化样本平均损失以近似总体风险的学习原则",
+    "aliases": [
+      "ERM"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "bias-variance tradeoff",
+    "target": "偏差–方差权衡",
+    "note": "模型复杂度在系统偏差与抽样方差之间的权衡",
+    "aliases": [
+      "bias variance tradeoff"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "probabilistic inference",
+    "target": "概率推断",
+    "note": "依据概率模型由观测数据推断隐变量或未知参数",
+    "domain": "statistics"
+  },
+  {
+    "source": "Gaussian process",
+    "target": "高斯过程",
+    "note": "任意有限维边缘分布均为联合高斯分布的随机过程；机器学习中常用作函数先验",
+    "aliases": [
+      "GP"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "lasso regression",
+    "target": "Lasso 回归",
+    "note": "使用 L1 正则化产生稀疏系数的回归方法",
+    "aliases": [
+      "LASSO"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "ridge regression",
+    "target": "岭回归",
+    "note": "使用 L2 正则化收缩系数的回归方法",
+    "domain": "statistics"
+  },
+  {
+    "source": "elastic net",
+    "target": "弹性网",
+    "note": "结合 L1 与 L2 正则化的回归方法",
+    "aliases": [
+      "elastic-net"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "softmax regression",
+    "target": "Softmax 回归",
+    "note": "多类别逻辑回归模型；输出归一化类别概率",
+    "aliases": [
+      "multinomial logistic regression"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "k-nearest neighbors",
+    "target": "k 近邻算法",
+    "note": "依据特征空间中最近的 k 个训练样本进行预测",
+    "aliases": [
+      "k-nearest neighbour",
+      "kNN",
+      "k-NN"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "naive Bayes classifier",
+    "target": "朴素贝叶斯分类器",
+    "note": "在给定类别下假设特征条件独立的概率分类器",
+    "aliases": [
+      "naive Bayes"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "support vector machine",
+    "target": "支持向量机",
+    "note": "通过最大间隔超平面进行分类或回归的核方法",
+    "aliases": [
+      "SVM"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "classification and regression tree",
+    "target": "分类与回归树",
+    "note": "通过递归划分构造分类树或回归树",
+    "aliases": [
+      "CART"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "Gini impurity",
+    "target": "基尼不纯度",
+    "note": "决策树分类节点的类别混杂度量；不要与收入基尼系数混同",
+    "aliases": [
+      "Gini index"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "bagging",
+    "target": "装袋法",
+    "note": "对自助样本并行训练多个模型并聚合预测，以降低方差",
+    "aliases": [
+      "bootstrap aggregating"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "random forest",
+    "target": "随机森林",
+    "note": "结合自助抽样和随机特征选择的树集成方法",
+    "aliases": [
+      "random forests"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "boosting",
+    "target": "提升法",
+    "note": "顺序组合弱学习器以降低预测误差的集成思想",
+    "domain": "statistics"
+  },
+  {
+    "source": "gradient boosted regression tree",
+    "target": "梯度提升回归树",
+    "note": "以回归树逐步拟合损失函数负梯度的提升模型",
+    "aliases": [
+      "GBRT",
+      "gradient boosting regression tree"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "AdaBoost",
+    "target": "自适应提升",
+    "note": "通过提高错分样本权重顺序训练弱学习器的提升算法",
+    "aliases": [
+      "adaptive boosting"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "class imbalance",
+    "target": "类别不平衡",
+    "note": "不同类别样本数量显著不均，评价与采样策略需相应调整",
+    "domain": "statistics"
+  },
+  {
+    "source": "k-means clustering",
+    "target": "k 均值聚类",
+    "note": "最小化样本到所属簇中心平方距离的聚类算法",
+    "aliases": [
+      "k-means",
+      "K means clustering"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "self-organizing map",
+    "target": "自组织映射",
+    "note": "通过竞争学习将高维数据映射到低维拓扑网格的神经模型",
+    "aliases": [
+      "SOM",
+      "self-organising map"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "hierarchical agglomerative clustering",
+    "target": "层次凝聚聚类",
+    "note": "由单点簇开始逐步合并的自底向上层次聚类",
+    "aliases": [
+      "HAC",
+      "agglomerative clustering"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "curse of dimensionality",
+    "target": "维数灾难",
+    "note": "维度增加导致样本空间稀疏、距离退化和估计难度上升",
+    "domain": "statistics"
+  },
+  {
+    "source": "t-distributed stochastic neighbor embedding",
+    "target": "t 分布随机邻域嵌入",
+    "note": "强调局部邻域结构的非线性降维可视化方法",
+    "aliases": [
+      "t-SNE",
+      "TSNE"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "uniform manifold approximation and projection",
+    "target": "统一流形近似与投影",
+    "note": "基于流形与图结构的非线性降维方法",
+    "aliases": [
+      "UMAP"
+    ],
     "domain": "statistics"
   }
 ].map(Object.freeze));

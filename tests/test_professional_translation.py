@@ -112,6 +112,20 @@ class ProfessionalTranslationTests(unittest.TestCase):
             targets = {item["target"] for item in MODULE.relevant_glossary(source, domain)}
             self.assertTrue(expected.issubset(targets), (domain, expected - targets))
 
+    def test_cqf_curriculum_terms_cover_all_six_modules_and_advanced_electives(self):
+        cases = (
+            ("mathematics", "transition density function and von Neumann stability analysis", {"转移密度函数", "冯·诺依曼稳定性分析"}),
+            ("quant_finance", "GMVP, initial margin, and the ISDA Master Agreement", {"全局最小方差组合", "初始保证金", "ISDA 主协议"}),
+            ("quant_finance", "Black-Scholes PDE, Black's formula, and the volatility surface", {"布莱克–斯科尔斯偏微分方程", "布莱克公式", "波动率曲面"}),
+            ("statistics", "ERM with elastic net, SVM, and random forests", {"经验风险最小化", "弹性网", "支持向量机", "随机森林"}),
+            ("programming", "t-SNE, LSTM, Word2Vec, and TD learning", {"t 分布随机邻域嵌入", "长短期记忆网络", "Word2Vec 词向量模型", "时序差分学习"}),
+            ("quant_finance", "HJM, LMM, weighted Monte Carlo, and the Black-Cox model", {"希思–贾罗–莫顿模型", "LIBOR 市场模型", "加权蒙特卡洛", "布莱克–考克斯模型"}),
+            ("auto", "SBA, risk budgeting, Qiskit, and RAG", {"敏感度法", "风险预算", "Qiskit 量子计算框架", "检索增强生成"}),
+        )
+        for domain, source, expected in cases:
+            targets = {item["target"] for item in MODULE.relevant_glossary(source, domain)}
+            self.assertTrue(expected.issubset(targets), (domain, expected - targets))
+
     def test_contextual_retrieval_includes_cqf_math_even_in_quant_domain(self):
         entries = MODULE.relevant_glossary("Ito’s lemma and quadratic variation under a risk neutral measure; VaR and ES versus EL.", "quant_finance")
         prompt = MODULE.glossary_prompt(entries)

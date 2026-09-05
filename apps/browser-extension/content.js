@@ -415,8 +415,8 @@ setTimeout(tryRestoreVideoArchive, 1500);
 setInterval(tryRestoreVideoArchive, 10000);
 
 // ---------------------------------------------------------------------------
-// Page-level floating control. Chrome owns the toolbar-popup anchor, so this
-// is a fixed bottom-right entry point, shared with the toolbar action.
+// Page-level floating control. It starts hidden so it never covers an ordinary
+// reading page; the extension toolbar toggles the entire entry point.
 // It lives in a shadow root to avoid inheriting styles from arbitrary sites.
 // ---------------------------------------------------------------------------
 const FLOATING_HOST_ID = 'quant-scholar-floating-control';
@@ -432,6 +432,8 @@ function mountFloatingMenu() {
   host.style.bottom = 'max(20px, env(safe-area-inset-bottom))';
   host.style.right = 'max(20px, env(safe-area-inset-right))';
   host.style.pointerEvents = 'none';
+  host.style.display = 'none';
+  host.hidden = true;
   const shadow = host.attachShadow({ mode: 'open' });
   shadow.innerHTML = `
     <style>
@@ -478,6 +480,12 @@ function mountFloatingMenu() {
     if (open) refreshStatus();
     wake();
   };
+  const setControlVisible = visible => {
+    if (!visible) setPanelOpen(false);
+    host.hidden = !visible;
+    host.style.display = visible ? 'block' : 'none';
+    if (visible) wake();
+  };
   const refreshStatus = async () => {
     try {
       const result = await chrome.runtime.sendMessage({ target: 'background', type: 'capture:status' });
@@ -492,7 +500,13 @@ function mountFloatingMenu() {
   shell.addEventListener('pointerenter', wake);
   setInterval(() => { if (!panel.hidden) refreshStatus(); }, 1800);
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type === 'floating:toggle-visibility') {
+      setControlVisible(host.hidden);
+      sendResponse({ ok: true, visible: !host.hidden });
+      return true;
+    }
     if (message?.type === 'floating:toggle-menu') {
+      setControlVisible(true);
       setPanelOpen(panel.hidden);
       sendResponse({ ok: true, open: !panel.hidden });
       return true;

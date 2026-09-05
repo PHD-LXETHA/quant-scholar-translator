@@ -171,6 +171,27 @@ test('V6 migration adds CFA and FRM terms without replacing an existing custom t
   assert.ok(saved.glossaryTerms.some(t => t.source === 'liquidity coverage ratio'));
 });
 
+test('V7 migration adds CQF curriculum terms without replacing an existing custom term', async () => {
+  const custom = { source: 'model calibration', target: '我的模型校准译法' };
+  const saved = {
+    quantScholarMaterialTermsRemovedV1: true,
+    quantScholarContextualGlossaryV2: true,
+    quantScholarContextualGlossaryV3: true,
+    quantScholarContextualGlossaryV4: true,
+    quantScholarContextualGlossaryV5: true,
+    quantScholarContextualGlossaryV6: true,
+    glossaryTerms: [custom]
+  };
+  const storage = { get: async () => saved, set: async value => Object.assign(saved, value) };
+  await migrateProfessionalGlossary(storage);
+  assert.equal(saved.quantScholarContextualGlossaryV7, true);
+  assert.equal(saved.glossaryTerms.filter(t => t.source === 'model calibration').length, 1);
+  assert.equal(saved.glossaryTerms.find(t => t.source === 'model calibration').target, '我的模型校准译法');
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'Black-Scholes PDE'));
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'nested clustered optimization'));
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'temporal-difference learning'));
+});
+
 test('library is domain-qualified, documented and free of conflicting duplicates within each domain', () => {
   const keys = new Set();
   for (const entry of PROFESSIONAL_GLOSSARY_PRESET) {

@@ -44,13 +44,17 @@ test('learning workspace supports Codex and Kimi subscriptions without an extern
   assert.doesNotMatch(`${settings}\n${background}`, /x-api-key|\/v1\/transcript/i);
 });
 
-test('toolbar click opens the fixed page menu, not a Chrome-anchored popup, new tab or side panel', () => {
+test('toolbar click toggles the floating entry point, not a Chrome popup, new tab or side panel', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('manifest.json', root), 'utf8'));
   const coreBackground = fs.readFileSync(new URL('background.js', root), 'utf8');
   const background = fs.readFileSync(new URL('learning/background.js', root), 'utf8');
+  const content = fs.readFileSync(new URL('content.js', root), 'utf8');
   assert.equal(manifest.action.default_popup, undefined);
   assert.match(coreBackground, /chrome\.action\.onClicked\.addListener/);
-  assert.match(coreBackground, /floating:toggle-menu/);
+  assert.match(coreBackground, /floating:toggle-visibility/);
+  assert.match(content, /host\.hidden = true/);
+  assert.match(content, /host\.style\.display = visible \? 'block' : 'none'/);
+  assert.match(content, /setControlVisible\(host\.hidden\)/);
   assert.doesNotMatch(coreBackground, /tabs\.create\(\{ url: chrome\.runtime\.getURL\('popup\/popup.html'\)/);
   assert.match(background, /setPanelBehavior\(\{ openPanelOnActionClick: false \}\)/);
   assert.doesNotMatch(background, /chrome\.action\.onClicked\.addListener/);

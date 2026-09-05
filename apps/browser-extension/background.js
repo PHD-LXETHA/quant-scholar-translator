@@ -476,9 +476,9 @@ function stopBackend() {
   backendState = 'down';
 }
 
-// The toolbar icon opens the page-level floating workspace. Chrome's own
-// action popup is intentionally disabled. Unsupported pages get a toolbar
-// hint, never a surprise full-page workspace or a second menu.
+// The toolbar icon shows or hides the page-level floating entry point. The
+// launcher itself opens the complete workspace, so ordinary reading pages stay
+// untouched until the user explicitly enables it for that tab.
 const toolbarActions = new Set();
 chrome.action.onClicked.addListener(async tab => {
   if (!tab?.id || toolbarActions.has(tab.id)) return;
@@ -486,15 +486,15 @@ chrome.action.onClicked.addListener(async tab => {
   try {
     if (!/^(https?|file):/i.test(tab.url || '')) throw new Error('请切换到普通网页后使用翻译菜单');
     await ensureContentScript(tab.id);
-    const result = await chrome.tabs.sendMessage(tab.id, { type: 'floating:toggle-menu' }, { frameId: 0 });
-    if (!result?.ok) throw new Error('网页菜单未响应');
+    const result = await chrome.tabs.sendMessage(tab.id, { type: 'floating:toggle-visibility' }, { frameId: 0 });
+    if (!result?.ok) throw new Error('网页悬浮入口未响应');
     await chrome.action.setBadgeText({ tabId: tab.id, text: '' });
-    await chrome.action.setTitle({ tabId: tab.id, title: 'Quant Scholar · 打开 / 关闭网页翻译菜单' });
+    await chrome.action.setTitle({ tabId: tab.id, title: 'Quant Scholar · 显示 / 隐藏网页悬浮按钮' });
   } catch (error) {
     await Promise.allSettled([
       chrome.action.setBadgeText({ tabId: tab.id, text: '!' }),
       chrome.action.setBadgeBackgroundColor({ tabId: tab.id, color: '#9b651b' }),
-      chrome.action.setTitle({ tabId: tab.id, title: '此页无法打开翻译菜单，请切换到普通网页并刷新后重试。' }),
+      chrome.action.setTitle({ tabId: tab.id, title: '此页无法显示悬浮按钮，请切换到普通网页并刷新后重试。' }),
     ]);
     console.info('[quant-scholar] toolbar menu unavailable:', String(error));
   } finally {
