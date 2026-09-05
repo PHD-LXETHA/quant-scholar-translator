@@ -2,20 +2,33 @@
   if (window.__researchTranslatorLoaded) return;
   window.__researchTranslatorLoaded = true;
 
-  const state = { records: [], translated: false, running: false, cancelled: false, quickText: "", quickHost: null, quickShadow: null };
+  const state = { records: [], translated: false, running: false, cancelled: false, progress: null, quickText: "", quickHost: null, quickShadow: null };
+  document.querySelector(".rt-hud")?.remove();
   const SKIP_TAGS = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "INPUT", "SELECT", "OPTION", "CODE", "PRE", "KBD", "SAMP", "SVG", "MATH", "CANVAS"]);
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type === "RESEARCH_PING") { sendResponse({ ok: true }); return; }
+    if (message?.type === "GET_PAGE_KNOWLEDGE") {
+      sendResponse({ ok: true, running: state.running, title: document.title, url: location.href,
+        segments: state.running ? [] : state.records.filter(record => record.translated && ownsRecord(record)).map(record => ({ source: record.original, translation: record.translated })) });
+      return;
+    }
     if (message?.type === "TRANSLATE_PAGE") {
       translatePage().then(sendResponse); return true;
     }
     if (message?.type === "SHOW_ORIGINAL") { showOriginal(); sendResponse({ ok: true }); }
     if (message?.type === "SHOW_TRANSLATION") { showTranslation(); sendResponse({ ok: true }); }
     if (message?.type === "TOGGLE_TRANSLATION") {
-      if (!state.records.length) translatePage(); else state.translated ? showOriginal() : showTranslation();
-      sendResponse({ ok: true });
+      if (state.running) { sendResponse({ ok: false, error: "网页翻译正在进行，请完成后再切换" }); return; }
+      if (!state.records.length) { sendResponse({ ok: false, error: "此页尚无译文，请先点击“翻译当前网页”" }); return; }
+      state.translated ? showOriginal() : showTranslation();
+      sendResponse({ ok: true, translated: state.translated, count: state.records.length });
     }
-    if (message?.type === "GET_STATUS") sendResponse({ running: state.running, translated: state.translated, count: state.records.length });
+    if (message?.type === "GET_STATUS") sendResponse({ ok: true, running: state.running, cancelled: state.cancelled, translated: state.translated, count: state.records.length, progress: state.progress });
+    if (message?.type === "CANCEL_PAGE_TRANSLATION") {
+      state.cancelled = state.running;
+      sendResponse({ ok: true, running: state.running });
+    }
     if (message?.type === "QUICK_TRANSLATE_SELECTION") { quickTranslate(message.text, null); sendResponse({ ok: true }); }
   });
 
@@ -33,34 +46,45 @@
 
   async function translatePage() {
     if (state.running) return { ok: false, error: "翻译正在进行中" };
+    state.records = state.records.filter(ownsRecord);
     if (state.records.length) { showTranslation(); return { ok: true, count: state.records.length }; }
     state.running = true; state.cancelled = false;
+    state.progress = { started: Date.now(), finished: null, done: 0, total: 0, error: "" };
     const nodes = collectTextNodes();
-    if (!nodes.length) { state.running = false; return { ok: false, error: "此页面没有找到可翻译正文" }; }
-    const batches = makeBatches(nodes, 6000, 45);
-    const hud = createHud(batches.length);
+    if (!nodes.length) { state.running = false; state.progress.error = "此页面没有找到可翻译正文"; state.progress.finished = Date.now(); return { ok: false, error: state.progress.error }; }
+    // Return the first reading-sized block sooner; keep later requests large
+    // to avoid repeated CLI startup overhead. Never split an individual text node.
+    const batches = makeBatches(nodes, 6000, 45, 1600, 12);
+    state.progress.total = batches.length;
     try {
       let done = 0;
       for (const batch of batches) {
         if (state.cancelled) throw new Error("已取消");
-        const result = await chrome.runtime.sendMessage({ type: "TRANSLATE_BATCH", texts: batch.map(x => x.original) });
+        // Identical text within the same request shares the same context.
+        // Do not reuse translations across different batches or documents.
+        const texts = [...new Set(batch.map(x => x.original))];
+        const result = await chrome.runtime.sendMessage({ type: "TRANSLATE_BATCH", texts });
+        if (state.cancelled) throw new Error("已取消，已恢复原文");
         if (!result?.ok) throw new Error(result?.error || "翻译失败");
-        batch.forEach((record, index) => {
-          record.translated = result.translations[index];
-          if (record.node.isConnected && record.node.nodeValue === record.original) record.node.nodeValue = record.translated;
-          state.records.push(record);
+        if (!Array.isArray(result.translations) || result.translations.length !== texts.length || result.translations.some(text => typeof text !== "string" || !text.trim())) throw new Error("翻译结果不完整，已恢复原文，请重试");
+        const translations = new Map(texts.map((text, index) => [text, result.translations[index]]));
+        batch.forEach(record => {
+          record.translated = translations.get(record.original);
+          if (record.node.isConnected && record.node.nodeValue === record.original) {
+            record.node.nodeValue = record.translated;
+            state.records.push(record);
+          }
         });
-        done += 1; hud.update(done, batches.length);
+        done += 1; state.progress.done = done;
       }
       state.translated = true;
-      hud.finish(`已覆盖翻译 ${state.records.length} 段`);
       return { ok: true, count: state.records.length };
     } catch (error) {
       showOriginal();
       state.records = [];
       state.translated = false;
-      hud.fail(error.message); return { ok: false, error: error.message };
-    } finally { state.running = false; }
+      state.progress.error = error.message; return { ok: false, error: error.message };
+    } finally { state.running = false; state.progress.finished = Date.now(); }
   }
 
   function collectTextNodes() {
@@ -70,7 +94,7 @@
         const parent = node.parentElement;
         const text = node.nodeValue?.trim();
         if (!parent || !text || text.length < 2 || SKIP_TAGS.has(parent.tagName)) return NodeFilter.FILTER_REJECT;
-        if (parent.closest("[contenteditable='true'], .rt-hud, [aria-hidden='true']")) return NodeFilter.FILTER_REJECT;
+        if (parent.closest("[contenteditable]:not([contenteditable='false']), .rt-hud, .rt-quick-host, #quant-scholar-floating-control, #kami-subs-overlay, [aria-hidden='true'], code, pre, math, svg")) return NodeFilter.FILTER_REJECT;
         if (/^[\d\s.,;:()[\]{}+\-–—=<>/%°×·|]+$/.test(text)) return NodeFilter.FILTER_REJECT;
         if (isInvisible(parent)) return NodeFilter.FILTER_REJECT;
         return NodeFilter.FILTER_ACCEPT;
@@ -83,41 +107,32 @@
 
   function isInvisible(element) {
     const style = getComputedStyle(element);
-    return style.display === "none" || style.visibility === "hidden";
+    return style.display === "none" || style.visibility === "hidden" || element.getClientRects().length === 0;
   }
 
-  function makeBatches(records, limit, maxItems) {
+  function makeBatches(records, limit, maxItems, firstLimit = limit, firstMaxItems = maxItems) {
     const batches = []; let batch = []; let size = 0;
     for (const record of records) {
       const length = record.original.length + 8;
-      if (batch.length && (size + length > limit || batch.length >= maxItems)) { batches.push(batch); batch = []; size = 0; }
+      const charLimit = batches.length ? limit : firstLimit;
+      const itemLimit = batches.length ? maxItems : firstMaxItems;
+      if (batch.length && (size + length > charLimit || batch.length >= itemLimit)) { batches.push(batch); batch = []; size = 0; }
       batch.push(record); size += length;
     }
     if (batch.length) batches.push(batch);
     return batches;
   }
 
+  function ownsRecord(record) {
+    return record.node.isConnected && (record.node.nodeValue === record.original || record.node.nodeValue === record.translated);
+  }
   function showOriginal() {
-    for (const record of state.records) if (record.node.isConnected) record.node.nodeValue = record.original;
+    for (const record of state.records) if (record.node.isConnected && record.node.nodeValue === record.translated) record.node.nodeValue = record.original;
     state.translated = false;
   }
   function showTranslation() {
-    for (const record of state.records) if (record.node.isConnected && record.translated) record.node.nodeValue = record.translated;
+    for (const record of state.records) if (record.node.isConnected && record.node.nodeValue === record.original && record.translated) record.node.nodeValue = record.translated;
     state.translated = true;
-  }
-
-  function createHud(total) {
-    document.querySelector(".rt-hud")?.remove();
-    const el = document.createElement("div"); el.className = "rt-hud";
-    el.innerHTML = `<strong>科研译镜</strong><span>正在准备翻译…</span><button type="button">取消</button>`;
-    el.querySelector("button").onclick = () => { state.cancelled = true; };
-    document.documentElement.appendChild(el);
-    const span = el.querySelector("span");
-    return {
-      update(done) { span.textContent = `正在翻译 ${done}/${total} 批`; },
-      finish(message) { span.textContent = message; el.querySelector("button").remove(); setTimeout(() => el.remove(), 2200); },
-      fail(message) { span.textContent = message; el.classList.add("rt-error"); el.querySelector("button")?.remove(); setTimeout(() => el.remove(), 5000); }
-    };
   }
 
   function ensureQuickTranslateUi() {

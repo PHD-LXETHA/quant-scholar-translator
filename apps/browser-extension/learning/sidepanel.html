@@ -11,7 +11,7 @@
     <div class="header">
       <div class="header-top">
         <div class="workspace-brand" aria-label="Quant Scholar Translator">
-          <span class="workspace-mark">QS</span>
+          <span class="workspace-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 19.5 18.5 8a5 5 0 0 1 7 7L22 18.5" stroke="#68e6ce"/><path d="M25 12.5 13.5 24a5 5 0 0 1-7-7L10 13.5" stroke="#e0f1ef"/></svg></span>
           <span><strong>Quant Scholar</strong><small>专业学习工作台</small></span>
         </div>
         <!-- Video info -->
@@ -40,6 +40,7 @@
 
     <!-- MAIN CONTENT -->
     <div class="content" id="contentArea">
+      <p id="videoPreparationStatus" role="status" aria-live="polite" hidden></p>
       <!-- WELCOME STATE -->
       <div id="welcomeState" class="welcome-container">
         <div class="welcome-icon">&#9655;</div>

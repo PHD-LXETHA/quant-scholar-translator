@@ -15,6 +15,7 @@ const debugLog = (...args) => {
 // ============================================================
 
 let currentVideoId = null;
+let currentCaptureMode = '';
 let currentVideoUrl = null;
 let currentAnalysis = null;
 let currentTranscript = null;
@@ -30,6 +31,7 @@ let youtubeTabId = null; // Store the YouTube tab ID for reliable messaging
 let errorAction = null;
 let activePageTabId = null;
 let currentSourceKind = "youtube";
+let currentTargetLanguage = "zh";
 let learningConfigStatus = { hasAiKey: false };
 
 // --- Translation state ---
@@ -446,6 +448,11 @@ async function checkCurrentTab() {
     });
     const tab = tabs[0] || null;
     activePageTabId = tab?.id ?? null;
+    const { currentLearningSession: liveSession } = await chrome.storage.local.get('currentLearningSession');
+    if (liveSession?.url === tab?.url && (liveSession?.segments?.length || liveSession?.full)) {
+      await loadUnifiedLearningSession(tab);
+      return;
+    }
 
     if (tab?.url && !tab.url.includes("youtube.com")) {
       await loadUnifiedLearningSession(tab);
@@ -501,17 +508,25 @@ async function checkCurrentTab() {
 async function loadUnifiedLearningSession(tab) {
   const { currentLearningSession: session } =
     await chrome.storage.local.get("currentLearningSession");
-  const entries = Array.isArray(session?.segments) ? session.segments : [];
+  const matchesPage = !tab?.url || session?.url === tab.url;
+  const entries = matchesPage && Array.isArray(session?.segments) ? session.segments : [];
+  currentCaptureMode = matchesPage ? session?.captureMode || '' : '';
 
   if (!entries.length) {
     currentSourceKind = "universal";
     currentVideoId = null;
     showState("welcome");
+    await refreshUnifiedWaitingState();
     return;
   }
 
   currentSourceKind = "universal";
-  currentVideoId = session.id || `page-${tab?.id || "local"}`;
+  currentTargetLanguage = session.targetLanguage || "zh";
+  const targetButton = document.querySelector('[data-transcript-mode="zh"]');
+  if (targetButton) targetButton.textContent = ['zh', 'zh-Hans'].includes(currentTargetLanguage) ? '中文' : '译文';
+  const nextSessionId = session.id || `page-${tab?.id || "local"}`;
+  if (currentVideoId !== nextSessionId) { currentTranscriptMode = "bilingual"; transcriptParagraphCache.clear(); }
+  currentVideoId = nextSessionId;
   currentVideoUrl = session.url || tab?.url || "";
   currentVideoTitle = session.title || tab?.title || "Learning session";
   currentChannelName = [session.domain, session.captureMode]
@@ -526,12 +541,13 @@ async function loadUnifiedLearningSession(tab) {
   const startedAt = Date.parse(session.startedAt || "") || Date.now();
   currentTranscript = entries.map((item, index) => {
     const wallTime = Math.max(0, ((Date.parse(item.capturedAt || "") || startedAt) - startedAt) / 1000);
-    const start = Number.isFinite(Number(item.mediaTime)) ? Number(item.mediaTime) : wallTime;
+    const start = item.mediaTime != null && Number.isFinite(Number(item.mediaTime)) ? Number(item.mediaTime) : wallTime;
     const next = entries[index + 1];
-    const nextTime = Number.isFinite(Number(next?.mediaTime)) ? Number(next.mediaTime) : start + 4;
+    const nextTime = next?.mediaTime != null && Number.isFinite(Number(next.mediaTime)) ? Number(next.mediaTime) : start + 4;
     return {
+      id: item.id || `live-${index}`,
       start,
-      duration: Math.max(0.5, nextTime - start),
+      duration: Number.isFinite(item.end) && item.end > start ? item.end - start : Math.max(0.5, nextTime - start),
       text: item.source || item.translation || "",
       translation: item.translation || "",
     };
@@ -542,16 +558,9 @@ async function loadUnifiedLearningSession(tab) {
     .map((item) => `[${formatLearningTime(item.start)}] ${item.text}`)
     .join("\n");
 
-  const grouped = groupTranscriptEntries(currentTranscript);
-  grouped.forEach((group, groupIndex) => {
-    const nextStart = grouped[groupIndex + 1]?.start ?? Infinity;
-    const translated = currentTranscript
-      .filter((item) => item.start >= group.start && item.start < nextStart)
-      .map((item) => item.translation)
-      .filter(Boolean)
-      .join(" ");
-    if (translated) transcriptParagraphCache.set(transcriptTranslationCacheKey(group), translated);
-  });
+  // Live capture has already translated each source sentence. Never split it
+  // again or infer alignment from timestamps (which can repeat after seeks).
+  transcriptParagraphCache.clear();
 
   document.getElementById("videoTitle").textContent = currentVideoTitle;
   document.getElementById("videoChannel").textContent = currentChannelName || new URL(currentVideoUrl || "https://local.invalid").hostname;
@@ -560,6 +569,60 @@ async function loadUnifiedLearningSession(tab) {
   showState("results");
   loadNotes(currentVideoId);
 }
+
+async function refreshUnifiedWaitingState() {
+  if (currentSourceKind !== "universal" || document.getElementById("welcomeState")?.style.display === "none") return;
+  try {
+    const status = await chrome.runtime.sendMessage({ target: "background", type: "capture:status" });
+    const title = document.querySelector(".welcome-title"), description = document.querySelector(".welcome-desc");
+    if (!title || !description) return;
+    title.textContent = "等待当前网页的学习记录";
+    if (status?.activeTabId != null && status.activeTabId !== activePageTabId) {
+      description.textContent = "实时翻译正在另一个标签页运行，请切回对应视频页查看记录。";
+    } else if (status?.captureError) {
+      title.textContent = "实时翻译尚未正常生成记录";
+      description.textContent = status.captureError;
+    } else if (status?.full) {
+      description.textContent = status.full.message || '正在准备完整字幕和专业译文…';
+    } else if (status?.captureStarting) {
+      description.textContent = "正在启动并检查字幕。无可读取字幕时，将尝试采集标签页音频。";
+    } else if (status?.isCapturing) {
+      const d = status.captureDiagnostics || {};
+      description.textContent = d.lastTranscriptAt
+        ? "已收到原文，正在等待专业译文。最终译文返回后会自动显示在这里。"
+        : d.lastAudioAt ? "已收到视频声音，正在等待 Whisper 识别及专业翻译。"
+        : "尚未收到可用字幕或声音，请确认视频正在播放且未静音。";
+    } else {
+      description.textContent = "此页尚无最终译文。请播放视频，在悬浮菜单中开始实时翻译；最终译文生成后会自动显示在这里。";
+    }
+  } catch (_error) { /* Preserve the last readable state during worker restarts. */ }
+}
+setInterval(refreshUnifiedWaitingState, 1500);
+
+async function refreshPreparationStatus() {
+  const el = document.getElementById('videoPreparationStatus');
+  if (!el) return;
+  try {
+    const state = await chrome.runtime.sendMessage({ target: 'background', type: 'capture:status' });
+    const belongs = state?.activeTabId === activePageTabId;
+    el.hidden = !belongs || (!state?.captureStarting && !state?.full);
+    el.textContent = el.hidden ? '' : state.captureStarting ? '正在自动读取完整字幕…' : state.full.message || '';
+    el.dataset.kind = state?.full?.error ? 'error' : 'progress';
+    if (belongs && state?.full && currentSourceKind === 'universal') {
+      const failed = state.full.status === 'failed';
+      for (const row of document.querySelectorAll('#transcriptList .translation-pending, #transcriptList [data-preparation-error]')) {
+        if (failed) {
+          row.textContent = '翻译已中断，原文已保留；请按顶部提示处理后继续。';
+          row.dataset.preparationError = 'true'; row.classList.add('translation-error');
+        } else if (row.dataset.preparationError) {
+          row.textContent = '原文已保留，等待译文。';
+          delete row.dataset.preparationError; row.classList.remove('translation-error');
+        }
+      }
+    }
+  } catch { /* Keep the last state while the worker reconnects. */ }
+}
+setInterval(refreshPreparationStatus, 1000);
 
 function extractVideoId(url) {
   try {
@@ -889,6 +952,16 @@ function seekFromTranscriptEntryClick(event, seconds) {
 
 function renderTranscript() {
   if (!currentTranscript) return;
+  setTranscriptModeButtons(currentTranscriptMode);
+  if (currentSourceKind === "universal" && currentTranscriptMode !== "original") {
+    translationGeneration += 1;
+    transcriptScrollObserver?.disconnect();
+    activeTranslationQueue = null;
+    translationWorkCount = 0;
+    setTranslatingSpinner(false);
+    renderTranscriptModeRows(getActiveTranscriptSegments(), currentTranscriptMode);
+    return;
+  }
 
   const transcriptList = document.getElementById("transcriptList");
   transcriptList.innerHTML = "";
@@ -903,13 +976,13 @@ function renderTranscript() {
   badge.id = "transcriptSourceBadge";
   badge.className = "transcript-source-badge";
   const sourceLabel = currentSourceKind === "universal"
-    ? "Quant Scholar live capture"
+    ? (currentCaptureMode.startsWith('full-') ? '完整字幕 · 提前精译' : '实时学习记录（非摘要）')
     : "Video subtitles";
   badge.innerHTML = `<span class="source-dot source-dot--subs"></span> ${sourceLabel} · ${escapeHtml(getOriginalTranscriptLabel())}`;
   transcriptList.parentElement.insertBefore(badge, transcriptList);
 
   // Group entries using smart sentence-boundary + time-guardrail logic
-  const grouped = groupTranscriptEntries(currentTranscript);
+  const grouped = getActiveTranscriptSegments();
 
   grouped.forEach((group) => {
     const div = document.createElement("div");
@@ -936,11 +1009,21 @@ function renderTranscript() {
 }
 
 function copyTranscript() {
-  copyToClipboardWithFeedback(currentTranscriptText || "", "copyTranscriptBtn");
+  copyToClipboardWithFeedback(currentTranscriptExportText(), "copyTranscriptBtn");
+}
+
+function currentTranscriptExportText() {
+  if (currentSourceKind !== "universal") return currentTranscriptText || "";
+  return getActiveTranscriptSegments().map(segment => {
+    const text = currentTranscriptMode === "original" ? segment.text
+      : currentTranscriptMode === "bilingual" ? [segment.text, segment.translation || '[待补译，原文已保留]'].join("\n")
+      : segment.translation || `[待补译] ${segment.text}`;
+    return `[${formatLearningTime(segment.start)}] ${text || ""}`;
+  }).join("\n\n");
 }
 
 function exportTranscript() {
-  const transcriptContent = currentTranscriptText || "";
+  const transcriptContent = currentTranscriptExportText();
   const videoUrl = currentVideoUrl || "";
 
   let exportText = "";
@@ -1114,6 +1197,11 @@ async function seekTo(seconds) {
 
   try {
     if (currentSourceKind === "universal" && activePageTabId) {
+      const state = await chrome.runtime.sendMessage({ target: 'background', type: 'capture:status' });
+      if (state?.isCapturing && state.activeTabId === activePageTabId && Number.isFinite(state.full?.lastTime)) {
+        highlightActiveEntry(state.full.lastTime);
+        return;
+      }
       try {
         await chrome.tabs.sendMessage(activePageTabId, {
           type: "media:seek",
@@ -1158,7 +1246,7 @@ async function seekTo(seconds) {
  *   new tab at the right timestamp instead.
  */
 function playNote(note) {
-  if (note.videoId && note.videoId === currentVideoId) {
+  if ((note.videoId && note.videoId === currentVideoId) || (note.pageUrl && note.pageUrl === currentVideoUrl)) {
     seekTo(note.timestampSeconds);
   } else {
     // note.timestampedUrl already includes the &t=<seconds>s anchor
@@ -1544,6 +1632,7 @@ async function loadNotes(videoId) {
     const result = await chrome.runtime.sendMessage({
       action: "getNotes",
       videoId: videoId,
+      pageUrl: videoId && currentSourceKind === 'universal' ? currentVideoUrl : undefined,
     });
 
     if (result.success) {
@@ -1568,8 +1657,8 @@ function renderNotes(notes, filteredVideoId) {
   if (!notes || notes.length === 0) {
     notesIntro.style.display = "block";
     notesIntro.textContent = filteredVideoId
-      ? "No notes for this video yet. Hover over the video and click 📝 Note to save."
-      : "No notes saved yet. Hover over a video and click 📝 Note to save.";
+      ? "此页暂无笔记。在双语记录中点击“存为笔记”，可保存原文、译文和时间戳。笔记保存在此浏览器本机，不会自动同步到云端。"
+      : "暂无笔记。在双语记录中点击“存为笔记”即可保存。";
     return;
   }
 
@@ -1772,18 +1861,19 @@ function highlightActiveEntry(currentSeconds) {
   // Find the entry whose time range contains the current playback time
   let activeEntry = null;
   entries.forEach((entry, index) => {
-    const entrySeconds = parseInt(entry.dataset.seconds);
+    const entrySeconds = Number(entry.dataset.seconds);
     const nextEntry = entries[index + 1];
     const nextSeconds = nextEntry
-      ? parseInt(nextEntry.dataset.seconds)
+      ? Number(nextEntry.dataset.seconds)
       : Infinity;
-
-    if (currentSeconds >= entrySeconds && currentSeconds < nextSeconds) {
+    const original = currentSourceKind === 'universal' ? currentTranscript?.[index] : null;
+    const end = original ? original.start + original.duration : nextSeconds;
+    if (currentSeconds >= entrySeconds && currentSeconds < end) {
       activeEntry = entry;
     }
   });
 
-  if (!activeEntry) return;
+  if (!activeEntry) { entries.forEach(e => e.classList.remove('active-playback')); return; }
 
   // Skip if this entry is already highlighted (no DOM thrashing)
   if (activeEntry.classList.contains("active-playback")) return;
@@ -1828,11 +1918,17 @@ function getOriginalTranscriptLabel() {
 }
 
 function getActiveTranscriptSegments() {
-  return groupTranscriptEntries(currentTranscript || []);
+  return transcriptSegmentsForDisplay(currentTranscript || [], currentSourceKind);
+}
+
+function transcriptSegmentsForDisplay(entries, sourceKind) {
+  return sourceKind === "universal"
+    ? entries.map((entry, index) => ({ ...entry, id: entry.id || `live-${index}` }))
+    : groupTranscriptEntries(entries);
 }
 
 function transcriptTranslationCacheKey(segment) {
-  return `${currentVideoId}:zh:semantic:${segment.id}`;
+  return JSON.stringify([currentVideoId, currentSourceKind === "universal" ? currentTargetLanguage : "zh", segment.id, segment.text]);
 }
 
 function setTranscriptModeButtons(mode) {
@@ -1871,7 +1967,7 @@ function renderTranscriptSegmentContent(segment, mode, translated, error) {
   } else if (error) {
     translationHtml = `${escapeHtml(error)}<button class="translation-retry-btn" type="button">Retry</button>`;
   } else {
-    translationHtml = "Waiting for translation…";
+    translationHtml = "原文已保留，等待译文；失败后可停止采集再补译。";
   }
 
   if (mode === "bilingual") {
@@ -1892,17 +1988,25 @@ function renderTranscriptModeRows(segments, mode) {
   badge.id = "transcriptSourceBadge";
   badge.className = "transcript-source-badge";
   const originalLabel = getOriginalTranscriptLabel();
+  const targetLabel = currentSourceKind === "universal"
+    ? ({ zh: "简体中文", "zh-Hans": "简体中文", en: "英语", ja: "日语" }[currentTargetLanguage] || currentTargetLanguage)
+    : "简体中文";
   const modeLabel =
     mode === "bilingual"
-      ? `${originalLabel} + 简体中文`
-      : `简体中文 · translated from ${originalLabel}`;
-  badge.innerHTML = `<span class="source-dot source-dot--subs"></span> From video subtitles · ${modeLabel}`;
+      ? `${originalLabel} + ${targetLabel}`
+      : `${targetLabel} · translated from ${originalLabel}`;
+  const sourceLabel = currentSourceKind === "universal" ? (currentCaptureMode.startsWith('full-') ? '完整字幕 · 提前精译' : '实时学习记录（非摘要）') : "Video subtitles";
+  badge.innerHTML = `<span class="source-dot source-dot--subs"></span> ${sourceLabel} · ${escapeHtml(modeLabel)}`;
+  if (currentSourceKind === 'universal') {
+    const remaining = segments.filter(s => !s.translation).length;
+    badge.append(document.createTextNode(` · 已译 ${segments.length - remaining}/${segments.length} 段`));
+  }
   transcriptList.parentElement.insertBefore(badge, transcriptList);
 
   const rows = [];
   segments.forEach((segment, index) => {
     const div = document.createElement("div");
-    const cached = transcriptParagraphCache.get(
+    const cached = currentSourceKind === "universal" ? segment.translation : transcriptParagraphCache.get(
       transcriptTranslationCacheKey(segment),
     );
     div.className = `transcript-entry ${cached ? "translated" : "translating"}`;
@@ -1920,6 +2024,36 @@ function renderTranscriptModeRows(segments, mode) {
     div.addEventListener("click", (event) =>
       seekFromTranscriptEntryClick(event, segment.start),
     );
+    if (currentSourceKind === 'universal') {
+      const button = document.createElement('button');
+      button.className = 'enhance-btn transcript-save-note';
+      button.textContent = '存为笔记';
+      const sessionId = currentVideoId;
+      button.addEventListener('click', async event => {
+        event.stopPropagation();
+        button.disabled = true;
+        try {
+          const result = await chrome.runtime.sendMessage({ action: 'saveLearningNote', sessionId, segmentId: segment.id });
+          if (!result?.success) throw new Error(result?.error || '保存失败');
+          button.textContent = '已保存';
+          await loadNotes(currentVideoId);
+        } catch (error) { button.textContent = error.message; button.disabled = false; }
+      });
+      div.querySelector('.transcript-copy')?.appendChild(button);
+      if (!cached) {
+        const retry = document.createElement('button');
+        retry.className = 'enhance-btn'; retry.textContent = '补译此段';
+        retry.addEventListener('click', async event => {
+          event.stopPropagation(); retry.disabled = true;
+          try {
+            const result = await chrome.runtime.sendMessage({ target: 'background', type: 'knowledge:retry', sessionId, segmentId: segment.id });
+            if (!result?.ok) throw new Error(result?.error || '补译失败');
+            await checkCurrentTab();
+          } catch (error) { retry.textContent = error.message; retry.disabled = false; }
+        });
+        div.querySelector('.transcript-copy')?.appendChild(retry);
+      }
+    }
     transcriptList.appendChild(div);
     rows.push(div);
   });
@@ -2086,6 +2220,12 @@ async function translateTranscript() {
   if (transcriptScrollObserver) transcriptScrollObserver.disconnect();
 
   const rows = renderTranscriptModeRows(segments, mode);
+  if (currentSourceKind === "universal") {
+    activeTranslationQueue = null;
+    translationWorkCount = 0;
+    setTranslatingSpinner(false);
+    return; // Live source/translation pairs are authoritative; no second model call.
+  }
   const queue = [];
   const queued = new Set();
   let processing = false;
@@ -2148,6 +2288,7 @@ async function translateTranscript() {
   });
 }
 
+
 function setTranslatingSpinner(show) {
   if (show) translationWorkCount += 1;
   else translationWorkCount = Math.max(0, translationWorkCount - 1);
@@ -2161,6 +2302,7 @@ function setTranslatingSpinner(show) {
 globalThis.__YTD_TRANSCRIPT_TESTING__ = {
   sendTranslationMessage,
   groupTranscriptEntries,
+  transcriptSegmentsForDisplay,
   splitOversizedThought,
   alignTranslatedSegmentBatch,
   renderSubtitleInlineMarkup,

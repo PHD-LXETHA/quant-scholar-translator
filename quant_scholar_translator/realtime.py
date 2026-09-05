@@ -97,20 +97,22 @@ def _register_nvidia_dll_dirs() -> None:
 _register_nvidia_dll_dirs()
 
 import numpy as np
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from . import __version__
 from .config import (
     MODEL_SIZE, DEVICE, COMPUTE_TYPE, TRANSLATOR, NLLB_MODEL,
-    HOST, PORT, MOBILE_ACCESS_TOKEN, SAMPLE_RATE, VAD_FILTER, MAX_CHUNK_LAG_S,
+    HOST, PORT, MOBILE_ACCESS_TOKEN, SAMPLE_RATE, VAD_FILTER,
     SENTENCE_MAX_CHARS, LLM_API_BASE, LLM_API_KEY, LLM_MODEL,
     WHISPER_CACHE, LOCAL_WHISPER_TURBO, NLLB_CT2_CACHE,
 )
-from .codex_bridge import CodexBridgeError, codex_status, run_codex_completion
+from .codex_bridge import CODEX_MODEL, CODEX_DEFAULT_EFFORT, CodexBridgeError, codex_status, run_codex_completion
 from .kimi_bridge import KimiBridgeError, kimi_status, run_kimi_completion
 from .translation import (
     hotwords_for_domain,
@@ -120,7 +122,6 @@ from .translation import (
     translate_kimi_subscription,
     translate_openai_compatible,
 )
-from .streaming import merge_incremental_text
 
 log = logging.getLogger("quant-scholar-translator")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -515,11 +516,21 @@ async def _professional_translation_worker(ws: WebSocket, session: Session, loop
     while True:
         item = await session.translation_queue.get()
         if item is None:
+            session.translation_queue.task_done()
             return
         source, detected, chunk_id = item
         provider = professional_provider(session.translator)
         try:
-            translated = await _render_source(session, loop, source, provider, detected=detected)
+            for attempt in range(3):
+                try:
+                    translated = await _render_source(session, loop, source, provider, detected=detected)
+                    if not translated.strip():
+                        raise RuntimeError('empty translation')
+                    break
+                except Exception:
+                    if attempt == 2:
+                        raise
+                    await asyncio.sleep(attempt + 1)
             await _send_line(
                 ws, session, translated, True,
                 raw=source, stage="professional-final", provider=provider,
@@ -536,6 +547,8 @@ async def _professional_translation_worker(ws: WebSocket, session: Session, loop
                 }, ensure_ascii=False))
             except Exception:
                 return
+        finally:
+            session.translation_queue.task_done()
 
 
 async def commit_pending(ws: WebSocket, session: Session, loop) -> None:
@@ -545,6 +558,9 @@ async def commit_pending(ws: WebSocket, session: Session, loop) -> None:
     source = session.pending
     detected = session.last_detected
     chunk_id = session.chunk_id
+    # Save the complete source before any model call. Failed translations
+    # remain visible and recoverable instead of disappearing from the record.
+    await _send_line(ws, session, "", False, raw=source, stage="source-final", chunk_id=chunk_id)
     session.pending = ""
     if session.translation_mode == "offline":
         translated = await _render_source(session, loop, source, "nllb", offline=True)
@@ -561,15 +577,8 @@ async def _handle_chunk(
     session.chunk_id += 1
     cid = session.chunk_id
 
-    # Backlog drop. If processing has slipped behind real-time, this chunk
-    # is already stale by the time we get to it. Subs from 15s ago are
-    # worse UX than no subs at all — drop and let the next (fresher) chunk
-    # catch us up. Flush whatever's buffered so we don't lose it.
-    lag = time.monotonic() - arrived_at
-    if lag > MAX_CHUNK_LAG_S:
-        # Behind real-time: skip this chunk and keep the current line on screen.
-        log.info("chunk #%d: dropped (lag=%.2fs > %.1fs)", cid, lag, MAX_CHUNK_LAG_S)
-        return
+    # Completeness takes priority over latency: never discard queued audio
+    # merely because recognition is slower than playback.
 
     pcm = np.frombuffer(raw_bytes, dtype=np.int16)
 
@@ -583,7 +592,7 @@ async def _handle_chunk(
     # initial_prompt context — exactly what causes "the last word spams
     # when the video pauses." Skip transcribe for sub-threshold chunks and
     # send empty text so the overlay clears.
-    SILENCE_RMS = 0.005   # voice/music typically > 0.05
+    SILENCE_RMS = 0.0001  # Only near-digital silence; quiet speech goes to ASR/VAD.
     if rms < SILENCE_RMS:
         log.info("chunk #%d: silence skip (rms=%.4f peak=%.3f)", cid, rms, peak)
         # A pause ends the current utterance: finalize whatever's building so it
@@ -601,7 +610,7 @@ async def _handle_chunk(
     # Drop whole-chunk fansub-credit hallucinations BEFORE buffering them.
     # If they entered the buffer they'd corrupt the translated sentence and
     # (via concatenation) the surrounding real words too.
-    if looks_like_hallucination(raw):
+    if looks_like_hallucination(raw) and rms < 0.001:
         # Skip the hallucinated fragment; keep the current line on screen.
         log.info("chunk #%d: hallucination filter dropped raw=%r", cid, raw)
         return
@@ -610,7 +619,9 @@ async def _handle_chunk(
     # source immediately and defers model translation until commit; quick mode
     # may show a local NLLB preview, but that preview is never passed downstream.
     session.last_detected = detected
-    session.pending = merge_incremental_text(session.pending, raw)
+    # PCM chunks are disjoint, not rolling ASR revisions. Deduplicating them
+    # erases genuine repeated words and repeated examples from lectures.
+    session.pending = f"{session.pending} {raw}".strip()
 
     if session.translation_mode == "professional":
         await _send_line(ws, session, "", False, stage="source", provider=professional_provider(session.translator))
@@ -695,6 +706,11 @@ async def handle_socket(ws: WebSocket):
                 # Allow runtime reconfig.
                 try:
                     cfg = json.loads(msg["text"])
+                    if cfg.get("type") == "flush":
+                        await commit_pending(ws, session, loop)
+                        await session.translation_queue.join()
+                        await ws.send_text(json.dumps({"type": "flushed"}))
+                        continue
                     if cfg.get("type") == "config":
                         session.source_lang = cfg.get("sourceLang", session.source_lang)
                         session.target_lang = cfg.get("targetLang", session.target_lang)
@@ -740,7 +756,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "X-QS-Token"],
 )
 
@@ -786,6 +802,127 @@ class TranslationRequest(BaseModel):
 class LocalChatMessage(BaseModel):
     role: str = "user"
     content: str = Field(min_length=1, max_length=120000)
+
+
+class CaptionItem(BaseModel):
+    id: str = Field(min_length=1, max_length=200)
+    text: str = Field(min_length=1, max_length=12000)
+
+
+class CaptionTranslationRequest(BaseModel):
+    cues: list[CaptionItem] = Field(min_length=1, max_length=24)
+    sourceLang: str = "auto"
+    targetLang: str = "zh"
+    domain: str = "auto"
+    translator: str = "kimi_subscription"
+    context: str = Field(default="", max_length=4000)
+
+
+class CaptionJobRequest(CaptionTranslationRequest):
+    requestId: str = Field(min_length=1, max_length=200)
+
+    @field_validator('translator')
+    @classmethod
+    def normalize_legacy_codex(cls, value):
+        # Already persisted browser jobs may still use the realtime API ID.
+        # Normalize before validation/dispatch AND idempotency fingerprinting:
+        # either spelling must query the same job, never launch another model.
+        return 'codex_subscription' if value == 'codex' else value
+
+
+@app.exception_handler(RequestValidationError)
+async def caption_request_validation_error(request, error):
+    if request.url.path != '/translate/cues/jobs':
+        return await request_validation_exception_handler(request, error)
+    # Do not log Pydantic's `input`: it contains the user's lecture text.
+    issues = [{'field': '.'.join(str(part) for part in item['loc']), 'type': item['type']}
+              for item in error.errors()]
+    log.warning('Caption request rejected: %s', json.dumps(issues, ensure_ascii=True))
+    return JSONResponse(status_code=422, content={'detail': '字幕请求参数不合法', 'issues': issues})
+
+
+def _run_caption_job(payload):
+    from .caption_translation import translate_cues
+    if payload.get('offline'):
+        cue = payload['cues'][0]
+        return [{'id': cue['id'], 'text': translate(cue['text'], payload['sourceLang'], payload['targetLang'],
+                 payload['domain'], 'nllb', payload['context'], True, True)}]
+    return translate_cues(payload['cues'], payload['sourceLang'], payload['targetLang'],
+                          payload['domain'], payload['translator'], payload['context'])
+
+
+from .caption_jobs import CaptionJobs
+caption_jobs = CaptionJobs(_run_caption_job)
+
+from .video_library import VideoLibrary
+video_library = VideoLibrary()
+
+
+def require_local_library(request):
+    from urllib.parse import urlsplit
+    origin = urlsplit(request.headers.get('origin', ''))
+    if (not _loopback_client(request.client.host if request.client else '')
+            or (origin.scheme and origin.scheme != 'chrome-extension' and origin.hostname not in ('localhost', '127.0.0.1', '::1'))):
+        raise HTTPException(403, '视频文档仅供本机扩展使用')
+
+
+@app.post('/library/videos/save')
+async def save_video_document(request: Request):
+    require_local_library(request)
+    raw = bytearray()
+    async for chunk in request.stream():
+        raw.extend(chunk)
+        if len(raw) > 24 * 1024 * 1024:
+            raise HTTPException(413, '视频文档超过大小上限')
+    try:
+        session = json.loads(raw)
+        if not isinstance(session, dict):
+            raise ValueError('视频文档格式无效')
+        result = await asyncio.to_thread(video_library.save, session)
+        return {'ok': True, **result}
+    except (ValueError, TypeError, AttributeError, KeyError):
+        raise HTTPException(422, '视频文档参数无效或原字幕已改变，未覆盖已有记录')
+
+
+class VideoLookupRequest(BaseModel):
+    url: str = Field(max_length=4000)
+    identity: str = Field(max_length=3000)
+    signature: str = Field(max_length=2000)
+    duration: float = Field(gt=0, allow_inf_nan=False)
+
+
+@app.post('/library/videos/lookup')
+async def lookup_video_document(body: VideoLookupRequest, request: Request):
+    require_local_library(request)
+    try:
+        record = await asyncio.to_thread(video_library.lookup, body.url, body.identity, body.signature, body.duration)
+        return {'ok': True, 'session': record}
+    except (ValueError, TypeError, AttributeError, KeyError):
+        raise HTTPException(422, '视频存档匹配信息无效')
+
+
+@app.post('/translate/cues/jobs')
+async def caption_job_endpoint(body: CaptionJobRequest, request: Request):
+    from urllib.parse import urlparse
+    origin = urlparse(request.headers.get('origin', ''))
+    if origin.scheme and origin.scheme != 'chrome-extension' and origin.hostname not in ('localhost', '127.0.0.1', '::1'):
+        raise HTTPException(403, '提前翻译任务仅供本机扩展或本机工具调用')
+    reason = ('caption_text_limit' if sum(len(c.text) for c in body.cues) > 12000 else
+              'duplicate_caption_id' if len({c.id for c in body.cues}) != len(body.cues) else
+              'unsupported_provider' if body.translator not in {'codex_subscription', 'kimi_subscription', 'nllb'} else
+              'offline_batch_limit' if body.translator == 'nllb' and len(body.cues) != 1 else '')
+    if reason:
+        provider = body.translator if body.translator in {'codex', 'codex_subscription', 'kimi_subscription', 'nllb', 'llm'} else 'unknown'
+        log.warning('Caption request rejected: rule=%s provider=%s count=%d', reason, provider, len(body.cues))
+        raise HTTPException(422, {'code': reason, 'message': '字幕批次、编号或翻译引擎无效'})
+    payload = body.model_dump(exclude={'requestId'})
+    payload['offline'] = body.translator == 'nllb'
+    try:
+        return caption_jobs.submit(body.requestId, payload)
+    except ValueError as error:
+        raise HTTPException(409, str(error)) from error
+    except OverflowError as error:
+        raise HTTPException(429, str(error)) from error
 
 
 class LocalChatRequest(BaseModel):
@@ -834,6 +971,26 @@ async def codex_status_endpoint():
     return {"ok": status.subscription, **status.to_dict()}
 
 
+@app.post("/translate/cues")
+async def translate_cues_endpoint(request: CaptionTranslationRequest):
+    from .caption_translation import translate_cues
+    if (sum(len(cue.text) for cue in request.cues) > 12000
+            or len({cue.id for cue in request.cues}) != len(request.cues)
+            or request.translator not in {"codex_subscription", "kimi_subscription"}):
+        return JSONResponse(status_code=422, content={"detail": "字幕批次、编号或专业翻译引擎无效"})
+    try:
+        rows = await asyncio.to_thread(
+            translate_cues, [cue.model_dump() for cue in request.cues],
+            request.sourceLang, request.targetLang, request.domain, request.translator, request.context,
+        )
+    except ValueError as error:
+        return JSONResponse(status_code=502, content={"detail": str(error)})
+    except Exception:
+        log.exception("caption translation failed")
+        return JSONResponse(status_code=502, content={"detail": "专业字幕翻译失败，请检查套餐登录和本地服务"})
+    return {"ok": True, "cues": rows}
+
+
 @app.post("/codex/v1/chat/completions")
 async def codex_chat_completions(request: LocalChatRequest):
     """Small OpenAI-compatible surface for the extension's local Codex mode."""
@@ -850,7 +1007,8 @@ async def codex_chat_completions(request: LocalChatRequest):
         "id": f"codex-local-{int(time.time() * 1000)}",
         "object": "chat.completion",
         "created": int(time.time()),
-        "model": request.model,
+        "model": CODEX_MODEL,
+        "reasoning_effort": CODEX_DEFAULT_EFFORT,
         "billing_mode": "chatgpt-subscription",
         "choices": [{"index": 0, "message": {"role": "assistant", "content": output}, "finish_reason": "stop"}],
     }
@@ -888,6 +1046,10 @@ async def kimi_chat_completions(request: LocalChatRequest):
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
     await handle_socket(ws)
+
+
+from .media_jobs import create_media_router
+app.include_router(create_media_router(get_model, hotwords_for_domain))
 
 
 if __name__ == "__main__":

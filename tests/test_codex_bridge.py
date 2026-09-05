@@ -9,6 +9,30 @@ from quant_scholar_translator import codex_bridge as MODULE
 
 
 class CodexBridgeTests(unittest.TestCase):
+    @mock.patch.object(MODULE, "codex_status")
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_pins_sol_and_medium_or_high_without_changing_billing(self, run, status):
+        status.return_value = MODULE.CodexStatus(True, True, True, "chatgpt-subscription", "ok")
+        run.return_value = subprocess.CompletedProcess([], 0, stdout="译文", stderr="")
+        for effort in ("medium", "high"):
+            with self.subTest(effort=effort), mock.patch.dict(os.environ, {"OPENAI_API_KEY": "secret", "CODEX_API_KEY": "secret"}):
+                kwargs = {} if effort == "medium" else {"reasoning_effort": effort}
+                self.assertEqual(MODULE.run_codex_completion([{"role": "user", "content": "Translate."}], **kwargs), "译文")
+                args = run.call_args.args[0]
+                self.assertEqual(args[args.index("--model") + 1], "gpt-5.6-sol")
+                self.assertIn(f'model_reasoning_effort="{effort}"', args)
+                self.assertIn("--ignore-user-config", args)
+                self.assertEqual(args[args.index("--sandbox") + 1], "read-only")
+                self.assertNotIn("OPENAI_API_KEY", run.call_args.kwargs["env"])
+                self.assertNotIn("CODEX_API_KEY", run.call_args.kwargs["env"])
+        self.assertEqual(status.return_value.to_dict()["configuredModel"], "gpt-5.6-sol")
+
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_invalid_reasoning_is_rejected_before_cli(self, run):
+        with self.assertRaises(ValueError):
+            MODULE.run_codex_completion([], reasoning_effort="ultra")
+        run.assert_not_called()
+
     def test_command_finds_versioned_windows_desktop_binary(self):
         with tempfile.TemporaryDirectory() as temp:
             executable = Path(temp) / "OpenAI" / "Codex" / "bin" / "build-id" / "codex.exe"

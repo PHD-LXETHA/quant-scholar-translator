@@ -7,13 +7,17 @@
   </head>
   <body>
     <header>
-      <h1><span class="brand-mark">QS</span> Quant Scholar</h1>
-      <p class="tagline">视频、网页与论文的本地优先双语学习工作台</p>
+      <h1><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M7 19.5 18.5 8a5 5 0 0 1 7 7L22 18.5" stroke="#68e6ce"/><path d="M25 12.5 13.5 24a5 5 0 0 1-7-7L10 13.5" stroke="#e0f1ef"/></svg></span> Quant Scholar</h1>
+      <p class="tagline">视频 · 网页 · 论文</p>
     </header>
 
     <main>
+      <button id="prepareVideo" class="primary">提前全文翻译</button>
+      <button id="showTranslated" hidden>显示译文字幕</button>
+      <button id="stopFull" hidden>结束翻译 / 字幕会话</button>
+      <small id="playbackHelp" hidden>字幕启用后，点击视频播放器的 ▶ 播放。不要再点“开始实时翻译”。</small>
       <button id="toggle" class="primary">开始实时翻译</button>
-      <div id="status" class="status idle">未开始</div>
+      <div id="status" class="status idle" role="status" aria-live="polite">未开始</div>
       <div id="backendStatus" class="backend-status idle">本地引擎：检测中</div>
 
       <section class="settings">
@@ -58,10 +62,29 @@
           </select>
         </label>
 
+        <label>
+          提前翻译来源
+          <select id="sourceStrategy">
+            <option value="auto" selected>自动：完整字幕 → 可读取的完整音轨</option>
+            <option value="full-captions">提前翻译完整字幕（CQF 优先）</option>
+            <option value="full-audio">提前识别可读取的完整音轨</option>
+          </select>
+        </label>
+        <p class="help">完整字幕会自动提取，无需复制链接。可等待全部翻译后播放，也可在前段就绪后边译边播；未译部分可能需要等待。</p>
         <label class="checkbox-row">
           <input type="checkbox" id="preferNativeCaptions" checked />
           优先使用网页原字幕（更准确，无字幕自动识别音频）
         </label>
+
+        <label>
+          视频字幕显示
+          <select id="subtitleDisplay">
+            <option value="translation" selected>紧凑译文（最多两行）</option>
+            <option value="bilingual">紧凑双语（原文＋译文）</option>
+            <option value="sidebar">仅右侧栏（不遮挡视频）</option>
+          </select>
+        </label>
+        <p class="help">长句请在“学习工作台”查看完整记录。选择仅右侧栏后，点击下方“学习工作台”打开；识别与翻译不会停止。</p>
 
         <label>
           <span>字幕字号 <span id="fontSizeVal">28</span> px</span>
@@ -128,18 +151,28 @@
       <section class="settings">
         <strong class="section-heading">专业阅读与研究</strong>
         <button id="translatePage">翻译当前网页</button>
+        <p id="pageProgress" class="action-feedback" role="status" hidden></p>
+        <button id="cancelPageTranslation" hidden>取消网页翻译</button>
         <button id="togglePageTranslation">切换网页原文 / 译文</button>
-        <button id="openPdfReader">在专业 PDF 阅读器中打开</button>
+        <p id="pageActionStatus" class="action-feedback" role="status" aria-live="polite">网页翻译使用下方“套餐、API、Prompt 与术语设置”中的阅读引擎。</p>
+        <button id="openPdfReader">打开 Quant Scholar PDF Reader</button>
         <button id="openResearchSettings">套餐、API、Prompt 与术语设置</button>
         <button id="openLearningPanel">打开学习工作台侧栏</button>
         <button id="openLearningSettings">学习摘要模型设置</button>
       </section>
       <section class="settings">
-        <strong class="section-heading">沉淀到个人知识库</strong>
-        <button id="exportMarkdown">导出 Markdown</button>
+        <strong class="section-heading">沉淀到个人知识库 · 导出文件</strong>
+        <label><input id="videoLibrary" type="checkbox" checked>自动保存视频文档并在回看时恢复字幕</label>
+        <p id="videoLibraryStatus" class="action-feedback" role="status">每个视频一份双语 MD，保存在项目“学习资料 / 视频双语”；回看已译部分不调用模型。</p>
+        <button id="saveVideoDocument">更新当前视频存档</button>
+        <p class="action-feedback">下载后可导入你的知识库或工作台；此处不会自动写入外部知识库。网页译文请在刷新或关闭网页前导出。</p>
+        <label>导出内容<select id="knowledgeSource"><option value="auto">当前页面（自动选择）</option><option value="webpage">当前网页译文</option><option value="video">最近的视频学习记录</option></select></label>
+        <p id="knowledgeActionStatus" class="action-feedback" role="status" aria-live="polite">各格式均按上方“导出内容”保存。Markdown / PDF 保留原文与译文对照；SRT 仅用于视频字幕。</p>
+        <button id="exportMarkdown">导出双语 Markdown</button>
+        <button id="exportPdf">导出双语 PDF</button>
         <button id="exportJson">导出结构化 JSON</button>
         <button id="exportSrt">导出双语 SRT</button>
-        <button id="clearSession">清空当前学习记录</button>
+        <button id="clearSession">清空当前会话记录（保留视频存档）</button>
       </section>
     </main>
 

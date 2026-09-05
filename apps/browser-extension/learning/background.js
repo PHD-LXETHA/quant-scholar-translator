@@ -321,6 +321,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === "saveLearningNote") {
+    handleSaveLearningNote(message.sessionId, message.segmentId).then(sendResponse)
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
   if (message.action === "saveNote") {
     // Save a note at the current timestamp
     handleSaveNote(
@@ -336,7 +341,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message.action === "getNotes") {
     // Get all saved notes
-    handleGetNotes(message.videoId)
+    handleGetNotes(message.videoId, message.pageUrl)
       .then(sendResponse)
       .catch((err) => sendResponse({ success: false, error: err.message }));
     return true;
@@ -1035,7 +1040,7 @@ async function handleSaveNote(
 
     // Create the note object
     const note = {
-      id: `note_${Date.now()}`,
+      id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
       videoId: videoId,
       videoTitle:
         typeof videoTitle === "string"
@@ -1148,28 +1153,49 @@ async function cleanupNoteText(
  * Saves a note to chrome.storage.local
  */
 async function saveNoteToStorage(note) {
+  return queueNoteWrite(async () => {
   const result = await chrome.storage.local.get("ytd_notes");
   const notes = result.ytd_notes || [];
   notes.unshift(note); // Add to beginning (newest first)
-
-  // Keep only last 100 notes to prevent storage bloat
-  if (notes.length > 100) {
-    notes.splice(100);
-  }
-
   await chrome.storage.local.set({ ytd_notes: notes });
+  });
+}
+
+let noteWriteQueue = Promise.resolve();
+function queueNoteWrite(operation) {
+  const next = noteWriteQueue.catch(() => {}).then(operation);
+  noteWriteQueue = next;
+  return next;
+}
+
+async function handleSaveLearningNote(sessionId, segmentId) {
+  const { currentLearningSession: session } = await chrome.storage.local.get('currentLearningSession');
+  const item = session?.id === sessionId && session.segments?.find(s => s.id === segmentId);
+  if (!item) throw new Error('此条学习记录已改变，请刷新侧栏后重试');
+  const url = new URL(session.url);
+  if (!['https:', 'http:', 'file:'].includes(url.protocol)) throw new Error('笔记来源地址无效');
+  const seconds = Math.max(0, Math.floor(Number(item.mediaTime) || 0));
+  const note = { id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`, videoId: session.id,
+    videoTitle: session.title, channelName: session.domain, pageUrl: session.url,
+    timestamp: `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`,
+    timestampSeconds: seconds, timestampedUrl: session.url,
+    text: [item.source, item.translation].filter(Boolean).join('\n'), rawText: item.source,
+    translation: item.translation || '', createdAt: Date.now() };
+  await saveNoteToStorage(note);
+  chrome.runtime.sendMessage({ action: 'noteSaved', note }).catch(() => {});
+  return { success: true, note };
 }
 
 /**
  * Gets notes from storage, optionally filtered by video ID
  */
-async function handleGetNotes(videoId) {
+async function handleGetNotes(videoId, pageUrl) {
   try {
     const result = await chrome.storage.local.get("ytd_notes");
     let notes = result.ytd_notes || [];
 
     if (videoId) {
-      notes = notes.filter((n) => n.videoId === videoId);
+      notes = notes.filter((n) => n.videoId === videoId || (pageUrl && n.pageUrl === pageUrl));
     }
 
     return { success: true, notes };
@@ -1183,11 +1209,13 @@ async function handleGetNotes(videoId) {
  */
 async function handleDeleteNote(noteId) {
   try {
+    return await queueNoteWrite(async () => {
     const result = await chrome.storage.local.get("ytd_notes");
     let notes = result.ytd_notes || [];
     notes = notes.filter((n) => n.id !== noteId);
     await chrome.storage.local.set({ ytd_notes: notes });
     return { success: true };
+    });
   } catch (error) {
     return { success: false, error: error.message };
   }

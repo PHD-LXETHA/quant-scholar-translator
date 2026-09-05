@@ -1,4 +1,4 @@
-import { BATTERY_GLOSSARY_PRESET, formatGlossaryPrompt } from "./glossary.mjs";
+import { PROFESSIONAL_GLOSSARY_PRESET, formatGlossaryPrompt, migrateProfessionalGlossary } from "./glossary.mjs";
 import { isRetryableApiStatus, retryDelayMs, sleep } from "./api-retry.mjs";
 import { providerNeedsApiKey } from "./provider-presets.mjs";
 import { isLikelyUntranslated, isSourcePreservingContent } from "./translation-quality.mjs";
@@ -11,7 +11,7 @@ const DEFAULTS = {
   apiStyle: "chat",
   targetLanguage: "简体中文",
   batchChars: 6500,
-  glossaryTerms: BATTERY_GLOSSARY_PRESET,
+  glossaryTerms: PROFESSIONAL_GLOSSARY_PRESET,
   prompt: `你是 Quant Scholar 专业学术翻译引擎，擅长金融、量化金融、经济学、计量经济学、统计学、数学、计算机科学和跨学科科研论文。将输入内容翻译为{targetLanguage}。
 要求：
 1. 忠实、准确、简洁，保持论文的逻辑关系与学术语气，不擅自解释、总结或补充结论。
@@ -27,6 +27,7 @@ const MAX_TRANSLATION_OUTPUT_TOKENS = 8192;
 const KIMI_DEFAULT_MIGRATION_KEY = "quantScholarKimiDefaultV1";
 
 chrome.runtime.onInstalled.addListener(async () => {
+  await migrateProfessionalGlossary(chrome.storage.local);
   const saved = await chrome.storage.local.get([
     ...Object.keys(DEFAULTS),
     KIMI_DEFAULT_MIGRATION_KEY,
@@ -69,7 +70,7 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "TRANSLATE_BATCH") {
-    translateBatch(message.texts, message.roles).then(
+    translateBatch(message.texts, message.roles, message.professionalOnly === true).then(
       (translations) => sendResponse({ ok: true, translations }),
       (error) => sendResponse({
         ok: false,
@@ -514,9 +515,12 @@ async function putPdfCache(key, data, url) {
   } finally { db.close(); }
 }
 
-async function translateBatch(texts, roles = []) {
+async function translateBatch(texts, roles = [], professionalOnly = false) {
   if (!Array.isArray(texts) || !texts.length) return [];
+  await migrateProfessionalGlossary(chrome.storage.local);
   const settings = { ...DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEFAULTS))) };
+  if (professionalOnly && !['codex', 'kimi_subscription'].includes(settings.provider))
+    throw new Error('PDF 采用直接精译：请在设置中选择 Codex（ChatGPT 套餐）或 Kimi（会员套餐），不会自动切换到其他引擎');
   if (providerNeedsApiKey(settings.provider) && !settings.apiKey) throw new Error("请先在设置中填写该服务商的 API Key");
   if (!settings.endpoint || !settings.model) throw new Error("API 地址和模型不能为空");
 
@@ -530,7 +534,7 @@ async function translateWithSettings(texts, settings, retryDepth, roles = []) {
   const repairInstruction = retryDepth > 0
     ? `\n\n这是自动修复重试。上次输出存在漏项或仍以英文为主。请逐项真正翻译为${settings.targetLanguage}；化学式和缩写可保留，但每个正文条目必须包含清晰的${settings.targetLanguage}表述。`
     : "";
-  const system = settings.prompt.replaceAll("{targetLanguage}", settings.targetLanguage) + formatGlossaryPrompt(settings.glossaryTerms) + repairInstruction + protocol;
+  const system = settings.prompt.replaceAll("{targetLanguage}", settings.targetLanguage) + formatGlossaryPrompt(settings.glossaryTerms, texts.join('\n')) + repairInstruction + protocol;
   const input = JSON.stringify({ items });
   const headers = { "Content-Type": "application/json" };
   let body;
@@ -746,9 +750,9 @@ async function requestPlainTranslation(text, settings, mode = "normal") {
     ? "输出必须包含自然、完整的中文句子，不得仅返回英文。"
     : `输出必须以${settings.targetLanguage}为主，不得原样返回源语言正文。`;
   const system = forced
-    ? `你是科研论文翻译器。把用户提供的英文科研文本完整翻译为${settings.targetLanguage}。${targetRule}忠实保留化学式、变量、单位、引用编号、图表编号、材料名称和公认缩写。不得省略、总结或解释。只输出译文本身，不要 JSON、Markdown或前缀。`
+    ? `你是科研论文翻译器。把用户提供的英文科研文本完整翻译为${settings.targetLanguage}。${targetRule}忠实保留公式、变量、单位、引用编号、图表编号和公认缩写。不得省略、总结或解释。只输出译文本身，不要 JSON、Markdown或前缀。${formatGlossaryPrompt(settings.glossaryTerms, text)}`
     : settings.prompt.replaceAll("{targetLanguage}", settings.targetLanguage)
-      + formatGlossaryPrompt(settings.glossaryTerms)
+      + formatGlossaryPrompt(settings.glossaryTerms, text)
       + `\n\n只翻译用户提供的这一段，完整保留公式、缩写、编号和专有名词。${targetRule}只输出译文本身，不要 JSON、Markdown、解释或前缀。`;
   const headers = { "Content-Type": "application/json" };
   let body;

@@ -7,12 +7,14 @@ this provider as using the user's existing Codex plan.
 """
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import threading
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
@@ -20,6 +22,9 @@ from typing import Iterable
 
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 _CODEX_LOCK = threading.Lock()
+CODEX_MODEL = "gpt-5.6-sol"
+CODEX_DEFAULT_EFFORT = "medium"
+logger = logging.getLogger(__name__)
 
 
 class CodexBridgeError(RuntimeError):
@@ -35,7 +40,9 @@ class CodexStatus:
     detail: str
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        return {**asdict(self), "configuredModel": CODEX_MODEL,
+                "configuredReasoningEffort": CODEX_DEFAULT_EFFORT,
+                "reviewReasoningEffort": "high"}
 
 
 def _command() -> str:
@@ -126,8 +133,11 @@ def _format_messages(messages: Iterable[dict]) -> str:
     return "\n\n".join(sections)
 
 
-def run_codex_completion(messages: Iterable[dict], timeout: int | None = None) -> str:
+def run_codex_completion(messages: Iterable[dict], timeout: int | None = None,
+                         *, reasoning_effort: str = CODEX_DEFAULT_EFFORT) -> str:
     """Return the final text from an isolated, read-only Codex invocation."""
+    if reasoning_effort not in {"medium", "high"}:
+        raise ValueError("专业翻译只允许 medium 首译或 high 复译")
     status = codex_status()
     if not status.available:
         raise CodexBridgeError(status.detail)
@@ -159,11 +169,15 @@ def run_codex_completion(messages: Iterable[dict], timeout: int | None = None) -
             _command(), "exec",
             "--ephemeral",
             "--ignore-user-config",
+            "--model", CODEX_MODEL,
+            "-c", f'model_reasoning_effort="{reasoning_effort}"',
             "--skip-git-repo-check",
             "--sandbox", "read-only",
             "--output-last-message", str(output_path),
             "-",
         ]
+        started = time.monotonic()
+        logger.info("Codex translation requested model=%s reasoning=%s", CODEX_MODEL, reasoning_effort)
         try:
             result = subprocess.run(
                 command,
@@ -186,4 +200,6 @@ def run_codex_completion(messages: Iterable[dict], timeout: int | None = None) -
         output = output_path.read_text(encoding="utf-8").strip() if output_path.exists() else result.stdout.strip()
         if not output:
             raise CodexBridgeError("Codex 没有返回可用结果。")
+        logger.info("Codex translation completed model=%s reasoning=%s elapsed=%.1fs",
+                    CODEX_MODEL, reasoning_effort, time.monotonic() - started)
         return output

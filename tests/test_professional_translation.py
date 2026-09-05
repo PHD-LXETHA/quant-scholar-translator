@@ -35,9 +35,69 @@ class ProfessionalTranslationTests(unittest.TestCase):
         self.assertEqual(MODULE.protect("A stationary process").text, "A stationary process")
 
     def test_every_domain_glossary_loads(self):
+        total = 0
         for domain in ("academic", "finance", "quant_finance", "economics", "statistics", "mathematics", "programming"):
             entries = MODULE.load_glossary(domain)
-            self.assertTrue(entries and all("source" in item and "target" in item for item in entries))
+            total += len(entries)
+            self.assertTrue(entries and all(
+                isinstance(item.get("source"), str) and item["source"].strip()
+                and isinstance(item.get("target"), str) and item["target"].strip()
+                and isinstance(item.get("note"), str) and item["note"].strip()
+                and all(isinstance(alias, str) and alias.strip() for alias in item.get("aliases", []))
+                for item in entries
+            ))
+        self.assertGreaterEqual(total, 480)
+
+    def test_cross_domain_homonyms_are_disambiguated_before_prompting(self):
+        programming = MODULE.relevant_glossary("The function return value has a type annotation.", "programming")
+        finance = MODULE.relevant_glossary("Expected return and portfolio volatility.", "finance")
+        statistics = MODULE.relevant_glossary("The statistical power of the hypothesis test.", "statistics")
+        mathematics = MODULE.relevant_glossary("The matrix power follows from the eigenvalue.", "mathematics")
+
+        self.assertIn(("return", "返回"), {(item["source"], item["target"]) for item in programming})
+        self.assertNotIn(("return", "收益率"), {(item["source"], item["target"]) for item in programming})
+        self.assertIn(("return", "收益率"), {(item["source"], item["target"]) for item in finance})
+        self.assertIn(("power", "检验功效"), {(item["source"], item["target"]) for item in statistics})
+        self.assertIn(("power", "幂"), {(item["source"], item["target"]) for item in mathematics})
+
+    def test_bare_ambiguous_term_does_not_inject_contradictory_hints(self):
+        entries = MODULE.relevant_glossary("return", "auto")
+        self.assertEqual([item for item in entries if item["source"].lower() == "return"], [])
+
+    def test_new_professional_coverage_spans_all_learning_domains(self):
+        cases = {
+            "academic": ("causal inference", "因果推断"),
+            "economics": ("Taylor rule", "泰勒规则"),
+            "finance": ("net present value", "净现值"),
+            "quant_finance": ("non-modellable risk factor", "不可建模风险因子"),
+            "statistics": ("heteroskedasticity-consistent standard error", "异方差稳健标准误"),
+            "mathematics": ("infinitesimal generator", "无穷小生成元"),
+            "programming": ("abstract syntax tree", "抽象语法树"),
+        }
+        for domain, (source, target) in cases.items():
+            entries = MODULE.relevant_glossary(source, domain)
+            self.assertIn((source, target), {(item["source"], item["target"]) for item in entries})
+
+    def test_contextual_retrieval_includes_cqf_math_even_in_quant_domain(self):
+        entries = MODULE.relevant_glossary("Ito’s lemma and quadratic variation under a risk neutral measure; VaR and ES versus EL.", "quant_finance")
+        prompt = MODULE.glossary_prompt(entries)
+        for term in ("伊藤引理", "二次变差", "风险中性测度", "风险价值", "预期信用损失"):
+            self.assertIn(term, prompt)
+        self.assertIn("不等同于信用风险", prompt)
+        self.assertNotIn("garbage collection", prompt)
+
+    def test_retrieval_uses_word_boundaries_and_respects_limit(self):
+        self.assertEqual(MODULE.relevant_glossary("alphabetagamma classification", "programming"), [])
+        entries = MODULE.load_glossary("mathematics")
+        text = " ".join(item['source'] for item in entries)
+        self.assertEqual(len(MODULE.select_glossary(entries, text, 5)), 5)
+
+    @mock.patch.object(MODULE, "run_codex_completion", return_value='{"cues":[{"id":"paragraph","text":"利用二次变差。"}],"review":[]}')
+    def test_professional_translation_actually_receives_relevant_glossary(self, run):
+        MODULE.translate_codex_subscription("Use quadratic variation.", "en", "zh", "quant_finance")
+        prompt = run.call_args.args[0][0]['content']
+        self.assertIn("二次变差", prompt)
+        self.assertNotIn("garbage collection", prompt)
 
     def test_hotwords_are_domain_specific_and_auto_combines_domains(self):
         quant = MODULE.hotwords_for_domain("quant_finance")

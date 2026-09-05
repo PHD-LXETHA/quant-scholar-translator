@@ -165,6 +165,18 @@ function streamingResponse(chunks, { ok = true, status = 200 } = {}) {
 const encode = (value) => new TextEncoder().encode(value);
 const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
 
+test('live records keep source-translation pairs intact even across sentences and duplicate seek timestamps', () => {
+  const { transcriptSegmentsForDisplay } = loadSidepanelHelpers();
+  const entries = [
+    { id: 's1', start: 301, text: 'We have a bust. So, unfortunately.', translation: '出现了衰退。因此，很遗憾。' },
+    { id: 's2', start: 301, text: 'The cost is high.', translation: '成本很高。' },
+    { id: 's3', start: 20, text: 'Variance is not volatility.', translation: '方差并不是波动率。' },
+  ];
+  const segments = transcriptSegmentsForDisplay(entries, 'universal');
+  assert.deepEqual(JSON.parse(JSON.stringify(segments)), entries);
+  assert.notEqual(segments[0].id, segments[1].id);
+});
+
 test("Transcript header exposes and wires original, Chinese, and bilingual modes", () => {
   const html = read("sidepanel.html");
   const js = read("sidepanel.js");

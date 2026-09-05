@@ -7,6 +7,8 @@
     "tabCapture",
     "offscreen",
     "storage",
+    "unlimitedStorage",
+    "alarms",
     "activeTab",
     "scripting",
     "nativeMessaging",

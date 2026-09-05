@@ -19,17 +19,17 @@
   <small>浏览器内部缓存始终保留；选择目录后会额外同步可恢复的译文、批注和阅读位置 JSON。出于浏览器隐私限制，只显示目录名，不显示完整 Windows 路径。</small>
 </section>
 <section class="glossary" aria-labelledby="glossary-title">
-  <div class="glossary-head"><div><h2 id="glossary-title">专业术语表</h2><p>左侧填写论文原词，右侧填写希望采用的标准译法。术语表会自动加入网页划词翻译、全文翻译和 PDF 翻译。</p></div><span id="glossary-count" class="glossary-count">0 条</span></div>
+  <div class="glossary-head"><div><h2 id="glossary-title">专业术语表</h2><p>支持原词、简称、标准译法和语境说明。网页及 PDF 翻译按当前原文选择相关词条，不做机械替换。JSON/CSV 导入导出保留语境；视频精译使用本地服务中的同源预置库，网页自定义词条暂不自动同步到视频。</p></div><span id="glossary-count" class="glossary-count">0 条</span></div>
   <div class="glossary-tools">
     <button id="add-term" type="button" class="secondary">＋ 添加术语</button>
-    <button id="battery-preset" type="button">加入 Quant Scholar 专业预置</button>
+    <button id="professional-preset" type="button">加入 Quant Scholar 专业预置</button>
     <button id="import-glossary" type="button">导入 JSON/CSV</button>
     <button id="export-glossary-json" type="button">导出 JSON</button>
     <button id="export-glossary-csv" type="button">导出 CSV</button>
     <input id="glossary-file" type="file" accept=".json,.csv,application/json,text/csv" hidden>
   </div>
   <div class="glossary-table-wrap"><table class="glossary-table"><thead><tr><th>英文原词 / 缩写</th><th>标准译法 / 保留要求</th><th><span class="sr-only">操作</span></th></tr></thead><tbody id="glossary-body"></tbody></table></div>
-  <p class="glossary-empty" id="glossary-empty">还没有术语。可以添加自己的术语，或载入锂/钠电池预置。</p>
+  <p class="glossary-empty" id="glossary-empty">还没有术语。可以添加自己的术语，或载入金融、量化、经济、数学、统计、编程与通用学术预置。</p>
 </section>
 <div class="actions"><button id="save" class="primary">保存设置</button><button id="test">测试所选方案</button><span id="status" class="status"></span></div>
 </main></div><script type="module" src="options.js"></script></body></html>

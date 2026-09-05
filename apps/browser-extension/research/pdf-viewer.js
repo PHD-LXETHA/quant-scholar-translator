@@ -4,12 +4,13 @@ import { availableOverlayHeight, detectVisualRegions } from "./pdf-visual-region
 import { renderScientificText } from "./scientific-text.mjs";
 import { splitInlineSection } from "./section-heading.mjs";
 import { parseReferenceList } from "./reference-list.mjs";
-import { formatGlossaryPrompt } from "./glossary.mjs";
+import { formatGlossaryPrompt, migrateProfessionalGlossary } from "./glossary.mjs";
 import { estimateTranslationUsage, translationProgress } from "./translation-usage.mjs";
 import { buildStableDocumentSignature, isCompatibleTranslationSession, matchCachedTranslations, sessionContentSimilarity } from "./pdf-session-cache.mjs";
 import { isLikelyUntranslated } from "./translation-quality.mjs";
 import { cleanupExternalTranslationSessions, deleteExternalDocumentSessions, getExternalTranslationSession, listExternalTranslationSessions, putExternalTranslationSession } from "./cache-directory.mjs";
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("research/vendor/pdf.worker.min.mjs");
+await migrateProfessionalGlossary(chrome.storage.local);
 
 const $ = id => document.getElementById(id);
 const APP_VERSION = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
@@ -35,6 +36,8 @@ else if (queryLocalMode === "select") notice("请点击工具栏中的“本地 
 $("open").onclick = () => openPdf($("url").value.trim());
 $("url").onkeydown = event => { if (event.key === "Enter") $("open").click(); };
 $("translate").onclick = translatePdf;
+document.querySelector('.brand strong').textContent = 'Quant Scholar PDF Reader';
+$("translate").textContent = 'Codex / Kimi 精译 PDF';
 $("pause-translation").onclick=toggleTranslationPause;
 $("cancel-translation").onclick=cancelTranslationTask;
 $("retry-failed").onclick=retryFailedTranslation;
@@ -88,7 +91,7 @@ async function openPdf(source, label = source) {
     state.targetLanguage=languageSettings.targetLanguage||"简体中文";
     state.rawDocumentKey=rawDocumentKey; state.profileKey=profileKey;
     const task = pdfjsLib.getDocument({ data: pdfData, cMapUrl: chrome.runtime.getURL("research/vendor/cmaps/"), cMapPacked: true, standardFontDataUrl: chrome.runtime.getURL("research/vendor/standard_fonts/") });
-    state.pdf = await task.promise; state.source = String(label); document.title = `科研译镜 · ${shortName(label)}`;
+    state.pdf = await task.promise; state.source = String(label); document.title = `Quant Scholar PDF Reader · ${shortName(label)}`;
     for (let number = 1; number <= state.pdf.numPages; number++) await renderPage(number);
     const signature=buildStableDocumentSignature(state.pages.map(page=>({number:page.number,blocks:sortBlocksForReading(page.blocks,page.viewport,page.number)})));
     state.documentKey=signature?await hashText(signature):rawDocumentKey;
@@ -308,7 +311,7 @@ async function clearCurrentDocumentCache(){
 function updateTranslateButton(){
   const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
   const completed=blocks.filter(block=>block.translation).length;
-  $("translate").textContent=!completed?"翻译 PDF":completed<blocks.length?`继续翻译 PDF（${completed}/${blocks.length}）`:"翻译完成";
+  $("translate").textContent=!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
   $("translate").disabled=state.translationTask.running||Boolean(blocks.length&&completed>=blocks.length);
   renderTranslationTaskPanel();
 }
@@ -423,7 +426,7 @@ async function runTranslationTasks(tasks,isRetry) {
       const task=queue[index],activeBatch=task.batch.filter(block=>!block.translation);if(!activeBatch.length)continue;
       taskState.message=`正在翻译第 ${task.page.number}/${state.pages.length} 页，第 ${index+1}/${queue.length} 批`;notice(taskState.message,false,true);renderTranslationTaskPanel();
       let result;
-      try{result=await chrome.runtime.sendMessage({type:"TRANSLATE_BATCH",texts:activeBatch.map(block=>block.text),roles:activeBatch.map(block=>block.role||"")});}
+      try{result=await chrome.runtime.sendMessage({type:"TRANSLATE_BATCH",professionalOnly:true,texts:activeBatch.map(block=>block.text),roles:activeBatch.map(block=>block.role||"")});}
       catch(error){result={ok:false,error:error?.message||String(error),retryable:true,code:"EXTENSION_MESSAGE_FAILED",stage:"extension-message",status:0,attempts:[]};}
       const returned=Array.isArray(result?.translations)?result.translations:[];
       let applied=0;

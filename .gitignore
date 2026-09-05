@@ -10,3 +10,4 @@ build/
 dist/
 *.egg-info/
 apps/browser-extension/native/com.quant_scholar.translator.json
+学习资料/

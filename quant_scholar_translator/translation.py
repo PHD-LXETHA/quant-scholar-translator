@@ -10,6 +10,7 @@ import json
 import os
 import re
 import urllib.request
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,12 +22,12 @@ ROOT = Path(os.getenv("QS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).r
 GLOSSARY_DIR = Path(__file__).resolve().parent / "data" / "glossaries"
 
 DOMAIN_HINTS = {
-    "finance": ("portfolio", "asset", "bond", "equity", "valuation", "yield", "return"),
-    "quant_finance": ("factor", "alpha", "beta", "backtest", "drawdown", "sharpe", "exposure"),
-    "economics": ("inflation", "utility", "equilibrium", "elasticity", "monetary", "fiscal"),
-    "statistics": ("estimator", "regression", "variance", "likelihood", "hypothesis", "stationary"),
-    "mathematics": ("theorem", "proof", "lemma", "matrix", "eigenvalue", "integral"),
-    "programming": ("function", "class", "runtime", "compiler", "thread", "repository"),
+    "finance": ("portfolio", "asset", "bond", "equity", "valuation", "yield", "coupon", "cash flow", "balance sheet"),
+    "quant_finance": ("factor", "alpha", "beta", "backtest", "drawdown", "sharpe", "exposure", "hedging", "martingale measure"),
+    "economics": ("inflation", "utility", "equilibrium", "elasticity", "monetary", "fiscal", "unemployment", "gross domestic product"),
+    "statistics": ("estimator", "regression", "variance", "likelihood", "hypothesis", "stationary", "p-value", "standard error"),
+    "mathematics": ("theorem", "proof", "lemma", "matrix", "eigenvalue", "integral", "sigma-algebra", "brownian motion"),
+    "programming": ("function", "class", "runtime", "compiler", "thread", "repository", "dataframe", "exception", "api endpoint"),
 }
 
 PROTECTED_PATTERNS = re.compile(
@@ -134,9 +135,81 @@ def hotwords_for_domain(domain: str, limit: int = 80) -> str:
     return ", ".join(words)
 
 
+def normalize_term(value: str) -> str:
+    value = "".join(c for c in unicodedata.normalize("NFKD", value) if not unicodedata.combining(c))
+    return re.sub(r"\s+", " ", re.sub(r"[-–—‑]", " ", value.replace("’", "'").lower())).strip()
+
+
+def select_glossary(entries: list[dict], text: str, limit: int = 40) -> list[dict]:
+    """Match whole terms/aliases in original context, favoring specific phrases."""
+    normalized = normalize_term(text)
+    ranked = []
+    for index, item in enumerate(entries):
+        score = 0
+        for alias in [item["source"], *item.get("aliases", [])]:
+            term = normalize_term(alias)
+            if term and re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", normalized):
+                score = max(score, len(term))
+        if score:
+            ranked.append((-score, index, item))
+    return [item for _, _, item in sorted(ranked, key=lambda row: row[:2])[:limit]]
+
+
+def relevant_glossary(text: str, domain: str, limit: int = 40) -> list[dict]:
+    # A quant paragraph may also contain mathematics/statistics terminology.
+    requested_domain = domain if domain not in ("", "auto", None) else None
+    primary_domain = requested_domain or detect_domain(text)
+    names = [primary_domain, *[name for name in ["academic", *DOMAIN_HINTS] if name != primary_domain]]
+    candidates, seen_names = [], set()
+    for name in names:
+        if name in seen_names:
+            continue
+        seen_names.add(name)
+        candidates.extend({**item, "domain": name} for item in load_glossary(name))
+    ranked = select_glossary(candidates, text, len(candidates))
+    groups: dict[str, list[dict]] = {}
+    for item in ranked:
+        groups.setdefault(normalize_term(item["source"]), []).append(item)
+
+    def matched_score(item: dict) -> int:
+        normalized = normalize_term(text)
+        return max((
+            len(term)
+            for alias in [item["source"], *item.get("aliases", [])]
+            if (term := normalize_term(alias))
+            and re.search(r"(?<![a-z0-9])" + re.escape(term) + r"(?![a-z0-9])", normalized)
+        ), default=0)
+
+    evidence: dict[str, int] = {}
+    for item in ranked:
+        evidence[item["domain"]] = evidence.get(item["domain"], 0) + matched_score(item)
+
+    allowed: set[int] = set()
+    for rows in groups.values():
+        targets = {item["target"] for item in rows}
+        if len(targets) <= 1:
+            allowed.add(id(rows[0]))
+            continue
+        # An explicitly selected domain is authoritative. In automatic mode,
+        # use other matched terminology as evidence. If still tied, omit every
+        # conflicting hint rather than feeding the model contradictory rules.
+        preferred = next((item for item in rows if item["domain"] == requested_domain), None)
+        if preferred:
+            allowed.add(id(preferred))
+            continue
+        scores = [evidence.get(item["domain"], 0) for item in rows]
+        best = max(scores)
+        if scores.count(best) == 1:
+            allowed.add(id(rows[scores.index(best)]))
+
+    return [item for item in ranked if id(item) in allowed][:limit]
+
+
 def glossary_prompt(entries: list[dict], limit: int = 40) -> str:
     return "\n".join(
-        f"- {item['source']} => {item['target']} ({item.get('note', '')})"
+        f"- {item['source']} => {item['target']} [{item.get('domain', '')}]"
+        f" ({item.get('note', '')})"
+        + (f"; aliases: {', '.join(item['aliases'])}" if item.get('aliases') else "")
         for item in entries[:limit]
     )
 
@@ -156,6 +229,7 @@ def translate_openai_compatible(
     selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
     protected = protect(text)
     system = f"""You are a professional translator for {selected_domain} learning material.
+Translate every sentence in the supplied text, in order. Never summarize, select highlights, or omit repeated examples or qualifications.
 Translate from {source_lang or 'auto-detected language'} to {target_lang}.
 Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
 variable names, citations, ticker symbols and code. Prefer established Chinese
@@ -163,7 +237,7 @@ academic terminology. Do not add explanations. Use the glossary contextually;
 do not perform blind word replacement. Return translation text only.
 
 Glossary:
-{glossary_prompt(load_glossary(selected_domain))}"""
+{glossary_prompt(relevant_glossary(text + ' ' + context, selected_domain))}"""
     payload = json.dumps({
         "model": model,
         "temperature": 0.1,
@@ -194,26 +268,15 @@ def translate_codex_subscription(
     timeout: int | None = None,
     context: str = "",
 ) -> str:
-    """Translate through the locally installed, ChatGPT-authenticated Codex CLI."""
-    selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
-    protected = protect(text)
-    system = f"""You are a professional translator for {selected_domain} learning material.
-Translate from {source_lang or 'auto-detected language'} to {target_lang}.
-Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
-variable names, citations, ticker symbols and code. Prefer established Chinese
-academic terminology. Do not add explanations. Use the glossary contextually;
-do not perform blind word replacement. Return translation text only.
-
-Glossary:
-{glossary_prompt(load_glossary(selected_domain))}"""
-    output = run_codex_completion(
-        [
-            {"role": "system", "content": system},
-            {"role": "user", "content": contextual_user_text(protected.text, context)},
-        ],
-        timeout=timeout,
+    """Use the same medium/high review policy for a plain-text paragraph."""
+    # Lazy import avoids the caption helper's glossary import cycle.
+    from .caption_translation import translate_cues
+    rows = translate_cues(
+        [{"id": "paragraph", "text": text}], source_lang, target_lang,
+        domain, "codex_subscription", context, timeout=timeout,
+        _codex_runner=run_codex_completion,
     )
-    return restore_checked(output.strip(), protected.values)
+    return rows[0]["text"]
 
 
 def translate_kimi_subscription(
@@ -229,6 +292,7 @@ def translate_kimi_subscription(
     selected_domain = detect_domain(text) if domain in ("", "auto", None) else domain
     protected = protect(text)
     system = f"""You are a professional translator for {selected_domain} learning material.
+Translate every sentence in the supplied text, in order. Never summarize, select highlights, or omit repeated examples or qualifications.
 Translate from {source_lang or 'auto-detected language'} to {target_lang}.
 Preserve every ⟪QS_PROTECTED_n⟫ token exactly. Preserve numbers, equations,
 variable names, citations, ticker symbols and code. Prefer established Chinese
@@ -236,7 +300,7 @@ academic terminology. Do not add explanations. Use the glossary contextually;
 do not perform blind word replacement. Return translation text only.
 
 Glossary:
-{glossary_prompt(load_glossary(selected_domain))}"""
+{glossary_prompt(relevant_glossary(text + ' ' + context, selected_domain))}"""
     output = run_kimi_completion(
         [
             {"role": "system", "content": system},

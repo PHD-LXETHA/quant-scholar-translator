@@ -1,5 +1,3 @@
-.rt-hud { position: fixed; right: 20px; bottom: 20px; z-index: 2147483647; display: grid; grid-template-columns: auto auto auto; align-items: center; gap: 12px; max-width: 520px; padding: 12px 14px; border: 1px solid #bfd7d0; border-radius: 12px; color: #173d35; background: rgba(244, 251, 248, .98); box-shadow: 0 12px 40px rgba(20, 56, 47, .2); font: 13px/1.4 system-ui, sans-serif; }
-.rt-hud strong { color: #08735d; }
-.rt-hud button { border: 0; border-radius: 7px; padding: 6px 9px; color: #fff; background: #56716a; cursor: pointer; }
-.rt-hud.rt-error { border-color: #eab6b6; color: #7d2222; background: #fff7f7; }
+/* Hide any orphan status element left by an earlier extension version. */
+.rt-hud { display:none!important; }
 .rt-quick-host { position:fixed!important; z-index:2147483647!important; }

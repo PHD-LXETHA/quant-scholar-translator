@@ -44,13 +44,14 @@ test('learning workspace supports Codex and Kimi subscriptions without an extern
   assert.doesNotMatch(`${settings}\n${background}`, /x-api-key|\/v1\/transcript/i);
 });
 
-test('toolbar click opens the draggable page menu, not a Chrome-anchored popup or side panel', () => {
+test('toolbar click opens the fixed page menu, not a Chrome-anchored popup, new tab or side panel', () => {
   const manifest = JSON.parse(fs.readFileSync(new URL('manifest.json', root), 'utf8'));
   const coreBackground = fs.readFileSync(new URL('background.js', root), 'utf8');
   const background = fs.readFileSync(new URL('learning/background.js', root), 'utf8');
   assert.equal(manifest.action.default_popup, undefined);
   assert.match(coreBackground, /chrome\.action\.onClicked\.addListener/);
   assert.match(coreBackground, /floating:toggle-menu/);
+  assert.doesNotMatch(coreBackground, /tabs\.create\(\{ url: chrome\.runtime\.getURL\('popup\/popup.html'\)/);
   assert.match(background, /setPanelBehavior\(\{ openPanelOnActionClick: false \}\)/);
   assert.doesNotMatch(background, /chrome\.action\.onClicked\.addListener/);
   assert.match(background, /path: "learning\/sidepanel\.html"/);
@@ -65,9 +66,10 @@ test('floating menu embeds the complete translation workspace', () => {
     'fontSize', 'position', 'model', 'device', 'translationMode', 'translator',
     'backendUrl', 'translatePage', 'togglePageTranslation', 'openPdfReader',
     'openResearchSettings', 'openLearningPanel', 'openLearningSettings',
-    'exportMarkdown', 'exportJson', 'exportSrt', 'clearSession',
+    'exportMarkdown', 'exportPdf', 'exportJson', 'exportSrt', 'clearSession',
   ];
   for (const id of expectedControls) assert.match(popup, new RegExp(`id=["']${id}["']`));
+  assert.doesNotMatch(popup, /id=["']saveBilingual(?:Pdf)?["']/);
   assert.match(content, /popup\/popup\.html/);
   assert.ok(manifest.web_accessible_resources.some(entry => entry.resources.includes('popup/popup.html')));
 });

@@ -1,17 +1,17 @@
 // Kami Subs — content script
 // Mounts a subtitle overlay anchored over the most likely active video element.
 
+(() => {
+if (window.top !== window || window.__quantScholarContentLoaded) return;
+window.__quantScholarContentLoaded = true;
+
 const OVERLAY_ID = 'kami-subs-overlay';
-const MAX_VISIBLE_CHARS = 180;
-// Clear the overlay this long after the last transcript update. While someone's
-// talking, updates land ~every second and keep resetting this timer, so the
-// line stays put; it only fades once speech actually stops for a few seconds.
-const CLEAR_AFTER_MS = 4000;
 
 let overlayEl = null;
 let textEl = null;
 let sourceEl = null;
-let stageEl = null;
+let overlaySettings = {};
+let overlayRecoveryObserver = null;
 let hideTimer = null;
 let trackedVideo = null;
 let resizeObserver = null;
@@ -21,6 +21,7 @@ let nativeTrackBindings = [];
 let lastNativeCaption = '';
 let nativeCaptionSettings = {};
 let domCaptionTimer = null;
+let pendingDomCaption = '';
 let youtubeTimedTextCues = [];
 let youtubeTimedTextTimer = null;
 let youtubeTimedTextNonce = 0;
@@ -120,18 +121,21 @@ function startYoutubeTimedTextBridge() {
 }
 
 function readDomCaption() {
-  const nodes = CAPTION_SELECTORS.flatMap(selector => Array.from(document.querySelectorAll(selector)));
+  const nodes = [...new Set(CAPTION_SELECTORS.flatMap(selector => Array.from(document.querySelectorAll(selector))))];
   const visible = nodes.filter(node => {
+    if (node.closest(`#${OVERLAY_ID}, #${FLOATING_HOST_ID}, .rt-quick-host`)) return false;
     const style = getComputedStyle(node);
     const rect = node.getBoundingClientRect();
     return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
   });
   const value = visible.map(node => node.textContent || '').join(' ').replace(/\s+/g, ' ').trim();
-  if (value && value !== lastNativeCaption) {
+  if (value && value !== lastNativeCaption && value !== pendingDomCaption) {
     if (domCaptionTimer) clearTimeout(domCaptionTimer);
+    pendingDomCaption = value;
     domCaptionTimer = setTimeout(() => {
       emitNativeCaption(value, location.hostname.includes('youtube.com') ? 'youtube-dom' : 'player-dom');
       domCaptionTimer = null;
+      pendingDomCaption = '';
     }, 280);
   }
   return Boolean(value);
@@ -161,6 +165,7 @@ function bindHtml5TextTrack() {
 function stopNativeCaptions() {
   if (domCaptionTimer) clearTimeout(domCaptionTimer);
   domCaptionTimer = null;
+  pendingDomCaption = '';
   if (nativeCaptionObserver) nativeCaptionObserver.disconnect();
   nativeCaptionObserver = null;
   for (const [track, listener] of nativeTrackBindings) track.removeEventListener('cuechange', listener);
@@ -182,12 +187,15 @@ async function startNativeCaptions(settings) {
     const cc = document.querySelector('.ytp-subtitles-button');
     if (cc && cc.getAttribute('aria-pressed') !== 'true') cc.click();
   }
-  if (hasTrack || readDomCaption()) return { ok: true, provider: hasTrack ? 'html5-texttrack' : 'player-dom' };
+  // A player can expose an empty TextTrack. Only select the subtitle path
+  // once actual text is available; otherwise tab audio must take over.
+  if (lastNativeCaption || readDomCaption()) return { ok: true, provider: hasTrack ? 'html5-texttrack' : 'player-dom' };
 
   const deadline = Date.now() + (location.hostname.includes('youtube.com') ? 6500 : 2200);
   while (Date.now() < deadline) {
     await new Promise(resolve => setTimeout(resolve, 200));
-    if (bindHtml5TextTrack() || readDomCaption() || youtubeTimedTextCues.length) {
+    bindHtml5TextTrack();
+    if (lastNativeCaption || readDomCaption() || youtubeTimedTextCues.length) {
       return { ok: true, provider: youtubeTimedTextCues.length ? 'youtube-timedtext' : 'detected-caption' };
     }
   }
@@ -203,10 +211,12 @@ function currentOverlayHost() {
 }
 
 function ensureOverlay(settings) {
+  overlaySettings = { ...overlaySettings, ...settings };
   // If we hold a reference that's still in the DOM, reuse it.
   if (overlayEl && overlayEl.isConnected) {
     const host = currentOverlayHost();
     if (overlayEl.parentNode !== host) host.appendChild(overlayEl);
+    applySettings(overlaySettings);
     return overlayEl;
   }
   // Service-worker restarts or stale content-script reloads can leave orphan
@@ -220,13 +230,21 @@ function ensureOverlay(settings) {
   sourceEl.className = 'kami-subs-source';
   textEl = document.createElement('span');
   textEl.className = 'kami-subs-text';
-  stageEl = document.createElement('span');
-  stageEl.className = 'kami-subs-stage';
-  overlayEl.appendChild(stageEl);
   overlayEl.appendChild(sourceEl);
   overlayEl.appendChild(textEl);
   currentOverlayHost().appendChild(overlayEl);
-  applySettings(settings || {});
+  applySettings(overlaySettings);
+  // Some players replace their containers during playback. Reattach the same
+  // card (including its text) instead of writing into a detached DOM node.
+  if (!overlayRecoveryObserver) {
+    overlayRecoveryObserver = new MutationObserver(() => {
+      if (overlayEl && !overlayEl.isConnected) {
+        currentOverlayHost().appendChild(overlayEl);
+        positionOverlayOverVideo();
+      }
+    });
+    overlayRecoveryObserver.observe(document.documentElement, { childList: true, subtree: true });
+  }
   return overlayEl;
 }
 
@@ -245,6 +263,8 @@ function applySettings(settings) {
   overlayEl.style.setProperty('--kami-font-size', fontSize + 'px');
   const position = settings.position || 'bottom';
   overlayEl.dataset.position = position;
+  overlayEl.dataset.display = ['translation', 'bilingual', 'sidebar'].includes(settings.subtitleDisplay)
+    ? settings.subtitleDisplay : 'translation';
 }
 
 function positionOverlayOverVideo() {
@@ -255,17 +275,18 @@ function positionOverlayOverVideo() {
   // whenever the player is taller than the viewport or scrolls oddly.
   overlayEl.style.left = '50%';
   overlayEl.style.transform = 'translateX(-50%)';
-  overlayEl.style.width = 'min(86vw, 1200px)';
+  overlayEl.style.width = 'min(76vw, 880px)';
   if ((overlayEl.dataset.position || 'bottom') === 'top') {
     overlayEl.style.top = '6vh';
     overlayEl.style.bottom = '';
   } else {
-    overlayEl.style.bottom = '8vh';
+    overlayEl.style.bottom = 'max(72px, 8vh)';
     overlayEl.style.top = '';
   }
 }
 
 function trackVideo() {
+  untrackVideo();
   trackedVideo = pickPrimaryVideo();
   if (resizeObserver) try { resizeObserver.disconnect(); } catch (e) {}
   if (window.ResizeObserver && trackedVideo) {
@@ -296,6 +317,8 @@ function mount(settings) {
 }
 
 function unmount() {
+  overlayRecoveryObserver?.disconnect();
+  overlayRecoveryObserver = null;
   if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
   untrackVideo();
   stopNativeCaptions();
@@ -305,57 +328,33 @@ function unmount() {
   overlayEl = null;
   textEl = null;
   sourceEl = null;
-  stageEl = null;
 }
 
 function setText(text, raw, stage = 'final', provider = '') {
-  if (!overlayEl) ensureOverlay({});
+  ensureOverlay(overlaySettings);
   let t = (text || '').trim();
   const source = (raw || '').trim();
   if (!t && !source) {
-    // Empty transcript — hide instead of showing a blank black box.
-    overlayEl.classList.remove('kami-visible');
-    textEl.textContent = '';
-    if (sourceEl) sourceEl.textContent = '';
+    // Empty interim recognition must not erase the last readable subtitle.
     return;
   }
-  if (t.length > MAX_VISIBLE_CHARS) t = '…' + t.slice(-MAX_VISIBLE_CHARS);
-  const labels = {
-    source: '原文 · 专业翻译中',
-    'quick-preview': 'NLLB 快速预览 · 非终稿',
-    'offline-preview': 'NLLB 离线预览',
-    'offline-final': 'NLLB 离线译文',
-    'professional-final': provider === 'codex'
-      ? 'Codex 专业终稿'
-      : provider === 'llm' ? 'API 专业终稿' : 'Kimi 专业终稿',
-  };
-  textEl.textContent = t || '专业译文生成中…';
-  if (sourceEl) sourceEl.textContent = source;
-  if (stageEl) stageEl.textContent = labels[stage] || (provider ? `${provider} 译文` : '专业译文');
-  overlayEl.dataset.stage = stage;
+  const nextText = t;
+  if (textEl.textContent !== nextText) textEl.textContent = nextText;
+  if (sourceEl && sourceEl.textContent !== source) sourceEl.textContent = source;
+  overlayEl.dataset.stage = !t && source ? 'source' : stage;
   overlayEl.classList.add('kami-visible');
+  overlayEl.classList.remove('kami-error');
   positionOverlayOverVideo();
-  // Reset the idle clear-timer on every update. The line persists through the
-  // gaps between chunks but disappears once speech stops for CLEAR_AFTER_MS.
+  // Keep the last line readable during model latency and pauses. Stop/unmount
+  // clears it explicitly instead of repeatedly fading out between updates.
   if (hideTimer) clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => {
-    if (overlayEl) {
-      overlayEl.classList.remove('kami-visible');
-      if (textEl) textEl.textContent = '';
-    }
-    hideTimer = null;
-  }, CLEAR_AFTER_MS);
+  hideTimer = null;
 }
 
 function showError(msg) {
-  if (!overlayEl) ensureOverlay({});
-  textEl.textContent = '⚠ ' + msg;
-  overlayEl.classList.add('kami-visible', 'kami-error');
-  if (hideTimer) clearTimeout(hideTimer);
-  hideTimer = setTimeout(() => {
-    if (overlayEl) overlayEl.classList.remove('kami-error');
-  }, 4000);
+  // Diagnostics belong in the control menu, never over the video.
 }
+
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (!msg || !msg.type) return;
@@ -363,72 +362,95 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     case 'ping':            sendResponse({ ok: true }); return true;
     case 'media:time':      sendResponse({ mediaTime: mediaTime() }); return true;
     case 'media:seek': {
-      const media = trackedVideo || pickPrimaryVideo();
-      if (!media || !Number.isFinite(Number(msg.seconds))) {
-        sendResponse({ ok: false });
-        return true;
-      }
-      media.currentTime = Math.max(0, Number(msg.seconds));
-      sendResponse({ ok: true, mediaTime: media.currentTime });
+      (async () => {
+        const result = await chrome.runtime.sendMessage({ target: 'background', type: 'full:seek', seconds: Number(msg.seconds) }).catch(() => null);
+        if (result?.ok) { sendResponse(result); return; }
+        const media = trackedVideo || pickPrimaryVideo();
+        if (!media || !Number.isFinite(Number(msg.seconds))) { sendResponse({ ok: false }); return; }
+        media.currentTime = Math.max(0, Number(msg.seconds));
+        sendResponse({ ok: true, mediaTime: media.currentTime });
+      })();
       return true;
     }
     case 'captions:start':
       startNativeCaptions(msg.settings).then(sendResponse);
       return true;
     case 'captions:stop':   stopNativeCaptions(); break;
-    case 'overlay:mount':   mount(msg.settings); break;
+    case 'overlay:mount':   mount(msg.settings); sendResponse({ ok: true }); return true;
+    case 'overlay:settings': overlaySettings = { ...overlaySettings, ...msg.settings }; applySettings(overlaySettings); positionOverlayOverVideo(); sendResponse({ ok: true }); return true;
     case 'overlay:unmount': unmount(); break;
-    case 'overlay:text':    setText(msg.text, msg.raw, msg.stage, msg.provider); break;
-    case 'overlay:error':   showError(msg.message); break;
+    case 'overlay:text':    setText(msg.text, msg.raw, msg.stage, msg.provider); sendResponse({ ok: true }); return true;
+    case 'overlay:clear':   overlayEl?.classList.remove('kami-visible'); sendResponse({ ok: true }); return true;
+    case 'overlay:error':   showError(msg.message); sendResponse({ ok: true }); return true;
   }
 });
 
 // If the page loads while capture is already active, restore the overlay.
-chrome.storage.local.get(['isCapturing', 'activeTabId', 'settings'], (s) => {
-  if (s && s.isCapturing) mount(s.settings || {});
-});
+// The background verifies the sender tab; global storage alone would mount a
+// live card on every unrelated tab when one course is being captured.
+chrome.runtime.sendMessage({ target: 'background', type: 'overlay:resume' }).then(result => {
+  if (!result?.active) return;
+  mount(result.settings || {});
+  if (result.lastOverlay) {
+    const line = result.lastOverlay;
+    setText(line.text, line.raw, line.stage, line.provider);
+  }
+}).catch(() => {});
+
+// ---------------------------------------------------------------------------
+// Recover saved captions on reopened tabs and playlist navigation. This request
+// only reads archives; the background must never start a translation here.
+let archiveRestoreBusy = false;
+async function tryRestoreVideoArchive() {
+  if (archiveRestoreBusy || document.visibilityState === 'hidden' || !document.querySelector('video,audio,iframe')) return;
+  archiveRestoreBusy = true;
+  try { await chrome.runtime.sendMessage({ target: 'background', type: 'library:restore' }); }
+  catch { /* Content may outlive an extension reload. */ }
+  finally { archiveRestoreBusy = false; }
+}
+document.addEventListener('loadedmetadata', tryRestoreVideoArchive, true);
+document.addEventListener('play', tryRestoreVideoArchive, true);
+document.addEventListener('visibilitychange', tryRestoreVideoArchive);
+setTimeout(tryRestoreVideoArchive, 1500);
+setInterval(tryRestoreVideoArchive, 10000);
 
 // ---------------------------------------------------------------------------
 // Page-level floating control. Chrome owns the toolbar-popup anchor, so this
-// is the stable, draggable entry point that the extension itself can position.
+// is a fixed bottom-right entry point, shared with the toolbar action.
 // It lives in a shadow root to avoid inheriting styles from arbitrary sites.
 // ---------------------------------------------------------------------------
 const FLOATING_HOST_ID = 'quant-scholar-floating-control';
-const FLOATING_POSITION_KEY = 'quantScholarFloatingPosition';
 
 function mountFloatingMenu() {
-  if (!document.documentElement || document.getElementById(FLOATING_HOST_ID)) return;
+  if (!document.documentElement) return;
+  // Extension reloads invalidate the old isolated world but leave its DOM behind.
+  document.getElementById(FLOATING_HOST_ID)?.remove();
   const host = document.createElement('div');
   host.id = FLOATING_HOST_ID;
   host.style.position = 'fixed';
   host.style.zIndex = '2147483646';
-  host.style.top = '96px';
-  host.style.right = '18px';
+  host.style.bottom = 'max(20px, env(safe-area-inset-bottom))';
+  host.style.right = 'max(20px, env(safe-area-inset-right))';
   host.style.pointerEvents = 'none';
   const shadow = host.attachShadow({ mode: 'open' });
   shadow.innerHTML = `
     <style>
       :host { all: initial; }
+      *, *::before, *::after { box-sizing:border-box; }
       .shell { position: relative; font: 13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; color:#edf8fb; pointer-events:none; }
-      .launcher { width:46px; height:46px; display:grid; place-items:center; border:1px solid rgba(54,214,194,.58); border-radius:15px; color:#f0c66d; background:linear-gradient(145deg,#123247,#071521); box-shadow:0 10px 30px rgba(0,0,0,.32); font-weight:800; font-size:12px; letter-spacing:.06em; cursor:grab; user-select:none; touch-action:none; pointer-events:auto; transition:opacity .2s, transform .2s, box-shadow .2s; }
-      .launcher:hover,.launcher:focus-visible { opacity:1!important; transform:translateY(-1px); box-shadow:0 12px 34px rgba(54,214,194,.2); outline:none; }
-      .shell.idle .launcher { opacity:.34; }
-      .shell.live .launcher { border-color:#61d69b; box-shadow:0 0 0 3px rgba(97,214,155,.16),0 10px 30px rgba(0,0,0,.32); }
-      .panel { position:absolute; top:54px; right:0; width:min(354px,calc(100vw - 28px)); height:min(78vh,720px); padding:0; border:1px solid #21445a; border-radius:16px; overflow:hidden; background:rgba(7,21,33,.97); box-shadow:0 18px 55px rgba(0,0,0,.42); backdrop-filter:blur(14px); pointer-events:auto; }
+      .launcher { width:48px; height:48px; padding:0; display:grid; place-items:center; border:1px solid #2c3d47; border-radius:15px; color:#80e4d7; background:#101c23; box-shadow:0 4px 14px rgba(0,0,0,.18); cursor:pointer; user-select:none; pointer-events:auto; transition:opacity .2s, border-color .2s; }
+      .launcher svg { width:29px; height:29px; fill:none; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; }
+      .launcher:hover { opacity:1!important; border-color:#68b9ae; }
+      .launcher:focus-visible { opacity:1!important; outline:2px solid #68b9ae; outline-offset:3px; }
+      .shell.idle .launcher { opacity:.55; }
+      .shell.live .launcher { border-color:#68b9ae; }
+      .panel { position:absolute; bottom:calc(100% + 20px); right:0; width:min(360px,calc(100vw - 40px - env(safe-area-inset-right))); height:min(700px,calc(100vh - 108px - env(safe-area-inset-bottom) - env(safe-area-inset-top))); height:min(700px,calc(100dvh - 108px - env(safe-area-inset-bottom) - env(safe-area-inset-top))); padding:0; border:1px solid #2c3d47; border-radius:14px; overflow:hidden; background:#101c23; box-shadow:0 12px 32px rgba(0,0,0,.24); pointer-events:auto; }
       .panel[hidden] { display:none; }
-      .head { position:absolute; z-index:2; top:7px; right:7px; display:flex; align-items:center; justify-content:flex-end; pointer-events:none; }
-      .brand { display:none; }
-      .close { width:30px; height:30px; border:1px solid #21445a; border-radius:999px; padding:0; color:#91adba; background:#102535; font-size:18px; cursor:pointer; pointer-events:auto; }
-      .full-menu { width:100%; height:100%; border:0; background:#071521; }
-      @media (max-width:600px) {
-        .launcher { width:44px; height:44px; border-radius:14px; }
-        .panel { position:fixed; left:8px; right:8px; top:max(8px,env(safe-area-inset-top)); bottom:max(8px,env(safe-area-inset-bottom)); width:auto; height:auto; max-height:none; }
-      }
+      .full-menu { display:block; width:100%; height:100%; border:0; background:#101c23; color-scheme:dark; }
     </style>
     <div class="shell">
-      <button class="launcher" type="button" aria-label="打开 Quant Scholar 翻译菜单" title="拖动可调整位置">QS</button>
-      <section class="panel" hidden aria-label="Quant Scholar 网页翻译控制">
-        <div class="head"><span class="brand"><strong>Quant Scholar</strong><small>专业实时翻译</small></span><button class="close" type="button" aria-label="关闭菜单">×</button></div>
+      <button class="launcher" type="button" aria-label="打开翻译菜单" aria-expanded="false" aria-controls="translation-menu" title="翻译与学习"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 19.5 18.5 8a5 5 0 0 1 7 7L22 18.5" stroke="#68e6ce"/><path d="M25 12.5 13.5 24a5 5 0 0 1-7-7L10 13.5" stroke="#e0f1ef"/></svg></button>
+      <section id="translation-menu" class="panel" hidden aria-label="Quant Scholar 网页翻译控制">
         <iframe class="full-menu" title="Quant Scholar 完整翻译菜单"></iframe>
       </section>
     </div>`;
@@ -437,11 +459,9 @@ function mountFloatingMenu() {
   const shell = shadow.querySelector('.shell');
   const launcher = shadow.querySelector('.launcher');
   const panel = shadow.querySelector('.panel');
-  const close = shadow.querySelector('.close');
   const frame = shadow.querySelector('.full-menu');
   const menuUrl = chrome.runtime.getURL('popup/popup.html');
   let idleTimer = null;
-  let drag = null;
 
   const wake = () => {
     shell.classList.remove('idle');
@@ -450,23 +470,12 @@ function mountFloatingMenu() {
       if (panel.hidden) shell.classList.add('idle');
     }, 4200);
   };
-  const placePanel = () => {
-    if (innerWidth <= 600) {
-      for (const key of ['position', 'left', 'right', 'top', 'bottom']) panel.style[key] = '';
-      return;
-    }
-    const rect = launcher.getBoundingClientRect();
-    const box = panel.getBoundingClientRect();
-    panel.style.position = 'fixed';
-    panel.style.right = 'auto';
-    panel.style.bottom = 'auto';
-    panel.style.left = `${Math.max(8, Math.min(rect.right - box.width, innerWidth - box.width - 8))}px`;
-    panel.style.top = `${Math.max(8, Math.min(rect.bottom + 8, innerHeight - box.height - 8))}px`;
-  };
   const setPanelOpen = open => {
     panel.hidden = !open;
+    launcher.setAttribute('aria-expanded', String(open));
+    launcher.setAttribute('aria-label', open ? '关闭翻译菜单' : '打开翻译菜单');
     frame.src = open ? menuUrl : 'about:blank';
-    if (open) { placePanel(); refreshStatus(); }
+    if (open) refreshStatus();
     wake();
   };
   const refreshStatus = async () => {
@@ -477,59 +486,10 @@ function mountFloatingMenu() {
     } catch (_error) { /* service worker may be restarting */ }
   };
 
-  chrome.storage.local.get([FLOATING_POSITION_KEY], stored => {
-    const position = stored[FLOATING_POSITION_KEY];
-    if (position && Number.isFinite(position.left) && Number.isFinite(position.top)) {
-      host.style.left = `${Math.min(Math.max(8, position.left), innerWidth - 54)}px`;
-      host.style.top = `${Math.min(Math.max(8, position.top), innerHeight - 54)}px`;
-      host.style.right = 'auto';
-    }
-    refreshStatus();
-    wake();
-  });
-
-  launcher.addEventListener('pointerdown', event => {
-    wake();
-    const rect = host.getBoundingClientRect();
-    drag = { x: event.clientX, y: event.clientY, left: rect.left, top: rect.top, moved: false };
-    launcher.setPointerCapture(event.pointerId);
-  });
-  launcher.addEventListener('pointermove', event => {
-    if (!drag) return;
-    const dx = event.clientX - drag.x;
-    const dy = event.clientY - drag.y;
-    if (Math.hypot(dx, dy) > 4) drag.moved = true;
-    if (!drag.moved) return;
-    const left = Math.min(Math.max(8, drag.left + dx), innerWidth - 54);
-    const top = Math.min(Math.max(8, drag.top + dy), innerHeight - 54);
-    host.style.left = `${left}px`;
-    host.style.top = `${top}px`;
-    host.style.right = 'auto';
-    if (!panel.hidden) placePanel();
-  });
-  launcher.addEventListener('pointerup', async event => {
-    if (!drag) return;
-    launcher.releasePointerCapture(event.pointerId);
-    if (drag.moved) {
-      const rect = host.getBoundingClientRect();
-      await chrome.storage.local.set({ [FLOATING_POSITION_KEY]: { left: rect.left, top: rect.top } });
-    } else {
-      setPanelOpen(panel.hidden);
-    }
-    drag = null;
-    wake();
-  });
-  launcher.addEventListener('pointercancel', () => { drag = null; });
-  launcher.addEventListener('click', event => { if (event.detail === 0) setPanelOpen(panel.hidden); });
-  close.addEventListener('click', () => setPanelOpen(false));
+  refreshStatus();
+  wake();
+  launcher.addEventListener('click', () => setPanelOpen(panel.hidden));
   shell.addEventListener('pointerenter', wake);
-  window.addEventListener('resize', () => {
-    const rect = launcher.getBoundingClientRect();
-    host.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - 54))}px`;
-    host.style.top = `${Math.max(8, Math.min(rect.top, innerHeight - 54))}px`;
-    host.style.right = 'auto';
-    if (!panel.hidden) placePanel();
-  });
   setInterval(() => { if (!panel.hidden) refreshStatus(); }, 1800);
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === 'floating:toggle-menu') {
@@ -546,3 +506,4 @@ function mountFloatingMenu() {
 }
 
 mountFloatingMenu();
+})();

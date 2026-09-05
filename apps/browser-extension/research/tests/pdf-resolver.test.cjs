@@ -16,7 +16,8 @@ function loadBackground() {
     atob: value => Buffer.from(value, "base64").toString("binary"),
     btoa: value => Buffer.from(value, "binary").toString("base64"),
     crypto: { randomUUID: () => "test" },
-    BATTERY_GLOSSARY_PRESET: [],
+    PROFESSIONAL_GLOSSARY_PRESET: [],
+    migrateProfessionalGlossary: async () => {},
     formatGlossaryPrompt: () => "",
     isRetryableApiStatus: status => [408,409,425,429,500,502,503,504].includes(Number(status)),
     retryDelayMs: () => 0,
@@ -57,6 +58,25 @@ test("Wiley epdf maps to direct PDF endpoints", () => {
     "https://advanced.onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.201700210",
     "https://advanced.onlinelibrary.wiley.com/doi/pdf/10.1002/adma.201700210"
   ]);
+});
+
+test('PDF direct professional mode rejects a non-subscription engine before sending content', async () => {
+  const bg = loadBackground();
+  bg.chrome.storage.local.get = async () => ({ provider: 'ollama', endpoint: 'http://localhost/api', model: 'local' });
+  bg.fetch = async () => assert.fail('PDF must not silently send text to another engine');
+  await assert.rejects(bg.translateBatch(['The variance is finite.'], [], true), /PDF.*直接精译/);
+});
+
+test('PDF direct professional mode uses selected Codex bridge without intermediate translation', async () => {
+  const bg = loadBackground();
+  bg.chrome.storage.local.get = async () => ({ provider: 'codex', endpoint: 'http://127.0.0.1:8765/codex/v1/chat/completions', model: 'codex-subscription' });
+  bg.providerNeedsApiKey = () => false;
+  let seen;
+  bg.translateWithSettings = async (texts, settings) => { seen = { texts, settings }; return ['方差有限。']; };
+  const result = await bg.translateBatch(['The variance is finite.'], [], true);
+  assert.equal(result[0], '方差有限。');
+  assert.equal(seen.texts[0], 'The variance is finite.');
+  assert.equal(seen.settings.provider, 'codex');
 });
 
 test("discovers citation metadata and embedded PDF links", () => {

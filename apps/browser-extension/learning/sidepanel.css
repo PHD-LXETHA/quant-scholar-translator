@@ -124,6 +124,7 @@ body {
   gap: 12px;
 }
 
+.workspace-mark svg { width:26px; height:26px; fill:none; stroke-width:2.8; stroke-linecap:round; stroke-linejoin:round; }
 .workspace-brand {
   display: flex;
   align-items: center;
@@ -147,9 +148,9 @@ body {
   width: 32px;
   height: 32px;
   place-items: center;
-  border: 1px solid rgba(54, 214, 194, 0.48);
+  border: 1px solid #2c3d47;
   border-radius: 10px;
-  background: linear-gradient(145deg, rgba(54, 214, 194, 0.2), rgba(240, 198, 109, 0.12));
+  background: #101c23;
   color: var(--highlight);
   font-size: 10px;
   font-weight: 800;
@@ -1366,3 +1367,13 @@ body {
   color: var(--accent);
   background: var(--accent-dim);
 }
+#videoPreparationStatus {
+  color: #9cbfbd;
+  background: #102a32;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+#videoPreparationStatus[hidden] { display: none; }
+#videoPreparationStatus[data-kind="error"] { color: #e8b4a8; }

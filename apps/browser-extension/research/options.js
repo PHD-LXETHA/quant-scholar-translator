@@ -1,6 +1,6 @@
 import {
-  BATTERY_GLOSSARY_PRESET,
   PROFESSIONAL_GLOSSARY_PRESET,
+  migrateProfessionalGlossary,
   glossaryToCsv,
   glossaryToJson,
   normalizeGlossaryTerms,
@@ -18,6 +18,7 @@ let activeProvider = "kimi_subscription";
 await load();
 
 async function load() {
+  await migrateProfessionalGlossary(chrome.storage.local);
   const data = await chrome.storage.local.get([...ids, "providerKeys", "glossaryTerms"]);
   for (const id of ids) if (data[id] !== undefined) $(id).value = data[id];
   providerKeys = data.providerKeys && typeof data.providerKeys === "object" ? { ...data.providerKeys } : {};
@@ -51,14 +52,19 @@ $("clear-cache-directory").onclick = async () => {
 
 function createTermRow(term = { source: "", target: "" }) {
   const row = document.createElement("tr");
+  row.glossaryMetadata = { ...term };
   const sourceCell = document.createElement("td"), targetCell = document.createElement("td"), actionCell = document.createElement("td");
   const source = document.createElement("input"), target = document.createElement("input"), remove = document.createElement("button");
-  source.className = "term-source"; source.placeholder = "例如 oxygen redox"; source.value = term.source || ""; source.setAttribute("aria-label", "英文原词或缩写");
-  target.className = "term-target"; target.placeholder = "例如 氧氧化还原"; target.value = term.target || ""; target.setAttribute("aria-label", "标准译法或保留要求");
+  source.className = "term-source"; source.placeholder = "例如 unbiased estimator"; source.value = term.source || ""; source.setAttribute("aria-label", "英文原词或缩写");
+  target.className = "term-target"; target.placeholder = "例如 无偏估计量"; target.value = term.target || ""; target.setAttribute("aria-label", "标准译法或保留要求");
   source.oninput = target.oninput = updateGlossaryCount;
   remove.className = "remove-term"; remove.type = "button"; remove.textContent = "×"; remove.title = "删除此术语"; remove.setAttribute("aria-label", `删除术语 ${term.source || "空白行"}`);
   remove.onclick = () => { row.remove(); updateGlossaryCount(); };
-  sourceCell.append(source); targetCell.append(target); actionCell.append(remove); row.append(sourceCell, targetCell, actionCell);
+  const aliases = document.createElement('input'), note = document.createElement('input');
+  aliases.className = 'term-aliases'; aliases.value = (term.aliases || []).join(' | '); aliases.placeholder = '简称 / 别名（用 | 分隔）'; aliases.setAttribute('aria-label', '术语别名');
+  note.className = 'term-note'; note.value = term.note || ''; note.placeholder = '语境与易混淆说明'; note.setAttribute('aria-label', '术语语境说明');
+  if (term.domain) { source.title = `专业领域：${term.domain}`; }
+  sourceCell.append(source, aliases); targetCell.append(target, note); actionCell.append(remove); row.append(sourceCell, targetCell, actionCell);
   return row;
 }
 
@@ -69,8 +75,11 @@ function renderGlossary(terms) {
 
 function collectGlossary() {
   return normalizeGlossaryTerms([...body.rows].map(row => ({
+    ...row.glossaryMetadata,
     source: row.querySelector(".term-source").value,
-    target: row.querySelector(".term-target").value
+    target: row.querySelector(".term-target").value,
+    note: row.querySelector('.term-note').value,
+    aliases: row.querySelector('.term-aliases').value.split('|').map(s => s.trim()).filter(Boolean),
   })));
 }
 
@@ -98,7 +107,7 @@ $("add-term").onclick = () => {
   const row = createTermRow(); body.append(row); updateGlossaryCount(); row.querySelector(".term-source").focus();
 };
 
-$("battery-preset").onclick = () => {
+$("professional-preset").onclick = () => {
   const before = collectGlossary();
   const merged = normalizeGlossaryTerms([...before, ...PROFESSIONAL_GLOSSARY_PRESET]);
   renderGlossary(merged); status(`已加入 Quant Scholar 专业预置，新增 ${merged.length - before.length} 条`);
@@ -133,7 +142,7 @@ async function saveSettings() {
 $("save").onclick = saveSettings;
 $("test").onclick = async () => {
   await saveSettings(); status("正在测试…");
-  const result = await chrome.runtime.sendMessage({ type: "TRANSLATE_BATCH", texts: ["Layered oxides exhibit complex oxygen redox chemistry."] });
+  const result = await chrome.runtime.sendMessage({ type: "TRANSLATE_BATCH", texts: ["The unbiased estimator has lower variance under these assumptions."] });
   status(result?.ok ? `连接成功：${result.translations[0]}` : result?.error || "连接失败", !result?.ok);
 };
 $("reveal").onclick = () => { const input = $("apiKey"); input.type = input.type === "password" ? "text" : "password"; $("reveal").textContent = input.type === "password" ? "显示" : "隐藏"; };
