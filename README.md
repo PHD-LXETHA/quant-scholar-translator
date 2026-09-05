@@ -58,7 +58,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 纯本地转写和 NLLB 翻译不要求云端 API Key。专业精译可以选择两个套餐入口：
 
 ```powershell
-# 二选一登录；已有登录可以跳过
+# 二选一登录；通常只需首次执行，已有登录直接跳过
 codex login
 kimi login --region mainland-cn
 
@@ -66,6 +66,8 @@ kimi login --region mainland-cn
 ```
 
 插件设置中选择 **Codex 套餐**或 **Kimi 套餐**。本地服务只通过官方 CLI 检查登录状态，不读取、复制或保存登录凭据；套餐模式还会清除进程中的 API Key 环境变量，避免误切换到按量 API。Codex 当前必须显示 ChatGPT 登录；Kimi 当前必须显示 `managed:kimi-code` 与 `source=oauth`。
+
+Codex 登录与翻译服务进程相互独立：关闭 PowerShell、重启本地服务或重启浏览器都不需要重新登录。请始终运行稳定命令 `codex login`，不要保存 `...\Codex\bin\<版本哈希>\codex.exe` 形式的内部路径；只有首次使用、凭据过期或 Codex 更新后登录状态失效时才需要再登录一次。
 
 Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套餐额度耗尽后可能继续扣余额；希望严格不产生套餐外费用时，请在 Kimi 账户中关闭 Extra Usage。
 

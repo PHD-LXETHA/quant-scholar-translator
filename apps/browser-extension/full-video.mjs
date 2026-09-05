@@ -104,7 +104,7 @@ export async function checkProfessionalEngine(session, endpoint, fetcher = fetch
   if (!response.ok) throw new Error(`${name} 登录状态检测失败，请重启本地服务后重试`);
   const status = await response.json();
   if (!status.available) throw new Error(`未找到 ${name} 本地工具，请先安装并登录`);
-  if (!status.loggedIn) throw new Error(`${name} 未登录，原文已保留但尚未翻译。请在 PowerShell 运行 ${name.toLowerCase()} login，登录后点击“继续提前翻译”`);
+  if (!status.loggedIn) throw new Error(`${name} 未登录，原文已保留但尚未翻译。首次使用或凭据失效时请在 PowerShell 运行稳定命令 ${name.toLowerCase()} login；正常重启服务无需重登。登录后点击“继续提前翻译”`);
   if (!status.subscription) throw new Error(`${name} 未确认使用套餐登录，为避免额外 API 计费，已停止翻译`);
 }
 

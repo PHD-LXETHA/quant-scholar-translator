@@ -53,7 +53,7 @@ Add `-WithPdf` when you need the optional layout-preserving PDF component. Model
 Local Whisper transcription and NLLB translation do not require a cloud API key. Professional translation can use either subscription login:
 
 ```powershell
-# Choose either login; skip one that is already authenticated.
+# Choose either login; normally run it only once and skip it when authenticated.
 codex login
 kimi login --region mainland-cn
 
@@ -61,6 +61,8 @@ kimi login --region mainland-cn
 ```
 
 Choose **Codex plan** or **Kimi membership** in the extension. The backend queries only the official CLIs for status and never reads or stores login credentials. Subscription mode removes ambient API-key variables to prevent accidental pay-as-you-go routing. Kimi Code shares the Kimi membership allowance; disable Extra Usage in the Kimi account if you want to rule out charges after that allowance is exhausted.
+
+Codex authentication is independent of the translation service process: closing PowerShell or restarting the backend/browser does not require another login. Always use the stable `codex login` command rather than saving an internal `...\Codex\bin\<version-hash>\codex.exe` path. Sign in again only when first setting up, when credentials expire, or when a Codex update invalidates the prior session.
 
 ### 3. Load the Chrome extension
 

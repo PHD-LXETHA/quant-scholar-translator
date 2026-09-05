@@ -47,6 +47,12 @@ class CodexBridgeTests(unittest.TestCase):
                 os.environ.pop("CODEX_INSTALL_DIR", None)
                 self.assertEqual(MODULE._command(), str(executable))
 
+    @mock.patch.object(MODULE.shutil, "which", return_value=r"C:\stable\codex.exe")
+    def test_command_prefers_stable_path_command_across_desktop_updates(self, _which):
+        with mock.patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("QS_CODEX_COMMAND", None)
+            self.assertEqual(MODULE._command(), r"C:\stable\codex.exe")
+
     @mock.patch.object(MODULE.subprocess, "run")
     def test_status_accepts_chatgpt_login(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout="Logged in using ChatGPT\n", stderr="")
@@ -60,6 +66,13 @@ class CodexBridgeTests(unittest.TestCase):
         status = MODULE.codex_status()
         self.assertFalse(status.subscription)
         self.assertEqual(status.billingMode, "api-key")
+
+    @mock.patch.object(MODULE.subprocess, "run")
+    def test_status_check_never_starts_interactive_login(self, run):
+        run.return_value = subprocess.CompletedProcess([], 1, stdout="Not logged in\n", stderr="")
+        MODULE.codex_status()
+        command = run.call_args.args[0]
+        self.assertEqual(command[1:], ["login", "status"])
 
     @mock.patch.object(MODULE, "codex_status")
     def test_completion_refuses_unknown_billing_mode(self, status):

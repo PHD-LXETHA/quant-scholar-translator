@@ -142,7 +142,7 @@ def run_codex_completion(messages: Iterable[dict], timeout: int | None = None,
     if not status.available:
         raise CodexBridgeError(status.detail)
     if not status.loggedIn:
-        raise CodexBridgeError("Codex CLI 尚未登录。请在 PowerShell 运行 codex login，并选择使用 ChatGPT 账号登录。")
+        raise CodexBridgeError("Codex CLI 尚未登录。首次使用或凭据失效时请在 PowerShell 运行稳定命令 codex login；正常重启服务无需重登。")
     if not status.subscription:
         if status.billingMode == "api-key":
             raise CodexBridgeError("Codex CLI 当前使用 API Key 登录，会产生独立 API 费用；请改为 ChatGPT 账号登录后再使用套餐模式。")

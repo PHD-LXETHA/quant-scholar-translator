@@ -99,7 +99,7 @@ $("provider").onchange = () => {
   status(providerNeedsApiKey(activeProvider)
     ? "已填入预设，请填写该服务商的 API Key 后测试"
     : activeProvider === "codex" || activeProvider === "kimi_subscription"
-      ? `已选择套餐模式：请确认本地服务已启动，并已运行 ${activeProvider === "codex" ? "codex login" : "kimi login"}`
+      ? `已选择套餐模式：请确认本地服务已启动；${activeProvider === "codex" ? "codex login 通常只需首次运行" : "kimi login 通常只需首次运行"}`
       : "已填入本地接口预设，请确认本地模型服务已经启动");
 };
 
