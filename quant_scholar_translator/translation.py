@@ -187,6 +187,16 @@ def relevant_glossary(text: str, domain: str, limit: int = 40) -> list[dict]:
         evidence[item["domain"]] = evidence.get(item["domain"], 0) + max(map(len, matches[id(item)]), default=0)
 
     allowed = {id(item) for item in ranked}
+    for item in ranked:
+        if not item.get("requiresContext") or not item.get("domain"):
+            continue
+        # Explicit user domain choice is authoritative. In automatic mode,
+        # require independent same-domain evidence before applying a generic
+        # professional sense (for example duration -> 久期).
+        own_score = max(map(len, matches[id(item)]), default=0)
+        independent_evidence = evidence.get(item["domain"], 0) - own_score
+        if requested_domain != item["domain"] and independent_evidence <= 0:
+            allowed.discard(id(item))
     for rows in alias_groups.values():
         targets = {item["target"] for item in rows}
         if len(targets) <= 1:

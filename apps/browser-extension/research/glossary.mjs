@@ -42,7 +42,8 @@ export async function migrateProfessionalGlossary(storage) {
   if (saved[key]) {
     await upgradeProfessionalGlossary(storage);
     await upgradeProfessionalGlossaryV3(storage);
-    return upgradeProfessionalGlossaryV4(storage);
+    await upgradeProfessionalGlossaryV4(storage);
+    return upgradeProfessionalGlossaryV5(storage);
   }
   const update = { [key]: true };
   if (Array.isArray(saved.glossaryTerms)) {
@@ -59,6 +60,7 @@ export async function migrateProfessionalGlossary(storage) {
   await upgradeProfessionalGlossary(storage);
   await upgradeProfessionalGlossaryV3(storage);
   await upgradeProfessionalGlossaryV4(storage);
+  await upgradeProfessionalGlossaryV5(storage);
 }
 
 async function upgradeProfessionalGlossary(storage) {
@@ -87,6 +89,10 @@ async function upgradeProfessionalGlossaryV3(storage) {
 
 async function upgradeProfessionalGlossaryV4(storage) {
   return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV4');
+}
+
+async function upgradeProfessionalGlossaryV5(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV5');
 }
 
 async function mergeMissingProfessionalDefaults(storage, key) {
@@ -128,6 +134,7 @@ export function normalizeGlossaryTerms(value) {
       const aliases = [...new Set(item.aliases.filter(a => typeof a === 'string' && a.trim()).map(a => a.trim()))];
       if (aliases.length) entry.aliases = aliases;
     }
+    if (!Array.isArray(item) && item?.requiresContext === true) entry.requiresContext = true;
     result.push(entry);
   }
   if (result.length > 5000) throw new Error('术语超过 5000 条，请拆分导入；未静默丢弃词条');
@@ -166,6 +173,13 @@ export function selectGlossaryTerms(value, text, limit = 60) {
     domainEvidence.set(row.item.domain, (domainEvidence.get(row.item.domain) || 0) + row.score);
   }
   const allowed = new Set(filtered);
+  for (const row of filtered) {
+    if (!row.item.requiresContext || !row.item.domain) continue;
+    // A short, polysemous term such as "duration" is safe only when another
+    // matched term independently establishes the same professional domain.
+    const independentEvidence = (domainEvidence.get(row.item.domain) || 0) - row.score;
+    if (independentEvidence <= 0) allowed.delete(row);
+  }
   for (const rows of aliasGroups.values()) {
     const targets = new Set(rows.map(row => row.item.target));
     if (targets.size <= 1 || rows.some(row => !row.item.domain)) continue;
@@ -226,13 +240,17 @@ export function parseGlossaryText(text, format = "") {
     if (aliasText?.trim()) {
       try { aliases = JSON.parse(aliasText); } catch { aliases = aliasText.split('|'); }
     }
-    return { source: row[0], target: row[1], domain: row[column('domain', 2)], note: row[column('note', 3)], aliases };
+    const contextValue = row[column('requirescontext', 5)];
+    return {
+      source: row[0], target: row[1], domain: row[column('domain', 2)], note: row[column('note', 3)], aliases,
+      requiresContext: /^(1|true|yes)$/i.test(String(contextValue || '').trim())
+    };
   }));
 }
 
 function csvCell(value) { return `"${String(value).replaceAll('"', '""')}"`; }
 export function glossaryToCsv(value) {
-  const lines = ["source,target,domain,note,aliases", ...normalizeGlossaryTerms(value).map(item => [item.source, item.target, item.domain || '', item.note || '', item.aliases?.length ? JSON.stringify(item.aliases) : ''].map(csvCell).join(','))];
+  const lines = ["source,target,domain,note,aliases,requiresContext", ...normalizeGlossaryTerms(value).map(item => [item.source, item.target, item.domain || '', item.note || '', item.aliases?.length ? JSON.stringify(item.aliases) : '', item.requiresContext === true ? 'true' : ''].map(csvCell).join(','))];
   return `\uFEFF${lines.join("\r\n")}`;
 }
 export function glossaryToJson(value) { return JSON.stringify({ version: 2, terms: normalizeGlossaryTerms(value) }, null, 2); }

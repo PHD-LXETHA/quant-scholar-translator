@@ -168,6 +168,36 @@ button.primary:disabled { opacity: .55; cursor: default; }
   align-items: flex-start;
   line-height: 1.35;
 }
+.settings label.archive-option {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  cursor: pointer;
+}
+.archive-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 1px 0 0;
+}
+.archive-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+.archive-option-title {
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.35;
+}
+.settings .archive-option-copy small {
+  display: block;
+  line-height: 1.45;
+}
 .settings label small {
   color: var(--muted);
   font-size: 10px;

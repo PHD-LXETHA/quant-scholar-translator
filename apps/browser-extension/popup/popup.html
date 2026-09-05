@@ -162,7 +162,13 @@
       </section>
       <section class="settings">
         <strong class="section-heading">沉淀到个人知识库 · 导出文件</strong>
-        <label><input id="videoLibrary" type="checkbox" checked>自动保存视频文档并在回看时恢复字幕</label>
+        <label class="checkbox-row archive-option" for="videoLibrary">
+          <input id="videoLibrary" type="checkbox" checked>
+          <span class="archive-option-copy">
+            <span class="archive-option-title">自动保存视频文档</span>
+            <small>回看同一视频时自动恢复已译字幕</small>
+          </span>
+        </label>
         <p id="videoLibraryStatus" class="action-feedback" role="status">每个视频一份双语 MD，保存在项目“学习资料 / 视频双语”；回看已译部分不调用模型。</p>
         <button id="saveVideoDocument">更新当前视频存档</button>
         <p class="action-feedback">下载后可导入你的知识库或工作台；此处不会自动写入外部知识库。网页译文请在刷新或关闭网页前导出。</p>

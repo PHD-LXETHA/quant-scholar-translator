@@ -411,6 +411,102 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "academic"
   },
   {
+    "source": "research protocol",
+    "target": "研究方案",
+    "note": "研究实施前规定目标、设计、样本和分析方法的正式文件",
+    "domain": "academic"
+  },
+  {
+    "source": "protocol deviation",
+    "target": "方案偏离",
+    "note": "实际研究实施与预定研究方案不一致的情形",
+    "domain": "academic"
+  },
+  {
+    "source": "attrition bias",
+    "target": "失访偏倚",
+    "note": "退出或缺失与处理或结果相关造成的系统偏差",
+    "domain": "academic"
+  },
+  {
+    "source": "loss to follow-up",
+    "target": "失访",
+    "note": "受试者在随访期间无法继续观察；需报告数量与原因",
+    "aliases": [
+      "lost to follow-up"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "blinding",
+    "target": "盲法",
+    "note": "使参与者、研究人员或评估者不知道分组以减少偏倚",
+    "aliases": [
+      "masking"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "allocation concealment",
+    "target": "分配隐藏",
+    "note": "在分配前防止研究人员预知下一组别；区别于分配后的盲法",
+    "domain": "academic"
+  },
+  {
+    "source": "intention-to-treat analysis",
+    "target": "意向性治疗分析",
+    "note": "按最初随机分组分析所有参与者，不因依从性改变分组",
+    "aliases": [
+      "ITT analysis"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "per-protocol analysis",
+    "target": "符合方案分析",
+    "note": "只分析充分遵循研究方案的参与者；可能引入选择偏倚",
+    "aliases": [
+      "PP analysis"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "null result",
+    "target": "零结果",
+    "note": "未发现预设效应或统计证据的结果；不等于证明完全无效应",
+    "domain": "academic"
+  },
+  {
+    "source": "data provenance",
+    "target": "数据溯源",
+    "note": "记录数据来源、处理步骤和派生关系",
+    "domain": "academic"
+  },
+  {
+    "source": "code availability statement",
+    "target": "代码可用性声明",
+    "note": "说明分析代码能否以及如何获取",
+    "domain": "academic"
+  },
+  {
+    "source": "plagiarism",
+    "target": "抄袭",
+    "note": "未适当注明来源而使用他人的文字、思想或成果",
+    "domain": "academic"
+  },
+  {
+    "source": "paraphrase",
+    "target": "转述",
+    "note": "用不同措辞表达原意，仍需在适当情况下标注来源",
+    "domain": "academic"
+  },
+  {
+    "source": "citation context",
+    "target": "引文语境",
+    "note": "引用在正文中承担的支持、对比、方法或背景作用",
+    "domain": "academic"
+  },
+  {
     "source": "general equilibrium",
     "target": "一般均衡",
     "note": "microeconomics",
@@ -992,6 +1088,186 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "economics"
   },
   {
+    "source": "headline inflation",
+    "target": "总体通胀",
+    "note": "包含所有消费项目的通胀指标；区别于剔除波动项目的核心通胀",
+    "domain": "economics"
+  },
+  {
+    "source": "core inflation",
+    "target": "核心通胀",
+    "note": "剔除部分波动项目以观察潜在通胀趋势；具体剔除口径依机构而异",
+    "domain": "economics"
+  },
+  {
+    "source": "inflation expectations",
+    "target": "通胀预期",
+    "note": "家庭、企业或市场对未来通胀的预期",
+    "domain": "economics"
+  },
+  {
+    "source": "breakeven inflation rate",
+    "target": "盈亏平衡通胀率",
+    "note": "名义债券收益率与同期限通胀保值债券实际收益率之差，含风险和流动性溢价",
+    "aliases": [
+      "breakeven inflation"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "demand-pull inflation",
+    "target": "需求拉动型通胀",
+    "note": "总需求超过经济供给能力推动的价格上涨",
+    "domain": "economics"
+  },
+  {
+    "source": "cost-push inflation",
+    "target": "成本推动型通胀",
+    "note": "工资、能源或中间投入成本上升推动的价格上涨",
+    "domain": "economics"
+  },
+  {
+    "source": "wage-price spiral",
+    "target": "工资–价格螺旋",
+    "note": "工资与价格相互推动并持续上升的反馈过程",
+    "domain": "economics"
+  },
+  {
+    "source": "primary surplus",
+    "target": "初级财政盈余",
+    "note": "扣除利息支出前财政收入超过非利息支出的部分",
+    "domain": "economics"
+  },
+  {
+    "source": "fiscal deficit",
+    "target": "财政赤字",
+    "note": "一定时期政府支出超过收入的差额；需说明总体或初级口径",
+    "domain": "economics"
+  },
+  {
+    "source": "debt sustainability",
+    "target": "债务可持续性",
+    "note": "债务人能够在不进行不可行调整或违约的情况下履行债务的能力",
+    "domain": "economics"
+  },
+  {
+    "source": "current account deficit",
+    "target": "经常账户赤字",
+    "note": "经常账户流出超过流入；不可直接等同于资本外逃",
+    "domain": "economics"
+  },
+  {
+    "source": "twin deficits",
+    "target": "双赤字",
+    "note": "财政赤字与经常账户赤字同时存在的现象",
+    "domain": "economics"
+  },
+  {
+    "source": "impossible trinity",
+    "target": "不可能三角",
+    "note": "固定汇率、资本自由流动和独立货币政策无法同时完全实现",
+    "aliases": [
+      "monetary trilemma"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "uncovered interest parity",
+    "target": "无抛补利率平价",
+    "note": "利差与预期汇率变化相关的无套保条件，不保证实证严格成立",
+    "aliases": [
+      "UIP"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "covered interest parity",
+    "target": "抛补利率平价",
+    "note": "利用远期汇率锁定汇率风险后的无套利利率关系",
+    "aliases": [
+      "CIP"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "Fisher equation",
+    "target": "费雪方程",
+    "note": "名义利率、实际利率与预期通胀之间的近似或精确关系",
+    "domain": "economics"
+  },
+  {
+    "source": "real exchange rate",
+    "target": "实际汇率",
+    "note": "经相对价格水平调整的名义汇率；方向取决于标价约定",
+    "domain": "economics"
+  },
+  {
+    "source": "nominal effective exchange rate",
+    "target": "名义有效汇率",
+    "note": "本币对一篮子贸易伙伴货币的加权汇率指数",
+    "aliases": [
+      "NEER"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "capital flight",
+    "target": "资本外逃",
+    "note": "因风险、管制预期或信心下降出现的大规模资本流出",
+    "domain": "economics"
+  },
+  {
+    "source": "foreign direct investment",
+    "target": "外国直接投资",
+    "note": "以持久控制或重大影响为目的的跨境投资",
+    "aliases": [
+      "FDI"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "portfolio investment",
+    "target": "证券投资",
+    "note": "不以控制企业为主要目的的跨境股票和债券投资",
+    "domain": "economics"
+  },
+  {
+    "source": "dynamic stochastic general equilibrium model",
+    "target": "动态随机一般均衡模型",
+    "note": "基于跨期优化、随机冲击与一般均衡的宏观模型",
+    "aliases": [
+      "DSGE model"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "real business cycle model",
+    "target": "实际经济周期模型",
+    "note": "强调真实冲击和跨期最优化的宏观周期模型",
+    "aliases": [
+      "RBC model"
+    ],
+    "domain": "economics"
+  },
+  {
+    "source": "New Keynesian model",
+    "target": "新凯恩斯模型",
+    "note": "通常结合名义刚性、垄断竞争与前瞻行为的宏观模型",
+    "domain": "economics"
+  },
+  {
+    "source": "rational expectations",
+    "target": "理性预期",
+    "note": "经济主体在模型信息集下不产生系统性预测偏差的假设",
+    "domain": "economics"
+  },
+  {
+    "source": "adaptive expectations",
+    "target": "适应性预期",
+    "note": "依据过去预测误差逐步调整未来预期的机制",
+    "domain": "economics"
+  },
+  {
     "source": "expected return",
     "target": "期望收益率",
     "note": "asset pricing",
@@ -1025,6 +1301,7 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "duration",
     "target": "久期",
     "note": "债券及利率敏感度语境；视频时长或事件持续时间不译久期",
+    "requiresContext": true,
     "domain": "finance"
   },
   {
@@ -1066,7 +1343,11 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
   {
     "source": "discounted cash flow",
     "target": "现金流折现法",
-    "note": "valuation",
+    "note": "估值方法；以适当折现率将预测现金流折算为现值",
+    "aliases": [
+      "DCF",
+      "DCF valuation"
+    ],
     "domain": "finance"
   },
   {
@@ -1692,6 +1973,235 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "aliases": [
       "FCFE"
     ],
+    "domain": "finance"
+  },
+  {
+    "source": "primary market",
+    "target": "一级市场",
+    "note": "新发行证券首次出售给投资者的市场",
+    "domain": "finance"
+  },
+  {
+    "source": "secondary market",
+    "target": "二级市场",
+    "note": "已发行证券在投资者之间交易的市场",
+    "domain": "finance"
+  },
+  {
+    "source": "market order",
+    "target": "市价单",
+    "note": "按当前可得最优价格立即成交的指令；成交价格不保证",
+    "domain": "finance"
+  },
+  {
+    "source": "limit order",
+    "target": "限价单",
+    "note": "只在指定价格或更优价格成交的交易指令；不保证成交",
+    "domain": "finance"
+  },
+  {
+    "source": "trade date",
+    "target": "交易日",
+    "note": "买卖双方达成证券交易的日期；区别于结算日",
+    "domain": "finance"
+  },
+  {
+    "source": "settlement date",
+    "target": "结算日",
+    "note": "证券和资金实际交割的日期",
+    "domain": "finance"
+  },
+  {
+    "source": "ex-dividend date",
+    "target": "除息日",
+    "note": "自该日起买入股票通常不再享有本次股息权利",
+    "aliases": [
+      "ex-date"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "record date",
+    "target": "股权登记日",
+    "note": "公司确认有权获得分配的股东名单日期",
+    "domain": "finance"
+  },
+  {
+    "source": "short selling",
+    "target": "卖空",
+    "note": "卖出借入证券并计划以后买回；区别于持有负面观点",
+    "domain": "finance"
+  },
+  {
+    "source": "securities lending",
+    "target": "证券借贷",
+    "note": "证券所有人暂时出借证券并收取费用及抵押品",
+    "domain": "finance"
+  },
+  {
+    "source": "debt-to-equity ratio",
+    "target": "债务权益比",
+    "note": "债务相对股东权益的比率；不得与负债资产比形式的资产负债率混淆",
+    "aliases": [
+      "D/E ratio"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "interest coverage ratio",
+    "target": "利息保障倍数",
+    "note": "利润或现金流相对利息支出的偿付能力指标",
+    "domain": "finance"
+  },
+  {
+    "source": "current ratio",
+    "target": "流动比率",
+    "note": "流动资产除以流动负债",
+    "domain": "finance"
+  },
+  {
+    "source": "quick ratio",
+    "target": "速动比率",
+    "note": "剔除存货等较难变现项目后的短期偿债指标",
+    "aliases": [
+      "acid-test ratio"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "gross margin",
+    "target": "毛利率",
+    "note": "毛利润相对营业收入的比例",
+    "domain": "finance"
+  },
+  {
+    "source": "operating margin",
+    "target": "营业利润率",
+    "note": "营业利润相对营业收入的比例",
+    "domain": "finance"
+  },
+  {
+    "source": "net profit margin",
+    "target": "净利率",
+    "note": "净利润相对营业收入的比例",
+    "domain": "finance"
+  },
+  {
+    "source": "return on invested capital",
+    "target": "投入资本回报率",
+    "note": "税后经营利润相对投入资本的回报指标，口径需保持一致",
+    "aliases": [
+      "ROIC"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "residual income",
+    "target": "剩余收益",
+    "note": "会计利润扣除权益资本成本后的收益；区别于个人可支配收入",
+    "domain": "finance"
+  },
+  {
+    "source": "terminal value",
+    "target": "终值",
+    "note": "显式预测期之后全部现金流的估计价值；区别于单笔资金未来值",
+    "domain": "finance"
+  },
+  {
+    "source": "perpetuity",
+    "target": "永续年金",
+    "note": "无限期支付固定现金流的年金",
+    "domain": "finance"
+  },
+  {
+    "source": "growing perpetuity",
+    "target": "增长型永续年金",
+    "note": "现金流按固定增长率无限延续的模型",
+    "domain": "finance"
+  },
+  {
+    "source": "annuity",
+    "target": "年金",
+    "note": "在有限或无限期间按规则支付的一系列现金流",
+    "domain": "finance"
+  },
+  {
+    "source": "debt covenant",
+    "target": "债务契约条款",
+    "note": "限制借款人行为或要求维持指标的合同条款",
+    "aliases": [
+      "covenant"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "credit rating",
+    "target": "信用评级",
+    "note": "对发行人或债项信用质量的等级评价；不等于违约概率本身",
+    "domain": "finance"
+  },
+  {
+    "source": "investment grade",
+    "target": "投资级",
+    "note": "达到评级机构规定最低投资级门槛的信用等级",
+    "domain": "finance"
+  },
+  {
+    "source": "high-yield bond",
+    "target": "高收益债券",
+    "note": "低于投资级评级的债券，亦称投机级债券",
+    "aliases": [
+      "junk bond"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "default rate",
+    "target": "违约率",
+    "note": "观察期内群体实际违约比例；区别于单一借款人的事前违约概率",
+    "domain": "finance"
+  },
+  {
+    "source": "securitization",
+    "target": "资产证券化",
+    "note": "将资产现金流打包并发行分层证券的融资过程",
+    "aliases": [
+      "securitisation"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "asset-backed security",
+    "target": "资产支持证券",
+    "note": "由贷款、应收款等资产现金流支持的证券",
+    "aliases": [
+      "ABS"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "mortgage-backed security",
+    "target": "抵押贷款支持证券",
+    "note": "由住房或商业抵押贷款现金流支持的证券",
+    "aliases": [
+      "MBS"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "collateralized debt obligation",
+    "target": "担保债务凭证",
+    "note": "将债务资产池现金流分层的结构化信用产品",
+    "aliases": [
+      "collateralised debt obligation",
+      "CDO"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "portfolio",
+    "target": "投资组合",
+    "note": "为实现风险收益目标而共同持有和管理的一组资产；区别于跨境收支统计中的证券投资",
     "domain": "finance"
   },
   {
@@ -2481,6 +2991,301 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "mathematics"
   },
   {
+    "source": "predictable process",
+    "target": "可预测过程",
+    "note": "相对于可预测 σ-代数可测的随机过程；常作为随机积分被积过程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "progressively measurable process",
+    "target": "逐步可测过程",
+    "note": "每个有限时段上的时间–样本映射对相应积 σ-代数可测",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Lévy process",
+    "target": "莱维过程",
+    "note": "具有平稳独立增量且路径依概率连续的随机过程",
+    "aliases": [
+      "Levy process"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "Lévy measure",
+    "target": "莱维测度",
+    "note": "描述莱维过程跳跃强度与大小分布的测度",
+    "aliases": [
+      "Levy measure"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "compensated Poisson process",
+    "target": "补偿泊松过程",
+    "note": "泊松过程减去其补偿项后得到的鞅",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Brownian bridge",
+    "target": "布朗桥",
+    "note": "在给定终点条件下的布朗运动条件过程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "reflection principle",
+    "target": "反射原理",
+    "note": "用路径反射推导布朗运动最大值等分布的技巧",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Kolmogorov backward equation",
+    "target": "柯尔莫哥洛夫后向方程",
+    "note": "描述马尔可夫过程期望随起始状态和时间变化的方程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Kolmogorov forward equation",
+    "target": "柯尔莫哥洛夫前向方程",
+    "note": "描述马尔可夫过程转移密度随终止状态演化的方程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Fokker-Planck equation",
+    "target": "福克–普朗克方程",
+    "note": "扩散过程概率密度满足的前向偏微分方程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Hamilton-Jacobi-Bellman equation",
+    "target": "汉密尔顿–雅可比–贝尔曼方程",
+    "note": "随机或确定性最优控制中价值函数满足的动态规划方程",
+    "aliases": [
+      "HJB equation"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "backward stochastic differential equation",
+    "target": "倒向随机微分方程",
+    "note": "给定终端条件并向后求解的随机微分方程",
+    "aliases": [
+      "BSDE"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "stochastic control",
+    "target": "随机控制",
+    "note": "在随机动态系统中选择控制以优化期望目标",
+    "domain": "mathematics"
+  },
+  {
+    "source": "optimal stopping",
+    "target": "最优停止",
+    "note": "选择停止时刻以最大化期望收益或最小化成本的问题",
+    "domain": "mathematics"
+  },
+  {
+    "source": "free-boundary problem",
+    "target": "自由边界问题",
+    "note": "部分边界位置本身也是待求未知量的问题",
+    "domain": "mathematics"
+  },
+  {
+    "source": "viscosity solution",
+    "target": "黏性解",
+    "note": "适用于非线性偏微分方程的广义弱解概念",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Green's function",
+    "target": "格林函数",
+    "note": "表示线性微分算子在点源下响应的核函数",
+    "aliases": [
+      "Green function"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "fundamental solution",
+    "target": "基本解",
+    "note": "微分算子作用后得到狄拉克 delta 的分布解",
+    "domain": "mathematics"
+  },
+  {
+    "source": "heat equation",
+    "target": "热方程",
+    "note": "典型抛物型偏微分方程，也用于扩散过程",
+    "domain": "mathematics"
+  },
+  {
+    "source": "elliptic partial differential equation",
+    "target": "椭圆型偏微分方程",
+    "note": "按最高阶项分类的一类 PDE，常描述稳态问题",
+    "aliases": [
+      "elliptic PDE"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "parabolic partial differential equation",
+    "target": "抛物型偏微分方程",
+    "note": "常描述扩散和金融定价演化的一类 PDE",
+    "aliases": [
+      "parabolic PDE"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "hyperbolic partial differential equation",
+    "target": "双曲型偏微分方程",
+    "note": "常描述波传播的一类 PDE",
+    "aliases": [
+      "hyperbolic PDE"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "finite element method",
+    "target": "有限元法",
+    "note": "用分片基函数离散偏微分方程弱形式的数值方法",
+    "aliases": [
+      "FEM"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "explicit scheme",
+    "target": "显式格式",
+    "note": "下一时间层由已知量直接计算的数值离散格式",
+    "domain": "mathematics"
+  },
+  {
+    "source": "implicit scheme",
+    "target": "隐式格式",
+    "note": "下一时间层未知量联立出现、通常需解线性或非线性系统的格式",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Crank-Nicolson scheme",
+    "target": "克兰克–尼科尔森格式",
+    "note": "时间方向采用显式与隐式平均的二阶差分格式",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Courant-Friedrichs-Lewy condition",
+    "target": "库朗–弗里德里希斯–列维条件",
+    "note": "数值信息传播速度必须覆盖方程特征传播的必要稳定性条件",
+    "aliases": [
+      "CFL condition"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "consistency of a numerical scheme",
+    "target": "数值格式的一致性",
+    "note": "网格尺度趋零时离散方程逼近原微分方程",
+    "aliases": [
+      "scheme consistency",
+      "consistency"
+    ],
+    "requiresContext": true,
+    "domain": "mathematics"
+  },
+  {
+    "source": "stability of a numerical scheme",
+    "target": "数值格式的稳定性",
+    "note": "离散误差在演化中保持受控；具体定义依问题和范数",
+    "aliases": [
+      "scheme stability",
+      "stability"
+    ],
+    "requiresContext": true,
+    "domain": "mathematics"
+  },
+  {
+    "source": "order of convergence",
+    "target": "收敛阶",
+    "note": "误差随步长减小的渐近速率",
+    "domain": "mathematics"
+  },
+  {
+    "source": "convex set",
+    "target": "凸集",
+    "note": "任意两点间线段完全包含于集合内",
+    "domain": "mathematics"
+  },
+  {
+    "source": "convex function",
+    "target": "凸函数",
+    "note": "函数在凸组合处不超过函数值的相同凸组合",
+    "domain": "mathematics"
+  },
+  {
+    "source": "strictly convex function",
+    "target": "严格凸函数",
+    "note": "不同点的非平凡凸组合满足严格凸不等式",
+    "domain": "mathematics"
+  },
+  {
+    "source": "subgradient",
+    "target": "次梯度",
+    "note": "凸函数在不可微点的支撑超平面斜率推广",
+    "domain": "mathematics"
+  },
+  {
+    "source": "convex conjugate",
+    "target": "凸共轭",
+    "note": "通过上确界定义的 Legendre–Fenchel 变换",
+    "domain": "mathematics"
+  },
+  {
+    "source": "primal problem",
+    "target": "原问题",
+    "note": "优化对偶关系中最初给定的优化问题",
+    "domain": "mathematics"
+  },
+  {
+    "source": "dual problem",
+    "target": "对偶问题",
+    "note": "由拉格朗日函数或共轭构造、给出原问题界的优化问题",
+    "domain": "mathematics"
+  },
+  {
+    "source": "weak duality",
+    "target": "弱对偶",
+    "note": "对偶可行目标为原问题最优值提供界",
+    "domain": "mathematics"
+  },
+  {
+    "source": "strong duality",
+    "target": "强对偶",
+    "note": "原问题与对偶问题最优值相等；通常需要约束资格条件",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Slater's condition",
+    "target": "斯莱特条件",
+    "note": "凸优化中保证强对偶的常用严格可行性条件",
+    "aliases": [
+      "Slater condition"
+    ],
+    "domain": "mathematics"
+  },
+  {
+    "source": "complementary slackness",
+    "target": "互补松弛条件",
+    "note": "最优解处不等式约束松弛量与对应乘子乘积为零",
+    "domain": "mathematics"
+  },
+  {
+    "source": "Markov process",
+    "target": "马尔可夫过程",
+    "note": "给定当前状态后，未来条件分布与完整过去无关的随机过程；不要与马尔可夫链限定为离散状态或离散时间混同",
+    "domain": "mathematics"
+  },
+  {
     "source": "return value",
     "target": "返回值",
     "note": "programming",
@@ -2796,6 +3601,9 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "unit test",
     "target": "单元测试",
     "note": "验证最小可独立测试单元的行为",
+    "aliases": [
+      "unit tests"
+    ],
     "domain": "programming"
   },
   {
@@ -3261,6 +4069,185 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "aliases": [
       "ROC AUC",
       "AUC"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "NumPy array",
+    "target": "NumPy 数组",
+    "note": "NumPy 的同质多维数组对象",
+    "aliases": [
+      "ndarray"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "pandas Series",
+    "target": "pandas 序列",
+    "note": "带索引的一维 pandas 数据结构",
+    "domain": "programming"
+  },
+  {
+    "source": "pandas DataFrame",
+    "target": "pandas 数据框",
+    "note": "带行列标签的二维表格数据结构",
+    "domain": "programming"
+  },
+  {
+    "source": "group-by operation",
+    "target": "分组聚合操作",
+    "note": "按键划分数据后分别执行聚合、转换或过滤",
+    "aliases": [
+      "groupby"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "missing value",
+    "target": "缺失值",
+    "note": "数据中未知或不可用的值；NaN 只是常见表示之一",
+    "aliases": [
+      "NA value"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "not a number",
+    "target": "非数值",
+    "note": "IEEE 浮点特殊值 NaN；不应自动等同于所有缺失数据",
+    "aliases": [
+      "NaN"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "view of an array",
+    "target": "数组视图",
+    "note": "与原数组共享底层数据的数组对象；修改可能相互影响",
+    "aliases": [
+      "array view",
+      "ndarray view"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "copy of an array",
+    "target": "数组副本",
+    "note": "拥有独立数据存储的复制数组；区别于共享内存的视图",
+    "aliases": [
+      "array copy",
+      "ndarray copy"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "eager evaluation",
+    "target": "即时求值",
+    "note": "表达式创建时立即执行计算",
+    "domain": "programming"
+  },
+  {
+    "source": "lazy evaluation",
+    "target": "惰性求值",
+    "note": "将计算推迟到结果实际需要时执行",
+    "domain": "programming"
+  },
+  {
+    "source": "database index",
+    "target": "数据库索引",
+    "note": "用于加速检索的数据结构，会增加写入和存储成本",
+    "domain": "programming"
+  },
+  {
+    "source": "inner join",
+    "target": "内连接",
+    "note": "只保留连接键在两侧均匹配的记录",
+    "domain": "programming"
+  },
+  {
+    "source": "left join",
+    "target": "左连接",
+    "note": "保留左表全部记录并匹配右表记录",
+    "domain": "programming"
+  },
+  {
+    "source": "ACID properties",
+    "target": "ACID 特性",
+    "note": "数据库事务的原子性、一致性、隔离性和持久性",
+    "domain": "programming"
+  },
+  {
+    "source": "optimistic locking",
+    "target": "乐观锁",
+    "note": "假设冲突较少，在提交时检测版本冲突",
+    "domain": "programming"
+  },
+  {
+    "source": "pessimistic locking",
+    "target": "悲观锁",
+    "note": "操作前获取排他或共享锁以预防并发冲突",
+    "domain": "programming"
+  },
+  {
+    "source": "batch processing",
+    "target": "批处理",
+    "note": "将有限数据集合成批执行的处理方式",
+    "domain": "programming"
+  },
+  {
+    "source": "stream processing",
+    "target": "流处理",
+    "note": "对持续到达的数据以低延迟增量处理",
+    "domain": "programming"
+  },
+  {
+    "source": "data pipeline",
+    "target": "数据管道",
+    "note": "采集、转换、验证和交付数据的一系列自动化步骤",
+    "domain": "programming"
+  },
+  {
+    "source": "extract transform load",
+    "target": "抽取、转换、加载",
+    "note": "先抽取并转换数据，再加载到目标系统的数据集成流程",
+    "aliases": [
+      "ETL"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "extract load transform",
+    "target": "抽取、加载、转换",
+    "note": "先加载原始数据，再在目标平台中转换的流程",
+    "aliases": [
+      "ELT"
+    ],
+    "domain": "programming"
+  },
+  {
+    "source": "Git branch",
+    "target": "Git 分支",
+    "note": "指向提交历史位置的可移动引用",
+    "domain": "programming"
+  },
+  {
+    "source": "merge commit",
+    "target": "合并提交",
+    "note": "具有多个父提交、记录分支合并结果的提交",
+    "domain": "programming"
+  },
+  {
+    "source": "rebase",
+    "target": "变基",
+    "note": "将一组提交重新应用到新的基点，会重写提交身份",
+    "domain": "programming"
+  },
+  {
+    "source": "pull request",
+    "target": "拉取请求",
+    "note": "请求审查并合并分支改动的协作对象；GitHub 常缩写 PR",
+    "aliases": [
+      "PR"
     ],
     "domain": "programming"
   },
@@ -4102,6 +5089,334 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "quant_finance"
   },
   {
+    "source": "forward rate agreement",
+    "target": "远期利率协议",
+    "note": "约定未来期间参考利率并以差额结算的场外合约",
+    "aliases": [
+      "FRA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "interest rate cap",
+    "target": "利率上限",
+    "note": "由一系列利率上限期权组成，保护浮动利率支付方免受利率上升影响",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "interest rate floor",
+    "target": "利率下限",
+    "note": "由一系列利率下限期权组成，保护浮动利率收取方免受利率下降影响",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "caplet",
+    "target": "单期利率上限期权",
+    "note": "针对单个计息期参考利率的看涨式利率期权",
+    "aliases": [
+      "caplets"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "floorlet",
+    "target": "单期利率下限期权",
+    "note": "针对单个计息期参考利率的看跌式利率期权",
+    "aliases": [
+      "floorlets"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "swaption",
+    "target": "互换期权",
+    "note": "在未来进入利率互换的权利",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "payer swaption",
+    "target": "支付固定利率互换期权",
+    "note": "行权后支付固定利率、收取浮动利率的互换期权",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "receiver swaption",
+    "target": "收取固定利率互换期权",
+    "note": "行权后收取固定利率、支付浮动利率的互换期权",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "overnight indexed swap",
+    "target": "隔夜指数互换",
+    "note": "浮动端按复合隔夜利率计算的利率互换",
+    "aliases": [
+      "OIS"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "secured overnight financing rate",
+    "target": "有担保隔夜融资利率",
+    "note": "美国国债回购市场交易形成的美元隔夜参考利率",
+    "aliases": [
+      "SOFR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "discount curve",
+    "target": "贴现曲线",
+    "note": "用于将未来现金流折现至现值的期限曲线",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "projection curve",
+    "target": "预测曲线",
+    "note": "用于预测浮动端远期参考利率的期限曲线；多曲线框架下区别于贴现曲线",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "curve bootstrapping",
+    "target": "曲线逐段构建",
+    "note": "从市场工具报价递推零息因子或远期利率的过程",
+    "aliases": [
+      "yield curve bootstrapping"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "day-count convention",
+    "target": "计息天数惯例",
+    "note": "把日期区间转换为计息年分数的市场约定",
+    "aliases": [
+      "day count convention"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "compounding convention",
+    "target": "复利惯例",
+    "note": "规定利率如何在期间内累计，包括单利、离散复利和连续复利",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "accrual factor",
+    "target": "计息年分数",
+    "note": "依据计息天数惯例计算的期间长度",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "hazard rate",
+    "target": "风险率",
+    "note": "条件于此前未违约时的瞬时违约强度；信用语境亦称违约强度",
+    "aliases": [
+      "default intensity",
+      "hazard rates"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "survival probability",
+    "target": "存续概率",
+    "note": "截至指定时间仍未发生违约的概率",
+    "aliases": [
+      "survival probabilities"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "cumulative default probability",
+    "target": "累计违约概率",
+    "note": "截至指定期限已发生违约的概率，通常等于一减存续概率",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit curve",
+    "target": "信用曲线",
+    "note": "描述不同期限信用利差、存续概率或违约强度的曲线",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "premium leg",
+    "target": "保费端",
+    "note": "信用违约互换中保护买方向卖方支付定期保费的现金流端",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "protection leg",
+    "target": "保护端",
+    "note": "信用事件发生时信用保护卖方向买方支付损失补偿的现金流端",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "reduced-form credit model",
+    "target": "简约式信用模型",
+    "note": "直接用随机违约强度描述违约时间的信用模型",
+    "aliases": [
+      "intensity-based credit model"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "structural credit model",
+    "target": "结构式信用模型",
+    "note": "以公司资产价值和资本结构触发违约的信用模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Merton credit model",
+    "target": "默顿信用模型",
+    "note": "将公司股权视为资产看涨期权的结构式违约模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit migration",
+    "target": "信用迁徙",
+    "note": "借款人或债项评级在不同信用等级之间转移",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "rating transition matrix",
+    "target": "评级迁移矩阵",
+    "note": "给定期间内各信用等级之间转移概率的矩阵",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "Gaussian copula",
+    "target": "高斯 Copula",
+    "note": "用高斯潜变量连接边际分布的依赖模型；尾部依赖能力有限",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit tranche",
+    "target": "信用分层",
+    "note": "按损失吸收顺序划分的结构化信用风险层级",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "attachment point",
+    "target": "起赔点",
+    "note": "信用分层开始承担组合损失的阈值",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "detachment point",
+    "target": "止赔点",
+    "note": "信用分层损失达到名义本金上限的阈值",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "convenience yield",
+    "target": "便利收益",
+    "note": "持有实物商品相对持有金融合约带来的非现金效用",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "cost of carry",
+    "target": "持有成本",
+    "note": "融资、仓储、保险减去持有收益等构成的资产持有净成本",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "contango",
+    "target": "正向市场",
+    "note": "较远期期货价格通常高于近月或现货的期限结构状态",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "backwardation",
+    "target": "现货溢价市场",
+    "note": "较远期期货价格通常低于近月或现货的期限结构状态",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "storage cost",
+    "target": "仓储成本",
+    "note": "持有实物商品产生的储存、保险和损耗等成本",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "roll yield",
+    "target": "展期收益",
+    "note": "期货头寸从近月移仓至远月时因期限结构产生的收益或损失",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "calendar spread",
+    "target": "跨期价差",
+    "note": "同一标的不同到期月份合约之间的价差头寸",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "currency pair",
+    "target": "货币对",
+    "note": "外汇报价中同时列示的两种货币",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "base currency",
+    "target": "基础货币",
+    "note": "货币对报价中的第一种货币；宏观语境 base money 应译基础货币或货币基础",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "quote currency",
+    "target": "计价货币",
+    "note": "货币对报价中的第二种货币，用于表示一单位基础货币的价格",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "FX forward",
+    "target": "外汇远期",
+    "note": "约定未来日期按预定汇率交换两种货币的合约",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "forward points",
+    "target": "远期点数",
+    "note": "外汇远期汇率相对即期汇率的点数差",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "FX swap",
+    "target": "外汇掉期",
+    "note": "同时进行相反方向、不同交割日的两笔外汇交易",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "cross-currency swap",
+    "target": "交叉货币互换",
+    "note": "交换不同货币本金和利息现金流的互换",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "cross-currency basis",
+    "target": "交叉货币基差",
+    "note": "跨币种融资供需和信用等因素在互换报价中的基差调整",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "non-deliverable forward",
+    "target": "无本金交割远期",
+    "note": "到期按参考汇率以可交割货币现金差额结算的外汇远期",
+    "aliases": [
+      "NDF"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "quanto option",
+    "target": "定额汇率期权",
+    "note": "标的以一种货币计价、支付以另一货币按预定汇率结算的期权",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "quanto adjustment",
+    "target": "Quanto 调整",
+    "note": "标的收益与汇率相关性造成的跨币种定价调整",
+    "domain": "quant_finance"
+  },
+  {
     "source": "statistical power",
     "target": "统计功效",
     "note": "hypothesis testing",
@@ -4110,7 +5425,10 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
   {
     "source": "null hypothesis",
     "target": "原假设",
-    "note": "hypothesis testing",
+    "note": "假设检验中接受检验、通常代表无效应或无差异的基准命题",
+    "aliases": [
+      "null hypotheses"
+    ],
     "domain": "statistics"
   },
   {
@@ -4568,7 +5886,9 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "target": "异方差稳健标准误",
     "note": "说明 HC0–HC5 等具体校正口径",
     "aliases": [
-      "robust standard error"
+      "heteroskedasticity-consistent standard errors",
+      "robust standard error",
+      "robust standard errors"
     ],
     "domain": "statistics"
   },
@@ -4628,7 +5948,9 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "target": "脉冲响应函数",
     "note": "动态系统对冲击的响应，需保留冲击识别方案",
     "aliases": [
-      "IRF"
+      "impulse response functions",
+      "IRF",
+      "IRFs"
     ],
     "domain": "statistics"
   },
@@ -4965,6 +6287,247 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "quantile regression",
     "target": "分位数回归",
     "note": "建模条件分布指定分位数而非条件均值",
+    "domain": "statistics"
+  },
+  {
+    "source": "conditional variance",
+    "target": "条件方差",
+    "note": "给定信息集或变量条件下随机变量的方差",
+    "domain": "statistics"
+  },
+  {
+    "source": "autocovariance function",
+    "target": "自协方差函数",
+    "note": "时间序列与其滞后值之间协方差随滞后变化的函数",
+    "aliases": [
+      "ACVF"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "martingale difference sequence",
+    "target": "鞅差序列",
+    "note": "相对过去信息的条件期望为零的序列",
+    "aliases": [
+      "MDS"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "Breusch-Pagan test",
+    "target": "布罗伊施–帕甘检验",
+    "note": "检验回归误差方差是否随解释变量系统变化的异方差检验",
+    "aliases": [
+      "Breusch–Pagan test",
+      "BP test"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "White test",
+    "target": "怀特检验",
+    "note": "不要求预先指定异方差形式的异方差检验",
+    "domain": "statistics"
+  },
+  {
+    "source": "Durbin-Watson statistic",
+    "target": "德宾–沃森统计量",
+    "note": "用于检测回归残差一阶自相关，存在解释区间限制",
+    "aliases": [
+      "DW statistic"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "Ljung-Box test",
+    "target": "Ljung–Box 检验",
+    "note": "联合检验多个滞后的序列自相关是否为零",
+    "domain": "statistics"
+  },
+  {
+    "source": "augmented Dickey-Fuller test",
+    "target": "增广迪基–富勒检验",
+    "note": "以单位根为原假设的时间序列检验",
+    "aliases": [
+      "ADF test"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "KPSS test",
+    "target": "KPSS 检验",
+    "note": "通常以水平或趋势平稳为原假设，与 ADF 的原假设方向不同",
+    "domain": "statistics"
+  },
+  {
+    "source": "Engle-Granger test",
+    "target": "恩格尔–格兰杰协整检验",
+    "note": "基于残差单位根的两步协整检验",
+    "domain": "statistics"
+  },
+  {
+    "source": "Johansen test",
+    "target": "约翰森协整检验",
+    "note": "在向量自回归框架下检验协整秩",
+    "domain": "statistics"
+  },
+  {
+    "source": "error correction model",
+    "target": "误差修正模型",
+    "note": "将短期变化与长期均衡偏离调整结合的动态模型",
+    "aliases": [
+      "ECM"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "vector error correction model",
+    "target": "向量误差修正模型",
+    "note": "存在协整关系时对 VAR 的受约束表示",
+    "aliases": [
+      "VECM"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "autoregressive conditional heteroskedasticity model",
+    "target": "自回归条件异方差模型",
+    "note": "用过去冲击平方建模条件方差",
+    "aliases": [
+      "ARCH model"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "exponential GARCH model",
+    "target": "指数 GARCH 模型",
+    "note": "对数条件方差模型，可表达正负冲击的不对称影响",
+    "aliases": [
+      "EGARCH"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "GJR-GARCH model",
+    "target": "GJR–GARCH 模型",
+    "note": "通过指示项刻画负面冲击对波动率的非对称影响",
+    "aliases": [
+      "GJR-GARCH"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "volatility clustering",
+    "target": "波动率聚集",
+    "note": "大幅波动倾向接续大幅波动、小幅波动倾向接续小幅波动的现象",
+    "domain": "statistics"
+  },
+  {
+    "source": "leverage effect",
+    "target": "杠杆效应",
+    "note": "资产收益为负时未来波动率往往上升更多的经验不对称现象；区别于公司财务杠杆",
+    "domain": "statistics"
+  },
+  {
+    "source": "long memory",
+    "target": "长记忆",
+    "note": "相关性以较慢速度衰减、远期观测仍有显著依赖的性质",
+    "domain": "statistics"
+  },
+  {
+    "source": "fractional differencing",
+    "target": "分数阶差分",
+    "note": "使用非整数差分阶数在保持长期记忆同时改善平稳性",
+    "domain": "statistics"
+  },
+  {
+    "source": "structural break",
+    "target": "结构突变",
+    "note": "数据生成过程的参数或关系在某一时点发生变化",
+    "domain": "statistics"
+  },
+  {
+    "source": "Chow test",
+    "target": "邹氏检验",
+    "note": "在已知候选断点下检验线性回归参数是否稳定",
+    "domain": "statistics"
+  },
+  {
+    "source": "change-point detection",
+    "target": "变点检测",
+    "note": "识别分布或模型参数发生变化的位置",
+    "aliases": [
+      "change point detection"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "rolling window",
+    "target": "滚动窗口",
+    "note": "保持固定窗口长度并随时间向前移动的估计方式",
+    "domain": "statistics"
+  },
+  {
+    "source": "expanding window",
+    "target": "扩展窗口",
+    "note": "保留起点并随时间加入新观测的递增样本估计方式",
+    "domain": "statistics"
+  },
+  {
+    "source": "influential observation",
+    "target": "强影响观测",
+    "note": "删除后会显著改变估计结果的观测",
+    "aliases": [
+      "influential observations"
+    ],
+    "domain": "statistics"
+  },
+  {
+    "source": "leverage point",
+    "target": "高杠杆点",
+    "note": "解释变量取值远离样本中心、对拟合具有较大潜在影响的观测",
+    "domain": "statistics"
+  },
+  {
+    "source": "Cook's distance",
+    "target": "库克距离",
+    "note": "综合残差和杠杆衡量观测对回归拟合影响的诊断量",
+    "domain": "statistics"
+  },
+  {
+    "source": "robust regression",
+    "target": "稳健回归",
+    "note": "降低异常值或模型偏离对估计影响的回归方法",
+    "domain": "statistics"
+  },
+  {
+    "source": "nonparametric method",
+    "target": "非参数方法",
+    "note": "不预设有限维参数化分布形式的方法",
+    "domain": "statistics"
+  },
+  {
+    "source": "permutation test",
+    "target": "置换检验",
+    "note": "在可交换性原假设下通过重新排列标签构造参考分布",
+    "domain": "statistics"
+  },
+  {
+    "source": "bootstrap confidence interval",
+    "target": "自助法置信区间",
+    "note": "通过重抽样估计统计量抽样分布并构造区间",
+    "domain": "statistics"
+  },
+  {
+    "source": "stationarity",
+    "target": "平稳性",
+    "note": "时间序列概率结构对时间平移保持不变的性质；需根据语境区分严格平稳、弱平稳和趋势平稳",
+    "domain": "statistics"
+  },
+  {
+    "source": "identification scheme",
+    "target": "识别方案",
+    "note": "在结构模型中施加短期、长期、符号或异方差等限制以识别结构冲击的方案",
     "domain": "statistics"
   }
 ].map(Object.freeze));

@@ -29,7 +29,7 @@ test("formats glossary as an explicit high-priority prompt section", () => {
   const prompt = formatGlossaryPrompt([{ source: "unbiased estimator", target: "无偏估计量" }]);
   assert.match(prompt, /用户术语表/);
   assert.match(prompt, /unbiased estimator => 无偏估计量/);
-  assert.ok(PROFESSIONAL_GLOSSARY_PRESET.length >= 700);
+  assert.ok(PROFESSIONAL_GLOSSARY_PRESET.length >= 900);
   assert.equal(PROFESSIONAL_GLOSSARY_PRESET.some(item => item.source === "layered oxide" || item.source === "oxygen redox"), false);
 });
 
@@ -58,7 +58,7 @@ test("migration respects an empty user glossary and leaves new-install defaults 
 
 test('context, aliases and domain survive JSON/CSV round trips without merging distinct senses', () => {
   const terms = [
-    { source: 'power', target: '检验功效', domain: 'statistics', note: '检验，不是幂', aliases: ['statistical power'] },
+    { source: 'power', target: '检验功效', domain: 'statistics', note: '检验，不是幂', aliases: ['statistical power'], requiresContext: true },
     { source: 'power', target: '幂', domain: 'mathematics', note: '指数运算' },
   ];
   for (const text of [glossaryToCsv(terms), glossaryToJson(terms)]) assert.deepEqual(parseGlossaryText(text), terms);
@@ -115,6 +115,13 @@ test('conflicting aliases are resolved by nearby domain terms', () => {
   assert.equal(mathematics.some(row => row.target === '生成器'), false);
 });
 
+test('generic professional senses require independent domain context', () => {
+  const ordinary = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'The video duration is ten minutes.');
+  const finance = selectGlossaryTerms(PROFESSIONAL_GLOSSARY_PRESET, 'Bond duration and convexity measure rate sensitivity.');
+  assert.equal(ordinary.some(row => row.source === 'duration'), false);
+  assert.ok(finance.some(row => row.target === '久期'));
+});
+
 test('older nonempty library gains missing defaults without replacing customized translations or metadata', async () => {
   const custom = { source: 'duration', target: '我的久期译法', note: '私有定义', owner: 'user' };
   const saved = { quantScholarMaterialTermsRemovedV1: true, glossaryTerms: [custom] };
@@ -128,18 +135,19 @@ test('older nonempty library gains missing defaults without replacing customized
   assert.equal(saved.glossaryTerms, previous);
 });
 
-test('V4 migration upgrades users who already completed V3 and keeps both qualified senses', async () => {
+test('V5 migration upgrades users who already completed V4 and keeps both qualified senses', async () => {
   const existing = PROFESSIONAL_GLOSSARY_PRESET.find(t => t.source === 'duration');
   const saved = {
     quantScholarMaterialTermsRemovedV1: true,
     quantScholarContextualGlossaryV2: true,
     quantScholarContextualGlossaryV3: true,
+    quantScholarContextualGlossaryV4: true,
     glossaryTerms: [existing]
   };
   const storage = { get: async () => saved, set: async value => Object.assign(saved, value) };
   await migrateProfessionalGlossary(storage);
-  assert.equal(saved.quantScholarContextualGlossaryV4, true);
-  assert.ok(saved.glossaryTerms.some(t => t.source === 'Longstaff-Schwartz method'));
+  assert.equal(saved.quantScholarContextualGlossaryV5, true);
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'cross-currency basis'));
   const power = saved.glossaryTerms.filter(t => t.source === 'power');
   assert.deepEqual(new Set(power.map(t => t.domain)), new Set(['mathematics', 'statistics']));
 });

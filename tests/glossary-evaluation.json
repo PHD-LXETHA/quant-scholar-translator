@@ -1,0 +1,73 @@
+{
+  "standard": "Quant Scholar Professional Glossary Gate v1",
+  "minimums": {
+    "totalTerms": 900,
+    "totalAliases": 280,
+    "perDomain": {
+      "academic": 70,
+      "economics": 100,
+      "finance": 120,
+      "mathematics": 145,
+      "programming": 140,
+      "quant_finance": 160,
+      "statistics": 145
+    }
+  },
+  "coverage": [
+    {"domain":"academic","text":"The registered report documents allocation concealment and intention-to-treat analysis.","expectedTargets":["注册报告","分配隐藏","意向性治疗分析"]},
+    {"domain":"academic","text":"Publication bias and attrition bias threaten the systematic review.","expectedTargets":["发表偏倚","失访偏倚","系统综述"]},
+    {"domain":"academic","text":"The estimand differs from the estimator and the final estimate.","expectedTargets":["目标估计量","估计量","估计值"]},
+    {"domain":"academic","text":"Provide a data availability statement, code availability statement, and conflict of interest disclosure.","expectedTargets":["数据可用性声明","代码可用性声明","利益冲突"]},
+
+    {"domain":"economics","text":"The Taylor rule reacts to the output gap, core inflation, and the effective lower bound.","expectedTargets":["泰勒规则","产出缺口","核心通胀","有效下限"]},
+    {"domain":"economics","text":"Covered interest parity links forward rates to interest differentials, unlike uncovered interest parity.","expectedTargets":["抛补利率平价","无抛补利率平价"]},
+    {"domain":"economics","text":"A DSGE model may include rational expectations, nominal rigidity, and a monetary policy shock.","expectedTargets":["动态随机一般均衡模型","理性预期","货币政策"]},
+    {"domain":"economics","text":"The current account deficit, capital flight, and exchange rate regime affect the balance of payments.","expectedTargets":["经常账户赤字","资本外逃","汇率制度","国际收支"]},
+
+    {"domain":"finance","text":"Compute Macaulay duration, effective duration, DV01, and key rate duration for the callable bond.","expectedTargets":["麦考利久期","有效久期","一个基点的美元价值","关键利率久期","可赎回债券"]},
+    {"domain":"finance","text":"Enterprise value, EBITDA margin, FCFF, and terminal value enter the DCF valuation.","expectedTargets":["企业价值","EBITDA 利润率","企业自由现金流","终值","现金流折现法"]},
+    {"domain":"finance","text":"The repo haircut and collateral reduce counterparty risk before a margin call.","expectedTargets":["回购协议","折扣率","抵押品","交易对手风险","追加保证金通知"]},
+    {"domain":"finance","text":"ABS, MBS, and CDO are securitization structures with different collateral pools.","expectedTargets":["资产支持证券","抵押贷款支持证券","担保债务凭证","资产证券化"]},
+
+    {"domain":"mathematics","text":"Apply Girsanov theorem after checking the Radon-Nikodym derivative and equivalent measures.","expectedTargets":["吉尔萨诺夫定理","拉东–尼科迪姆导数","等价测度"]},
+    {"domain":"mathematics","text":"The Fokker-Planck equation is the Kolmogorov forward equation for the diffusion density.","expectedTargets":["福克–普朗克方程","柯尔莫哥洛夫前向方程"]},
+    {"domain":"mathematics","text":"The Crank-Nicolson scheme must satisfy consistency, stability, and the required order of convergence.","expectedTargets":["克兰克–尼科尔森格式","数值格式的一致性","数值格式的稳定性","收敛阶"]},
+    {"domain":"mathematics","text":"Slater's condition yields strong duality and complementary slackness for this convex optimization problem.","expectedTargets":["斯莱特条件","强对偶","互补松弛条件","凸优化"]},
+
+    {"domain":"programming","text":"A NumPy ndarray view shares memory while an array copy owns independent storage.","expectedTargets":["NumPy 数组","数组视图","数组副本"]},
+    {"domain":"programming","text":"The async generator returns an awaitable through the event loop.","expectedTargets":["异步生成器","可等待对象","事件循环"]},
+    {"domain":"programming","text":"ETL batch processing and stream processing feed the data pipeline.","expectedTargets":["抽取、转换、加载","批处理","流处理","数据管道"]},
+    {"domain":"programming","text":"Use a validation set for hyperparameter tuning and keep the test set untouched.","expectedTargets":["验证集","超参数","测试集"]},
+
+    {"domain":"quant_finance","text":"Price a payer swaption under the Hull-White model using an OIS discount curve.","expectedTargets":["支付固定利率互换期权","赫尔–怀特模型","隔夜指数互换","贴现曲线"]},
+    {"domain":"quant_finance","text":"Bootstrap the projection curve with FRA, caplets, and floorlets.","expectedTargets":["预测曲线","远期利率协议","单期利率上限期权","单期利率下限期权"]},
+    {"domain":"quant_finance","text":"The premium leg and protection leg depend on hazard rates and survival probabilities.","expectedTargets":["保费端","保护端","风险率","存续概率"]},
+    {"domain":"quant_finance","text":"Cross-currency basis and quanto adjustment matter for an NDF and a quanto option.","expectedTargets":["交叉货币基差","Quanto 调整","无本金交割远期","定额汇率期权"]},
+    {"domain":"quant_finance","text":"Contango produces negative roll yield when a futures position is rolled along the commodity curve.","expectedTargets":["正向市场","展期收益"]},
+    {"domain":"quant_finance","text":"Filtered historical simulation estimates expected shortfall and complements stress testing.","expectedTargets":["过滤历史模拟法","预期损失","压力测试"]},
+
+    {"domain":"statistics","text":"The ADF test and KPSS test use opposite stationarity null hypotheses.","expectedTargets":["增广迪基–富勒检验","KPSS 检验","平稳性","原假设"]},
+    {"domain":"statistics","text":"A VECM represents cointegration while impulse response functions require an identification scheme.","expectedTargets":["向量误差修正模型","协整","脉冲响应函数","识别方案"]},
+    {"domain":"statistics","text":"GJR-GARCH and EGARCH capture volatility clustering and the leverage effect.","expectedTargets":["GJR–GARCH 模型","指数 GARCH 模型","波动率聚集","杠杆效应"]},
+    {"domain":"statistics","text":"Cook's distance combines residual size and a leverage point to identify influential observations.","expectedTargets":["库克距离","残差","高杠杆点","强影响观测"]},
+    {"domain":"statistics","text":"Compare AIC and BIC after checking heteroskedasticity-consistent standard errors.","expectedTargets":["赤池信息准则","贝叶斯信息准则","异方差稳健标准误"]}
+  ],
+  "ambiguity": [
+    {"domain":"auto","text":"The function return value has a type annotation.","expectedTargets":["返回"],"forbiddenTargets":["收益率"]},
+    {"domain":"auto","text":"Expected return and portfolio volatility determine the efficient frontier.","expectedTargets":["收益率","投资组合","有效前沿"],"forbiddenTargets":["返回"]},
+    {"domain":"auto","text":"The statistical power of the hypothesis test is low.","expectedTargets":["检验功效"],"forbiddenTargets":["幂"]},
+    {"domain":"auto","text":"The matrix power follows from its eigenvalue decomposition.","expectedTargets":["幂","特征值"],"forbiddenTargets":["检验功效"]},
+    {"domain":"auto","text":"The CI pipeline runs unit tests.","expectedTargets":["持续集成","单元测试"],"forbiddenTargets":["置信区间"]},
+    {"domain":"auto","text":"Report the 95% CI for the unbiased estimator.","expectedTargets":["置信区间","无偏估计量"],"forbiddenTargets":["持续集成"]},
+    {"domain":"auto","text":"The infinitesimal generator characterizes the Markov process.","expectedTargets":["无穷小生成元","马尔可夫过程"],"forbiddenTargets":["生成器"]},
+    {"domain":"auto","text":"The Python generator implements the iterator protocol.","expectedTargets":["生成器","迭代器协议"],"forbiddenTargets":["无穷小生成元"]}
+  ],
+  "negative": [
+    {"domain":"programming","text":"classification pipeline","forbiddenSources":["class"]},
+    {"domain":"quant_finance","text":"alphabetagamma distribution","forbiddenSources":["alpha","beta","gamma"]},
+    {"domain":"statistics","text":"a powerful computer","forbiddenSources":["power"]},
+    {"domain":"finance","text":"the video duration is ten minutes","forbiddenSources":["duration"]},
+    {"domain":"programming","text":"the returnable package arrived","forbiddenSources":["return"]},
+    {"domain":"mathematics","text":"integralism is unrelated","forbiddenSources":["integral"]}
+  ]
+}

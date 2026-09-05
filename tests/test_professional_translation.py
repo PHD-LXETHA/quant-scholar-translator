@@ -46,7 +46,7 @@ class ProfessionalTranslationTests(unittest.TestCase):
                 and all(isinstance(alias, str) and alias.strip() for alias in item.get("aliases", []))
                 for item in entries
             ))
-        self.assertGreaterEqual(total, 700)
+        self.assertGreaterEqual(total, 900)
 
     def test_cross_domain_homonyms_are_disambiguated_before_prompting(self):
         programming = MODULE.relevant_glossary("The function return value has a type annotation.", "programming")
@@ -79,6 +79,14 @@ class ProfessionalTranslationTests(unittest.TestCase):
         self.assertNotIn("持续集成", {item["target"] for item in statistics})
         self.assertIn("无穷小生成元", {item["target"] for item in math})
         self.assertNotIn("生成器", {item["target"] for item in math})
+
+    def test_generic_professional_sense_requires_context_in_auto_mode(self):
+        ordinary = MODULE.relevant_glossary("The video duration is ten minutes.", "auto")
+        finance = MODULE.relevant_glossary("Bond duration and convexity measure rate sensitivity.", "auto")
+        explicit = MODULE.relevant_glossary("duration", "finance")
+        self.assertNotIn("久期", {item["target"] for item in ordinary})
+        self.assertIn("久期", {item["target"] for item in finance})
+        self.assertIn("久期", {item["target"] for item in explicit})
 
     def test_new_professional_coverage_spans_all_learning_domains(self):
         cases = {

@@ -60,5 +60,19 @@
   {"source":"corresponding author","target":"通讯作者","note":"负责稿件通信的作者，不必然等于第一作者"},
   {"source":"preprint","target":"预印本","note":"尚未完成正式同行评议的公开稿件"},
   {"source":"systematic error","target":"系统误差","note":"以稳定方向影响测量或估计的误差；区别于随机误差"},
-  {"source":"random error","target":"随机误差","note":"由随机波动产生、方向不固定的误差"}
+  {"source":"random error","target":"随机误差","note":"由随机波动产生、方向不固定的误差"},
+  {"source":"research protocol","target":"研究方案","note":"研究实施前规定目标、设计、样本和分析方法的正式文件"},
+  {"source":"protocol deviation","target":"方案偏离","note":"实际研究实施与预定研究方案不一致的情形"},
+  {"source":"attrition bias","target":"失访偏倚","note":"退出或缺失与处理或结果相关造成的系统偏差"},
+  {"source":"loss to follow-up","target":"失访","note":"受试者在随访期间无法继续观察；需报告数量与原因","aliases":["lost to follow-up"]},
+  {"source":"blinding","target":"盲法","note":"使参与者、研究人员或评估者不知道分组以减少偏倚","aliases":["masking"]},
+  {"source":"allocation concealment","target":"分配隐藏","note":"在分配前防止研究人员预知下一组别；区别于分配后的盲法"},
+  {"source":"intention-to-treat analysis","target":"意向性治疗分析","note":"按最初随机分组分析所有参与者，不因依从性改变分组","aliases":["ITT analysis"]},
+  {"source":"per-protocol analysis","target":"符合方案分析","note":"只分析充分遵循研究方案的参与者；可能引入选择偏倚","aliases":["PP analysis"]},
+  {"source":"null result","target":"零结果","note":"未发现预设效应或统计证据的结果；不等于证明完全无效应"},
+  {"source":"data provenance","target":"数据溯源","note":"记录数据来源、处理步骤和派生关系"},
+  {"source":"code availability statement","target":"代码可用性声明","note":"说明分析代码能否以及如何获取"},
+  {"source":"plagiarism","target":"抄袭","note":"未适当注明来源而使用他人的文字、思想或成果"},
+  {"source":"paraphrase","target":"转述","note":"用不同措辞表达原意，仍需在适当情况下标注来源"},
+  {"source":"citation context","target":"引文语境","note":"引用在正文中承担的支持、对比、方法或背景作用"}
 ]

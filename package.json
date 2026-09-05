@@ -14,6 +14,7 @@
   "type": "module",
   "scripts": {
     "build:glossary": "node scripts/build-domain-preset.mjs",
+    "evaluate:glossary": "node scripts/evaluate-glossary.mjs",
     "test:extension": "node --test tests/*.test.mjs apps/browser-extension/research/tests/*.test.mjs apps/browser-extension/research/tests/*.test.cjs apps/browser-extension/learning/tests/*.test.js"
   }
 }

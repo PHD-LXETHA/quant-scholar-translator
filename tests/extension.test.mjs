@@ -69,6 +69,7 @@ test('floating menu embeds the complete translation workspace', () => {
     'exportMarkdown', 'exportPdf', 'exportJson', 'exportSrt', 'clearSession',
   ];
   for (const id of expectedControls) assert.match(popup, new RegExp(`id=["']${id}["']`));
+  assert.match(popup, /class="checkbox-row archive-option"[\s\S]*id="videoLibrary"[\s\S]*自动保存视频文档[\s\S]*回看同一视频时自动恢复已译字幕/);
   assert.doesNotMatch(popup, /id=["']saveBilingual(?:Pdf)?["']/);
   assert.match(content, /popup\/popup\.html/);
   assert.ok(manifest.web_accessible_resources.some(entry => entry.resources.includes('popup/popup.html')));
