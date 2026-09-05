@@ -39,9 +39,11 @@ class KimiBridgeTests(unittest.TestCase):
         self.assertEqual(output, "专业译文")
         command = run.call_args.args[0]
         kwargs = run.call_args.kwargs
-        self.assertIn("--plan", command)
+        self.assertNotIn("--plan", command)
+        self.assertIn("--agent-file", command)
         self.assertIn("--skills-dir", command)
         self.assertNotIn("--yolo", command)
+        self.assertIn("tools: []", MODULE._TRANSLATOR_AGENT)
         self.assertNotIn("KIMI_API_KEY", kwargs["env"])
         self.assertNotIn("MOONSHOT_API_KEY", kwargs["env"])
 

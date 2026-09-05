@@ -21,6 +21,18 @@ from typing import Iterable
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 _KIMI_LOCK = threading.Lock()
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+_TRANSLATOR_AGENT = """---
+name: quant-scholar-translator
+description: Text-only professional translator for Quant Scholar
+tools: []
+subagents: []
+---
+
+You are a text-only professional translation engine. Follow the supplied
+translation contract exactly. Never call tools, inspect files, browse,
+delegate, execute commands, or modify external state. Return only the format
+requested by the translation contract.
+"""
 
 
 class KimiBridgeError(RuntimeError):
@@ -131,9 +143,12 @@ def run_kimi_completion(messages: Iterable[dict], timeout: int | None = None) ->
     )
 
     with _KIMI_LOCK, tempfile.TemporaryDirectory(prefix="quant-scholar-kimi-") as temp:
+        agent_file = os.path.join(temp, "translator.md")
+        with open(agent_file, "w", encoding="utf-8", newline="\n") as stream:
+            stream.write(_TRANSLATOR_AGENT)
         command = [
             _command(),
-            "--plan",
+            "--agent-file", agent_file,
             "--skills-dir", temp,
             "--output-format", "text",
             "--prompt", prompt,
