@@ -152,6 +152,25 @@ test('V5 migration upgrades users who already completed V4 and keeps both qualif
   assert.deepEqual(new Set(power.map(t => t.domain)), new Set(['mathematics', 'statistics']));
 });
 
+test('V6 migration adds CFA and FRM terms without replacing an existing custom term', async () => {
+  const custom = { source: 'risk appetite', target: '我的风险偏好译法' };
+  const saved = {
+    quantScholarMaterialTermsRemovedV1: true,
+    quantScholarContextualGlossaryV2: true,
+    quantScholarContextualGlossaryV3: true,
+    quantScholarContextualGlossaryV4: true,
+    quantScholarContextualGlossaryV5: true,
+    glossaryTerms: [custom]
+  };
+  const storage = { get: async () => saved, set: async value => Object.assign(saved, value) };
+  await migrateProfessionalGlossary(storage);
+  assert.equal(saved.quantScholarContextualGlossaryV6, true);
+  assert.equal(saved.glossaryTerms.filter(t => t.source === 'risk appetite').length, 1);
+  assert.equal(saved.glossaryTerms.find(t => t.source === 'risk appetite').target, '我的风险偏好译法');
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'material nonpublic information'));
+  assert.ok(saved.glossaryTerms.some(t => t.source === 'liquidity coverage ratio'));
+});
+
 test('library is domain-qualified, documented and free of conflicting duplicates within each domain', () => {
   const keys = new Set();
   for (const entry of PROFESSIONAL_GLOSSARY_PRESET) {

@@ -507,6 +507,146 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "domain": "academic"
   },
   {
+    "source": "fiduciary duty",
+    "target": "受托责任",
+    "note": "受托人应以客户或受益人利益为先并履行忠诚、审慎和注意义务",
+    "aliases": [
+      "fiduciary duties"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "material nonpublic information",
+    "target": "重大非公开信息",
+    "note": "尚未公开且理性投资者可能认为会影响投资决定或证券价格的信息",
+    "aliases": [
+      "MNPI"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "fair dealing",
+    "target": "公平对待",
+    "note": "向客户提供投资分析、建议或交易机会时公平、客观地处理，不要求结果完全相同",
+    "domain": "academic"
+  },
+  {
+    "source": "suitability",
+    "target": "适当性",
+    "note": "投资建议或操作应符合客户目标、约束、风险承受能力及整体投资组合",
+    "domain": "academic"
+  },
+  {
+    "source": "diligence and reasonable basis",
+    "target": "勤勉与合理依据",
+    "note": "分析、建议和行动应经过充分调查并具有合理、适当的依据",
+    "domain": "academic"
+  },
+  {
+    "source": "priority of transactions",
+    "target": "交易优先顺序",
+    "note": "客户和雇主交易应优先于从业人员可获个人利益的交易",
+    "domain": "academic"
+  },
+  {
+    "source": "referral fee",
+    "target": "推荐费",
+    "note": "因推荐客户或业务而收取或支付的报酬；应按适用规则充分披露",
+    "aliases": [
+      "referral fees"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "soft dollar arrangement",
+    "target": "软美元安排",
+    "note": "用客户佣金换取研究或经纪服务的安排；需评估服务是否有利于客户",
+    "aliases": [
+      "soft commission arrangement",
+      "soft dollars"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "mosaic theory",
+    "target": "马赛克理论",
+    "note": "将公开信息与非重大非公开信息组合形成投资结论，不包含重大非公开信息",
+    "domain": "academic"
+  },
+  {
+    "source": "professional misconduct",
+    "target": "专业失当行为",
+    "note": "损害诚信、声誉或专业胜任能力的职业相关行为",
+    "domain": "academic"
+  },
+  {
+    "source": "market manipulation",
+    "target": "市场操纵",
+    "note": "通过虚假信息、扭曲价格或人为交易活动误导市场参与者",
+    "domain": "academic"
+  },
+  {
+    "source": "performance presentation",
+    "target": "业绩展示",
+    "note": "向客户或潜在客户呈现投资业绩时应公平、准确、完整且不具误导性",
+    "domain": "academic"
+  },
+  {
+    "source": "record retention",
+    "target": "记录保存",
+    "note": "保留支持投资分析、建议、行动与客户沟通的适当记录",
+    "domain": "academic"
+  },
+  {
+    "source": "whistleblowing",
+    "target": "举报不当行为",
+    "note": "向有权处理的内部或外部渠道报告违法、违规或严重不当行为",
+    "domain": "academic"
+  },
+  {
+    "source": "Global Investment Performance Standards",
+    "target": "全球投资业绩标准",
+    "note": "CFA Institute 发布的投资业绩展示道德标准，通常保留 GIPS 缩写",
+    "aliases": [
+      "GIPS"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "composite",
+    "target": "组合群",
+    "note": "GIPS 语境中按相似投资授权、目标或策略归集的一个或多个投资组合",
+    "requiresContext": true,
+    "domain": "academic"
+  },
+  {
+    "source": "GIPS verification",
+    "target": "GIPS 验证",
+    "note": "由独立第三方对公司层面组合群构建及政策程序是否符合 GIPS 要求进行检验",
+    "aliases": [
+      "verification"
+    ],
+    "domain": "academic"
+  },
+  {
+    "source": "discretionary portfolio",
+    "target": "全权委托投资组合",
+    "note": "投资管理人对投资决策拥有实际自主权、可按既定策略管理的组合",
+    "domain": "academic"
+  },
+  {
+    "source": "total firm assets",
+    "target": "公司管理资产总额",
+    "note": "GIPS 报告口径下公司所管理资产的汇总值，需遵循公司定义和适用规则",
+    "domain": "academic"
+  },
+  {
+    "source": "independence and objectivity",
+    "target": "独立性与客观性",
+    "note": "专业判断不受礼品、利益冲突、压力或其他外部影响的不当干扰",
+    "domain": "academic"
+  },
+  {
     "source": "general equilibrium",
     "target": "一般均衡",
     "note": "microeconomics",
@@ -2202,6 +2342,791 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "portfolio",
     "target": "投资组合",
     "note": "为实现风险收益目标而共同持有和管理的一组资产；区别于跨境收支统计中的证券投资",
+    "domain": "finance"
+  },
+  {
+    "source": "money-weighted rate of return",
+    "target": "资金加权收益率",
+    "note": "使各期外部现金流与期末价值净现值为零的内部收益率式业绩指标，受现金流时点影响",
+    "aliases": [
+      "money-weighted return",
+      "MWRR"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "time-weighted rate of return",
+    "target": "时间加权收益率",
+    "note": "将各子期间收益率连乘，尽量剔除外部现金流时点和规模影响",
+    "aliases": [
+      "time-weighted return",
+      "TWRR"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "bank discount yield",
+    "target": "银行贴现收益率",
+    "note": "按面值和 360 天年基计算的货币市场报价，不是投资者实际持有期收益率",
+    "aliases": [
+      "discount yield"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "effective annual rate",
+    "target": "有效年利率",
+    "note": "计入一年内复利次数后的实际年化利率",
+    "aliases": [
+      "effective annual yield",
+      "EAR"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "accrual accounting",
+    "target": "权责发生制会计",
+    "note": "收入和费用按经济活动发生而非现金收付时点确认",
+    "domain": "finance"
+  },
+  {
+    "source": "deferred tax asset",
+    "target": "递延所得税资产",
+    "note": "可抵扣暂时性差异或可结转税务项目形成的未来税收利益",
+    "aliases": [
+      "DTA"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "deferred tax liability",
+    "target": "递延所得税负债",
+    "note": "应纳税暂时性差异导致未来期间预计增加的所得税负担",
+    "aliases": [
+      "DTL"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "valuation allowance",
+    "target": "估值备抵",
+    "note": "美国会计语境中，对预计难以实现的递延所得税资产计提的抵减项目",
+    "requiresContext": true,
+    "domain": "finance"
+  },
+  {
+    "source": "first-in first-out",
+    "target": "先进先出法",
+    "note": "假定最早购入的存货先转入销售成本的存货计价方法",
+    "aliases": [
+      "FIFO"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "last-in first-out",
+    "target": "后进先出法",
+    "note": "假定最近购入的存货先转入销售成本；国际财务报告准则不允许使用",
+    "aliases": [
+      "LIFO"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "inventory turnover",
+    "target": "存货周转率",
+    "note": "通常以销售成本除以平均存货，衡量存货使用或销售速度",
+    "domain": "finance"
+  },
+  {
+    "source": "days sales outstanding",
+    "target": "应收账款周转天数",
+    "note": "反映销售形成的应收账款平均回收天数",
+    "aliases": [
+      "DSO"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "goodwill",
+    "target": "商誉",
+    "note": "企业合并购买价超过可辨认净资产公允价值份额的部分",
+    "requiresContext": true,
+    "domain": "finance"
+  },
+  {
+    "source": "impairment loss",
+    "target": "减值损失",
+    "note": "资产账面价值超过可收回金额或适用计量基础所确认的损失",
+    "domain": "finance"
+  },
+  {
+    "source": "capitalization of costs",
+    "target": "成本资本化",
+    "note": "将符合条件的支出确认为资产并在未来期间分摊，而不是立即费用化",
+    "aliases": [
+      "capitalising costs",
+      "capitalizing costs"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "expensing",
+    "target": "费用化",
+    "note": "将支出在当期计入损益，而非确认为资产",
+    "domain": "finance"
+  },
+  {
+    "source": "operating lease",
+    "target": "经营租赁",
+    "note": "按适用准则和分析目的区分资产使用权、租赁负债及费用列报",
+    "domain": "finance"
+  },
+  {
+    "source": "finance lease",
+    "target": "融资租赁",
+    "note": "实质上转移相关资产主要风险与报酬或形成融资性质的租赁",
+    "aliases": [
+      "capital lease"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "defined benefit plan",
+    "target": "设定受益计划",
+    "note": "退休给付按公式确定，精算和投资风险主要由计划发起人承担",
+    "aliases": [
+      "DB plan"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "defined contribution plan",
+    "target": "设定提存计划",
+    "note": "雇主按约定缴费，最终给付取决于缴费和投资表现",
+    "aliases": [
+      "DC plan"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "basic earnings per share",
+    "target": "基本每股收益",
+    "note": "以归属于普通股股东的利润除以加权平均普通股股数",
+    "aliases": [
+      "basic EPS"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "diluted earnings per share",
+    "target": "稀释每股收益",
+    "note": "计入潜在稀释性普通股影响后的每股收益",
+    "aliases": [
+      "diluted EPS"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "quality of earnings",
+    "target": "盈利质量",
+    "note": "盈利的可持续性、现金支持程度与会计估计可靠性等综合特征",
+    "domain": "finance"
+  },
+  {
+    "source": "cash conversion cycle",
+    "target": "现金转换周期",
+    "note": "存货周转天数加应收账款周转天数减应付账款周转天数",
+    "aliases": [
+      "CCC"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "DuPont analysis",
+    "target": "杜邦分析",
+    "note": "将净资产收益率分解为利润率、资产周转率和财务杠杆等驱动因素",
+    "domain": "finance"
+  },
+  {
+    "source": "common-size financial statement",
+    "target": "共同比财务报表",
+    "note": "将报表项目表示为统一基数的百分比以便跨期或跨公司比较",
+    "aliases": [
+      "common-size statement"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "horizontal analysis",
+    "target": "水平分析",
+    "note": "比较同一报表项目随期间变化的金额或百分比",
+    "domain": "finance"
+  },
+  {
+    "source": "vertical analysis",
+    "target": "垂直分析",
+    "note": "把同一期报表项目表示为销售收入或总资产等基数的比例",
+    "domain": "finance"
+  },
+  {
+    "source": "non-controlling interest",
+    "target": "非控股权益",
+    "note": "子公司中不归属于母公司股东的权益份额",
+    "aliases": [
+      "minority interest",
+      "NCI"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "capital budgeting",
+    "target": "资本预算",
+    "note": "评估和选择长期投资项目的现金流、风险与价值创造过程",
+    "domain": "finance"
+  },
+  {
+    "source": "agency conflict",
+    "target": "代理冲突",
+    "note": "委托人与代理人目标不一致及信息不对称造成的利益冲突",
+    "aliases": [
+      "agency problem"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "corporate governance",
+    "target": "公司治理",
+    "note": "董事会、管理层、股东及其他利益相关者之间的权责和监督机制",
+    "domain": "finance"
+  },
+  {
+    "source": "sustainable growth rate",
+    "target": "可持续增长率",
+    "note": "在既定盈利能力、股利政策和资本结构下无需发行新股可维持的长期增长率",
+    "aliases": [
+      "SGR"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "dividend discount model",
+    "target": "股利折现模型",
+    "note": "以预期未来股利的现值估计普通股内在价值",
+    "aliases": [
+      "DDM"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "Gordon growth model",
+    "target": "戈登增长模型",
+    "note": "假定股利以恒定增长率永久增长的股利折现模型",
+    "aliases": [
+      "constant-growth DDM",
+      "Gordon model"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "justified price-to-earnings ratio",
+    "target": "合理市盈率",
+    "note": "由基本面假设推导、与估值模型一致的市盈率",
+    "aliases": [
+      "justified P/E"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "residual income model",
+    "target": "剩余收益模型",
+    "note": "以账面价值加未来剩余收益现值估计股权价值",
+    "aliases": [
+      "RIM"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "sum-of-the-parts valuation",
+    "target": "分部加总估值法",
+    "note": "分别估计各业务或资产价值后加总并调整公司层面项目",
+    "aliases": [
+      "SOTP valuation"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "control premium",
+    "target": "控制权溢价",
+    "note": "取得企业控制权相对少数股权价值通常愿意支付的额外价值",
+    "domain": "finance"
+  },
+  {
+    "source": "minority discount",
+    "target": "少数股权折价",
+    "note": "非控制性权益相对控制性权益价值的折减",
+    "aliases": [
+      "discount for lack of control",
+      "DLOC"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "discount for lack of marketability",
+    "target": "缺乏流动性折价",
+    "note": "因权益难以及时出售或缺乏活跃市场而作的估值折减",
+    "aliases": [
+      "DLOM"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "matrix pricing",
+    "target": "矩阵定价法",
+    "note": "用相似期限、票息和信用质量证券的报价估计缺乏活跃报价债券的价值",
+    "domain": "finance"
+  },
+  {
+    "source": "government spread",
+    "target": "政府债券利差",
+    "note": "债券收益率相对相近期限政府基准收益率之差",
+    "aliases": [
+      "G-spread"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "interpolated spread",
+    "target": "插值利差",
+    "note": "债券收益率相对互换曲线插值收益率之差",
+    "aliases": [
+      "I-spread"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "embedded option",
+    "target": "嵌入期权",
+    "note": "嵌入债券或其他基础合约、改变现金流或期限的期权条款",
+    "domain": "finance"
+  },
+  {
+    "source": "sinking fund provision",
+    "target": "偿债基金条款",
+    "note": "要求发行人按计划定期偿还或回购部分债券本金的条款",
+    "domain": "finance"
+  },
+  {
+    "source": "convertible bond",
+    "target": "可转换债券",
+    "note": "持有人可按约定条件将债券转换为发行人股票的债券",
+    "domain": "finance"
+  },
+  {
+    "source": "credit enhancement",
+    "target": "信用增级",
+    "note": "通过超额抵押、次级结构、担保或准备金等提高债项信用质量",
+    "domain": "finance"
+  },
+  {
+    "source": "structural subordination",
+    "target": "结构性次级",
+    "note": "控股公司债权因运营子公司债权在资产请求顺序上优先而处于事实次级",
+    "domain": "finance"
+  },
+  {
+    "source": "private equity",
+    "target": "私募股权",
+    "note": "投资于非上市企业股权或推动上市公司私有化的资本",
+    "domain": "finance"
+  },
+  {
+    "source": "private debt",
+    "target": "私募债权",
+    "note": "由非银行投资者向非上市或中小企业提供的非公开债务融资",
+    "domain": "finance"
+  },
+  {
+    "source": "venture capital",
+    "target": "风险投资",
+    "note": "投资高成长早期企业的私募股权策略",
+    "aliases": [
+      "VC"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "buyout",
+    "target": "并购型投资",
+    "note": "取得成熟企业控制权并通过运营、资本结构或战略改进创造价值",
+    "requiresContext": true,
+    "domain": "finance"
+  },
+  {
+    "source": "leveraged buyout",
+    "target": "杠杆收购",
+    "note": "大量使用债务融资取得企业控制权的收购",
+    "aliases": [
+      "LBO"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "general partner",
+    "target": "普通合伙人",
+    "note": "基金架构中负责管理和承担约定责任的一方",
+    "aliases": [
+      "GP"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "limited partner",
+    "target": "有限合伙人",
+    "note": "向基金出资但通常不参与日常管理、责任以出资为限的投资者",
+    "aliases": [
+      "LP"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "committed capital",
+    "target": "承诺资本",
+    "note": "有限合伙人承诺在基金存续期内按缴款通知投入的资本总额",
+    "domain": "finance"
+  },
+  {
+    "source": "called capital",
+    "target": "实缴调用资本",
+    "note": "基金已通过缴款通知要求投资者实际缴付的承诺资本",
+    "aliases": [
+      "drawn capital"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "capital distribution",
+    "target": "资本分配",
+    "note": "基金向投资者返还本金或分配投资收益的现金流",
+    "requiresContext": true,
+    "domain": "finance"
+  },
+  {
+    "source": "carried interest",
+    "target": "业绩报酬",
+    "note": "普通合伙人在达到约定条件后分享基金投资利润的报酬",
+    "aliases": [
+      "carry"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "management fee",
+    "target": "管理费",
+    "note": "按承诺资本、投资成本或净资产等约定基数收取的基金管理报酬",
+    "domain": "finance"
+  },
+  {
+    "source": "performance fee",
+    "target": "业绩报酬费",
+    "note": "依据投资收益或超额业绩收取的浮动管理报酬",
+    "domain": "finance"
+  },
+  {
+    "source": "hurdle rate",
+    "target": "门槛收益率",
+    "note": "业绩报酬开始计提前投资者通常需先获得的最低收益率",
+    "domain": "finance"
+  },
+  {
+    "source": "catch-up provision",
+    "target": "追赶条款",
+    "note": "达到门槛收益后，一段分配优先给予管理人以追赶约定业绩报酬比例",
+    "domain": "finance"
+  },
+  {
+    "source": "clawback provision",
+    "target": "回拨条款",
+    "note": "基金最终业绩不足时要求普通合伙人返还超额取得的业绩报酬",
+    "domain": "finance"
+  },
+  {
+    "source": "vintage year",
+    "target": "基金年份",
+    "note": "私募基金开始投资或首次调用资本的年份，用于同类比较",
+    "domain": "finance"
+  },
+  {
+    "source": "J-curve",
+    "target": "J 曲线效应",
+    "note": "私募基金早期净现金流或回报为负、后期随退出改善的典型路径",
+    "domain": "finance"
+  },
+  {
+    "source": "net asset value",
+    "target": "资产净值",
+    "note": "资产公允价值减负债后的净额；基金语境常按每份或总体报告",
+    "aliases": [
+      "NAV"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "distributed to paid-in capital",
+    "target": "已分配资本倍数",
+    "note": "累计分配额除以实缴资本，衡量已实现回款",
+    "aliases": [
+      "DPI"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "residual value to paid-in capital",
+    "target": "剩余价值倍数",
+    "note": "未实现剩余净值除以实缴资本",
+    "aliases": [
+      "RVPI"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "total value to paid-in capital",
+    "target": "总价值倍数",
+    "note": "累计分配与剩余价值之和除以实缴资本，等于 DPI 加 RVPI",
+    "aliases": [
+      "TVPI"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "net operating income",
+    "target": "净营业收入",
+    "note": "房地产经营收入减物业层面运营费用，通常不扣融资成本和所得税",
+    "aliases": [
+      "NOI"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "capitalization rate",
+    "target": "资本化率",
+    "note": "房地产净营业收入相对资产价值或价格的比率",
+    "aliases": [
+      "cap rate"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "real estate investment trust",
+    "target": "房地产投资信托基金",
+    "note": "持有、经营或融资收益型房地产的集合投资载体",
+    "aliases": [
+      "REIT"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "infrastructure investment",
+    "target": "基础设施投资",
+    "note": "对交通、能源、公共事业、通信等长期实体资产或运营权的投资",
+    "domain": "finance"
+  },
+  {
+    "source": "high-water mark",
+    "target": "高水位线",
+    "note": "基金只有在净值超过此前最高计费基准后才对新增收益计提业绩报酬",
+    "domain": "finance"
+  },
+  {
+    "source": "fund of funds",
+    "target": "基金中的基金",
+    "note": "主要投资于其他基金而非直接持有底层证券的集合投资载体",
+    "aliases": [
+      "FoF"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "investment policy statement",
+    "target": "投资政策说明书",
+    "note": "记录投资者目标、风险偏好、约束、治理和实施规则的正式文件",
+    "aliases": [
+      "IPS"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "risk capacity",
+    "target": "风险承受能力",
+    "note": "投资者在不损害关键目标前提下客观承担损失或波动的能力；区别于主观风险意愿",
+    "domain": "finance"
+  },
+  {
+    "source": "strategic asset allocation",
+    "target": "战略资产配置",
+    "note": "依据长期目标和约束设定各资产类别的政策权重",
+    "aliases": [
+      "SAA"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "tactical asset allocation",
+    "target": "战术资产配置",
+    "note": "基于中短期市场判断暂时偏离战略权重的主动配置",
+    "aliases": [
+      "TAA"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "portfolio rebalancing",
+    "target": "投资组合再平衡",
+    "note": "通过交易或现金流使实际权重回到目标区间",
+    "aliases": [
+      "rebalancing"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "active management",
+    "target": "主动管理",
+    "note": "通过证券选择、因子暴露或时机决策寻求超越基准",
+    "domain": "finance"
+  },
+  {
+    "source": "passive management",
+    "target": "被动管理",
+    "note": "以低偏离方式复制基准或规则化指数敞口",
+    "domain": "finance"
+  },
+  {
+    "source": "active share",
+    "target": "主动份额",
+    "note": "投资组合持仓权重与基准权重绝对差之和的一半",
+    "domain": "finance"
+  },
+  {
+    "source": "performance attribution",
+    "target": "业绩归因",
+    "note": "将相对或绝对业绩分解为资产配置、证券选择及其他来源",
+    "domain": "finance"
+  },
+  {
+    "source": "allocation effect",
+    "target": "配置效应",
+    "note": "业绩归因中资产类别权重相对基准偏离带来的贡献",
+    "domain": "finance"
+  },
+  {
+    "source": "selection effect",
+    "target": "选择效应",
+    "note": "业绩归因中类别内证券选择相对基准的贡献",
+    "domain": "finance"
+  },
+  {
+    "source": "interaction effect",
+    "target": "交互效应",
+    "note": "归因模型中配置偏离与类别内超额收益共同作用的部分",
+    "domain": "finance"
+  },
+  {
+    "source": "market-capitalization-weighted index",
+    "target": "市值加权指数",
+    "note": "成分权重与其可投资市值或总市值成比例的指数",
+    "aliases": [
+      "market-cap weighted index"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "equal-weighted index",
+    "target": "等权重指数",
+    "note": "各成分证券配置相同权重并需定期再平衡的指数",
+    "domain": "finance"
+  },
+  {
+    "source": "fundamentally weighted index",
+    "target": "基本面加权指数",
+    "note": "按销售额、现金流、账面价值等非价格指标确定权重的指数",
+    "domain": "finance"
+  },
+  {
+    "source": "loss aversion",
+    "target": "损失厌恶",
+    "note": "相同金额损失带来的负效用通常大于收益带来的正效用",
+    "domain": "finance"
+  },
+  {
+    "source": "overconfidence bias",
+    "target": "过度自信偏差",
+    "note": "高估自身知识、预测精度或控制能力的认知偏差",
+    "aliases": [
+      "overconfidence"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "anchoring bias",
+    "target": "锚定偏差",
+    "note": "判断过度依赖初始数值或参考点，后续调整不足",
+    "aliases": [
+      "anchoring"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "confirmation bias",
+    "target": "确认偏差",
+    "note": "偏向寻找或重视支持既有观点的信息并忽视反证",
+    "domain": "finance"
+  },
+  {
+    "source": "mental accounting",
+    "target": "心理账户",
+    "note": "按资金来源或用途分别对待经济上可替代财富的行为偏差",
+    "domain": "finance"
+  },
+  {
+    "source": "framing bias",
+    "target": "框架效应偏差",
+    "note": "同一问题因表述方式不同而引发不同判断或选择",
+    "aliases": [
+      "framing effect"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "availability bias",
+    "target": "易得性偏差",
+    "note": "因信息更容易回忆而高估其概率或重要性",
+    "domain": "finance"
+  },
+  {
+    "source": "representativeness bias",
+    "target": "代表性偏差",
+    "note": "过度依据表面相似性分类或预测，忽视基准概率与样本量",
+    "domain": "finance"
+  },
+  {
+    "source": "herding behavior",
+    "target": "羊群行为",
+    "note": "投资者跟随群体决策而弱化独立信息判断",
+    "aliases": [
+      "herding"
+    ],
+    "domain": "finance"
+  },
+  {
+    "source": "status quo bias",
+    "target": "现状偏差",
+    "note": "在缺乏充分理由时偏好维持当前选择",
+    "domain": "finance"
+  },
+  {
+    "source": "endowment effect",
+    "target": "禀赋效应",
+    "note": "仅因已经拥有某资产而赋予其更高主观价值",
     "domain": "finance"
   },
   {
@@ -4733,9 +5658,9 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
   {
     "source": "component contribution to risk",
     "target": "成分风险贡献",
-    "note": "通常为权重乘以边际风险贡献",
+    "note": "通常为权重乘以边际风险贡献；不使用 CCR 缩写，以免与交易对手信用风险混淆",
     "aliases": [
-      "CCR"
+      "component risk contribution"
     ],
     "domain": "quant_finance"
   },
@@ -5414,6 +6339,656 @@ export const QUANT_SCHOLAR_GLOSSARY_PRESET = Object.freeze([
     "source": "quanto adjustment",
     "target": "Quanto 调整",
     "note": "标的收益与汇率相关性造成的跨币种定价调整",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk appetite",
+    "target": "风险偏好",
+    "note": "机构为实现战略目标愿意主动承担的风险类型和总体水平；不同于具体限额",
+    "aliases": [
+      "risk appetite statement"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk tolerance",
+    "target": "风险容忍度",
+    "note": "围绕目标或风险偏好可接受的结果偏离边界；个人投资语境需结合主观意愿与客观能力",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk limit",
+    "target": "风险限额",
+    "note": "把风险偏好落实到业务、组合、产品或风险指标的可监控约束",
+    "aliases": [
+      "risk limits"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk culture",
+    "target": "风险文化",
+    "note": "组织成员在风险识别、沟通、承担和问责方面共享的价值观与行为规范",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk governance",
+    "target": "风险治理",
+    "note": "董事会、管理层和控制职能对风险决策、监督、报告与问责的制度安排",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "three lines model",
+    "target": "三道防线模型",
+    "note": "由业务管理、风险合规监督和内部审计构成的分层治理框架",
+    "aliases": [
+      "three lines of defense",
+      "three lines of defence"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "board risk committee",
+    "target": "董事会风险委员会",
+    "note": "协助董事会监督风险偏好、重大风险、风险管理框架和管理层执行的专门委员会",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "chief risk officer",
+    "target": "首席风险官",
+    "note": "负责统筹独立风险管理职能并向高级管理层和董事会报告的高管",
+    "aliases": [
+      "CRO"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "enterprise risk management",
+    "target": "全面风险管理",
+    "note": "跨风险类型和业务单元整体识别、评估、应对和监控风险的框架",
+    "aliases": [
+      "ERM"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "economic capital",
+    "target": "经济资本",
+    "note": "机构内部按目标置信水平和期限估计、用于吸收非预期损失的资本",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "regulatory capital",
+    "target": "监管资本",
+    "note": "依据监管规则计算并必须维持的合格资本",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk-adjusted return on capital",
+    "target": "风险调整资本收益率",
+    "note": "风险调整后收益相对经济资本或分配资本的绩效指标，口径需明确",
+    "aliases": [
+      "RAROC"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk-adjusted performance measure",
+    "target": "风险调整绩效指标",
+    "note": "将收益与承担风险共同纳入评价的指标统称",
+    "aliases": [
+      "RAPM"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "model risk",
+    "target": "模型风险",
+    "note": "因模型错误、数据缺陷、不当使用或局限性导致不利决策和损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "model validation",
+    "target": "模型验证",
+    "note": "独立评估模型概念合理性、实现正确性、持续表现和使用适当性的过程",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "independent model validation",
+    "target": "独立模型验证",
+    "note": "由不承担模型开发或直接使用责任的职能实施的模型验证",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "challenger model",
+    "target": "挑战者模型",
+    "note": "用于与现行模型比较、检验稳健性或支持替代方案评估的模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "benchmark model",
+    "target": "基准模型",
+    "note": "作为性能、复杂度或风险估计比较基线的独立或简化模型",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "backtesting exception",
+    "target": "回测超损次数",
+    "note": "实际损失超过模型预测风险阈值的观测次数，亦称例外次数",
+    "aliases": [
+      "VaR exception",
+      "exception count"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "traffic light approach",
+    "target": "交通灯法",
+    "note": "依据 VaR 回测例外次数将模型表现划分绿、黄、红区并关联监管处理",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "incremental value at risk",
+    "target": "增量风险价值",
+    "note": "加入或删除某头寸后组合 VaR 的离散变化",
+    "aliases": [
+      "incremental VaR",
+      "IVaR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "marginal value at risk",
+    "target": "边际风险价值",
+    "note": "组合 VaR 对某头寸规模微小变化的一阶敏感度",
+    "aliases": [
+      "marginal VaR",
+      "MVaR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "component value at risk",
+    "target": "成分风险价值",
+    "note": "边际 VaR 乘以头寸规模得到的风险贡献，适当条件下可加总为组合 VaR",
+    "aliases": [
+      "component VaR",
+      "CVaR contribution"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "coherent risk measure",
+    "target": "一致性风险度量",
+    "note": "满足单调性、平移不变性、正齐次性和次可加性的风险度量",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "subadditivity",
+    "target": "次可加性",
+    "note": "组合风险不超过各部分风险之和，体现分散化不增加总体风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "exponentially weighted moving average",
+    "target": "指数加权移动平均",
+    "note": "对较新观测赋予较高指数衰减权重的波动率或协方差估计方法",
+    "aliases": [
+      "EWMA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "extreme value theory",
+    "target": "极值理论",
+    "note": "研究分布尾部和极端观测渐近规律的统计理论",
+    "aliases": [
+      "EVT"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "tail index",
+    "target": "尾指数",
+    "note": "刻画重尾分布尾部衰减速度的参数，定义和估计方法需明确",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "peaks over threshold",
+    "target": "超阈值法",
+    "note": "对超过高阈值的超额量建模的极值理论方法",
+    "aliases": [
+      "POT method"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "stressed value at risk",
+    "target": "压力风险价值",
+    "note": "使用历史压力期或压力参数估计的 VaR",
+    "aliases": [
+      "stressed VaR",
+      "sVaR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "stressed expected shortfall",
+    "target": "压力预期损失",
+    "note": "在压力期数据或压力校准下计算的尾部平均损失",
+    "aliases": [
+      "stressed ES"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk factor mapping",
+    "target": "风险因子映射",
+    "note": "将复杂头寸现金流或敞口近似映射到标准市场风险因子的过程",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "correlation risk",
+    "target": "相关性风险",
+    "note": "资产或风险因子相关结构变化使估值、对冲或风险估计恶化的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "vega risk",
+    "target": "Vega 风险",
+    "note": "期权价值对隐含波动率变化的敏感性风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "close-out netting",
+    "target": "终止净额结算",
+    "note": "交易对手违约或提前终止时将净额结算集合内交易价值合并为单一应收或应付额",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "netting set",
+    "target": "净额结算集合",
+    "note": "依据可执行净额结算安排可在违约时合并计算敞口的一组交易",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit support annex",
+    "target": "信用支持附件",
+    "note": "规定场外衍生品抵押品交付、估值、门槛和争议处理的法律附件",
+    "aliases": [
+      "CSA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "debt valuation adjustment",
+    "target": "债务估值调整",
+    "note": "反映本方违约风险对衍生品负债价值影响的估值调整",
+    "aliases": [
+      "DVA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "funding valuation adjustment",
+    "target": "融资估值调整",
+    "note": "反映未抵押或部分抵押衍生品融资成本与收益的估值调整",
+    "aliases": [
+      "FVA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "margin valuation adjustment",
+    "target": "保证金融资估值调整",
+    "note": "反映初始保证金融资成本的估值调整",
+    "aliases": [
+      "MVA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "expected positive exposure",
+    "target": "预期正敞口",
+    "note": "未来各时点正市场价值的期望，常用于交易对手信用风险计量",
+    "aliases": [
+      "EPE"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "expected negative exposure",
+    "target": "预期负敞口",
+    "note": "未来各时点负市场价值绝对额的期望，常用于本方信用和融资分析",
+    "aliases": [
+      "ENE"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "margin period of risk",
+    "target": "保证金风险期",
+    "note": "从交易对手停止履约到抵押品结算并完成头寸平仓或替代所需的风险暴露期间",
+    "aliases": [
+      "MPOR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "central counterparty",
+    "target": "中央交易对手",
+    "note": "通过合约更替成为每个卖方的买方和每个买方的卖方并集中管理违约风险的清算机构",
+    "aliases": [
+      "CCP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "clearing member",
+    "target": "清算会员",
+    "note": "直接参与中央交易对手清算并承担相应保证金及违约基金义务的机构",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "default fund",
+    "target": "违约基金",
+    "note": "清算会员共同出资、在违约会员资源不足时吸收剩余损失的资金池",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "counterparty credit risk",
+    "target": "交易对手信用风险",
+    "note": "交易对手在交易最终结算前违约且敞口随市场价值变化的风险",
+    "aliases": [
+      "CCR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "settlement risk",
+    "target": "结算风险",
+    "note": "支付或证券交割两端不同步时，一方已履约而另一方未履约造成损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "sovereign risk",
+    "target": "主权风险",
+    "note": "主权实体违约、重组债务或采取政策导致债权人损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "country risk",
+    "target": "国家风险",
+    "note": "一国政治、经济、法律或社会环境对境内交易对手和资产造成损失的综合风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "transfer risk",
+    "target": "转移风险",
+    "note": "因外汇管制或货币不可兑换导致借款人有本币却不能取得外币履约的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit concentration risk",
+    "target": "信用集中度风险",
+    "note": "对单一客户、行业、地区或相关主体过度集中导致损失放大的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit risk mitigation",
+    "target": "信用风险缓释",
+    "note": "通过抵押品、担保、净额结算或信用衍生品降低信用敞口或损失的方法",
+    "aliases": [
+      "CRM"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "credit conversion factor",
+    "target": "信用转换系数",
+    "note": "将表外承诺或或有项目转换为信用风险暴露等值的监管或内部参数",
+    "aliases": [
+      "CCF"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "operational risk",
+    "target": "操作风险",
+    "note": "因不完善或失效的内部流程、人员、系统或外部事件造成损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "operational resilience",
+    "target": "操作韧性",
+    "note": "发生扰动时持续交付关键业务服务并在容忍范围内恢复的能力",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "risk and control self-assessment",
+    "target": "风险与控制自我评估",
+    "note": "业务单元识别操作风险、评估固有及剩余风险并检视控制有效性的结构化过程",
+    "aliases": [
+      "RCSA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "key risk indicator",
+    "target": "关键风险指标",
+    "note": "用于监测风险水平、趋势或控制环境变化并触发预警的量化或定性指标",
+    "aliases": [
+      "KRI"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "business continuity plan",
+    "target": "业务连续性计划",
+    "note": "在重大中断期间维持或恢复关键业务活动的预案",
+    "aliases": [
+      "BCP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "disaster recovery plan",
+    "target": "灾难恢复计划",
+    "note": "恢复信息技术、数据和基础设施能力的具体预案",
+    "aliases": [
+      "DRP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "cyber risk",
+    "target": "网络风险",
+    "note": "网络攻击、系统漏洞、数据泄露或技术依赖造成业务和财务损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "third-party risk",
+    "target": "第三方风险",
+    "note": "供应商、外包商、云服务商或其他外部依赖方失效或违规造成的风险",
+    "aliases": [
+      "vendor risk"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "conduct risk",
+    "target": "行为风险",
+    "note": "机构或人员不当行为损害客户、市场完整性或机构自身的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "legal risk",
+    "target": "法律风险",
+    "note": "合同不可执行、诉讼、法规解释或法律程序导致损失的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "internal fraud",
+    "target": "内部欺诈",
+    "note": "员工或内部人员蓄意欺骗、盗用财产或规避制度的操作风险事件",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "external fraud",
+    "target": "外部欺诈",
+    "note": "外部人员实施盗窃、伪造、网络攻击或其他欺诈造成的操作损失",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "operational loss event",
+    "target": "操作风险损失事件",
+    "note": "由操作风险原因触发并产生财务或非财务影响的事件",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "near miss",
+    "target": "未遂事件",
+    "note": "本可造成损失但因偶然或控制及时介入而未形成实际重大损失的事件",
+    "requiresContext": true,
+    "domain": "quant_finance"
+  },
+  {
+    "source": "important business service",
+    "target": "重要业务服务",
+    "note": "中断可能对客户、市场或金融稳定造成不可容忍损害的端到端服务",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "impact tolerance",
+    "target": "影响容忍度",
+    "note": "重要业务服务在严重但可行扰动下可接受的最大中断程度或持续时间",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "liquidity coverage ratio",
+    "target": "流动性覆盖率",
+    "note": "高质量流动性资产相对未来 30 天压力情景净现金流出的监管指标",
+    "aliases": [
+      "LCR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "high-quality liquid assets",
+    "target": "优质流动性资产",
+    "note": "在压力时期仍可较容易、快速变现且价值损失有限的合格资产",
+    "aliases": [
+      "HQLA"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "net stable funding ratio",
+    "target": "净稳定资金比例",
+    "note": "可用稳定资金相对所需稳定资金的中长期结构性流动性指标",
+    "aliases": [
+      "NSFR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "funding liquidity risk",
+    "target": "融资流动性风险",
+    "note": "机构无法在到期时以可接受成本获得资金履行现金义务的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "market liquidity risk",
+    "target": "市场流动性风险",
+    "note": "头寸无法及时以接近公允价值的价格交易或平仓的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "liquidity-adjusted value at risk",
+    "target": "流动性调整风险价值",
+    "note": "在 VaR 中纳入买卖价差、市场冲击或更长平仓期的风险计量",
+    "aliases": [
+      "liquidity-adjusted VaR",
+      "LVaR"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "market depth",
+    "target": "市场深度",
+    "note": "市场在价格显著变化前能够吸收交易量的能力",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "market breadth",
+    "target": "市场广度",
+    "note": "市场中参与者、交易工具或上涨下跌覆盖面的广泛程度，具体指标依语境",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "market resilience",
+    "target": "市场韧性",
+    "note": "大额交易或冲击后价格和流动性恢复正常的速度与能力",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "liquidity buffer",
+    "target": "流动性缓冲",
+    "note": "为应对压力现金流出而持有的现金及高流动性资产储备",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "survival horizon",
+    "target": "流动性生存期",
+    "note": "在既定压力情景和可用缓冲下，机构无需外部援助可持续履约的时间",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "contingency funding plan",
+    "target": "应急融资计划",
+    "note": "流动性压力发生时的触发条件、治理、资金来源、沟通和行动预案",
+    "aliases": [
+      "CFP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "intraday liquidity risk",
+    "target": "日间流动性风险",
+    "note": "机构无法在营业日内按时满足支付和结算义务的风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "asset encumbrance",
+    "target": "资产受限",
+    "note": "资产已被质押、抵押或受其他安排限制，不能自由用于融资或处置",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "fund transfer pricing",
+    "target": "资金转移定价",
+    "note": "将资金成本、流动性成本和期限风险分配到业务单元或产品的内部定价机制",
+    "aliases": [
+      "FTP"
+    ],
+    "domain": "quant_finance"
+  },
+  {
+    "source": "deposit runoff rate",
+    "target": "存款流失率",
+    "note": "压力情景下某类存款预计流出的比例",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "maturity mismatch",
+    "target": "期限错配",
+    "note": "资产与负债现金流到期结构不一致造成再融资、利率或流动性风险",
+    "domain": "quant_finance"
+  },
+  {
+    "source": "liquidity stress testing",
+    "target": "流动性压力测试",
+    "note": "评估机构在特定及全市场压力情景下现金流、缓冲和融资能力的测试",
     "domain": "quant_finance"
   },
   {

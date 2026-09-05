@@ -102,6 +102,16 @@ class ProfessionalTranslationTests(unittest.TestCase):
             entries = MODULE.relevant_glossary(source, domain)
             self.assertIn((source, target), {(item["source"], item["target"]) for item in entries})
 
+    def test_cfa_and_frm_curriculum_terms_retrieve_with_standard_meanings(self):
+        cases = {
+            "academic": ("material nonpublic information and fair dealing", {"重大非公开信息", "公平对待"}),
+            "finance": ("Gordon growth model and time-weighted return", {"戈登增长模型", "时间加权收益率"}),
+            "quant_finance": ("RCSA, HQLA, and counterparty credit risk", {"风险与控制自我评估", "优质流动性资产", "交易对手信用风险"}),
+        }
+        for domain, (source, expected) in cases.items():
+            targets = {item["target"] for item in MODULE.relevant_glossary(source, domain)}
+            self.assertTrue(expected.issubset(targets), (domain, expected - targets))
+
     def test_contextual_retrieval_includes_cqf_math_even_in_quant_domain(self):
         entries = MODULE.relevant_glossary("Ito’s lemma and quadratic variation under a risk neutral measure; VaR and ES versus EL.", "quant_finance")
         prompt = MODULE.glossary_prompt(entries)

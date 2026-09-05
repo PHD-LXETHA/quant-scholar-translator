@@ -2,7 +2,7 @@
 
 ## 结论
 
-当前词库通过 **Quant Scholar Professional Glossary Gate v1**：946 个带领域词条、325 个别名，45 个评估样本全部通过，得分 100/100。该结论表示词库满足本项目当前的自动化专业质量门槛，不等同于第三方认证，也不替代领域专家对整篇译文的复核。
+当前词库通过 **Quant Scholar Professional Glossary Gate v2 (CFA/FRM)**：1,157 个带领域词条、436 个别名，60 个评估样本全部通过，得分 100/100。该结论表示词库满足本项目当前的自动化专业质量门槛，不等同于第三方认证，也不替代领域专家对整篇译文的复核。
 
 ## 验收范围
 
@@ -10,7 +10,7 @@
 
 1. 七个领域均达到最低词条覆盖量：通用学术、经济、金融、数学、编程、量化金融、统计。
 2. 每个词条具备原词、目标译法、领域和语境说明；别名结构有效。
-3. 核心课程语句能够检索到预期专业概念，包括宏观经济、公司金融、利率与信用衍生品、随机分析、数值方法、统计计量和 Python 数据工作流。
+3. 核心课程语句能够检索到预期专业概念，包括 CFA 职业伦理、GIPS、财报分析、权益与固收估值、另类投资、组合管理，以及 FRM 风险治理、市场风险、信用风险、操作韧性、流动性风险和模型风险。
 4. `return`、`power`、`CI`、`generator` 等跨领域同形词利用邻近概念消歧；证据不足时不向模型注入冲突译法。
 5. `duration` 等通用词只有在独立金融语境成立时才注入专业义，避免把“视频时长”提示为“久期”。
 6. 英文复数、常见缩写和拼写变体通过别名覆盖；检索使用词边界，避免在更长单词内部误命中。
@@ -26,9 +26,13 @@ python -m unittest discover -s tests
 
 ## 术语来源与整理原则
 
-词库围绕项目实际用途整理，并用权威资料核对概念边界：CQF 课程结构用于确定量化金融主题范围；BIS Basel Framework 用于市场、信用和操作风险术语；IMF 术语资源用于宏观经济及国际收支表述；NIST 统计手册用于统计检验、回归和不确定性术语；Python 官方术语表用于语言与运行时概念。
+词库围绕项目实际用途整理，并用权威资料核对概念边界：CFA Candidate Body of Knowledge、Level I topic outlines、Code and Standards 用于投资分析、组合管理、财报和伦理范围；GARP 2026 FRM Study Materials 与考试范围用于风险治理、市场、信用、操作韧性和流动性主题；CQF 课程结构用于量化金融主题；BIS、IMF、NIST 与 Python 官方资料用于监管、宏观、统计和编程概念复核。
 
 - CQF program structure: <https://www.cqf.com/about-cqf/program-structure/cqf-qualification>
+- CFA Candidate Body of Knowledge: <https://www.cfainstitute.org/programs/cfa-program/candidate-resources/cbok>
+- CFA Code and Standards: <https://www.cfainstitute.org/standards/professionals/code-ethics-standards>
+- GARP FRM study materials: <https://www.garp.org/frm/study-materials>
+- GARP FRM exam scope: <https://www.garp.org/frm>
 - BIS Basel Framework: <https://www.bis.org/baselframework/BaselFramework.pdf>
 - IMF terminology: <https://www.imf.org/en/about/terminology>
 - NIST quantitative techniques: <https://www.itl.nist.gov/div898/handbook/quantgal.htm>

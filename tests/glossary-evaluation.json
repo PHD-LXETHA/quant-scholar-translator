@@ -1,15 +1,15 @@
 {
-  "standard": "Quant Scholar Professional Glossary Gate v1",
+  "standard": "Quant Scholar Professional Glossary Gate v2 (CFA/FRM)",
   "minimums": {
-    "totalTerms": 900,
-    "totalAliases": 280,
+    "totalTerms": 1150,
+    "totalAliases": 430,
     "perDomain": {
-      "academic": 70,
+      "academic": 95,
       "economics": 100,
-      "finance": 120,
+      "finance": 230,
       "mathematics": 145,
       "programming": 140,
-      "quant_finance": 160,
+      "quant_finance": 260,
       "statistics": 145
     }
   },
@@ -50,7 +50,23 @@
     {"domain":"statistics","text":"A VECM represents cointegration while impulse response functions require an identification scheme.","expectedTargets":["向量误差修正模型","协整","脉冲响应函数","识别方案"]},
     {"domain":"statistics","text":"GJR-GARCH and EGARCH capture volatility clustering and the leverage effect.","expectedTargets":["GJR–GARCH 模型","指数 GARCH 模型","波动率聚集","杠杆效应"]},
     {"domain":"statistics","text":"Cook's distance combines residual size and a leverage point to identify influential observations.","expectedTargets":["库克距离","残差","高杠杆点","强影响观测"]},
-    {"domain":"statistics","text":"Compare AIC and BIC after checking heteroskedasticity-consistent standard errors.","expectedTargets":["赤池信息准则","贝叶斯信息准则","异方差稳健标准误"]}
+    {"domain":"statistics","text":"Compare AIC and BIC after checking heteroskedasticity-consistent standard errors.","expectedTargets":["赤池信息准则","贝叶斯信息准则","异方差稳健标准误"]},
+
+    {"domain":"academic","text":"The analyst must not act on material nonpublic information and must preserve independence and objectivity.","expectedTargets":["重大非公开信息","独立性与客观性"]},
+    {"domain":"academic","text":"Fair dealing, suitability, and diligence and reasonable basis govern the recommendation.","expectedTargets":["公平对待","适当性","勤勉与合理依据"]},
+    {"domain":"academic","text":"A GIPS composite includes each eligible discretionary portfolio and may undergo GIPS verification.","expectedTargets":["全球投资业绩标准","组合群","全权委托投资组合","GIPS 验证"]},
+    {"domain":"finance","text":"Under accrual accounting, a deferred tax asset may require a valuation allowance.","expectedTargets":["权责发生制会计","递延所得税资产","估值备抵"]},
+    {"domain":"finance","text":"FIFO, inventory turnover, and days sales outstanding affect DuPont analysis and the cash conversion cycle.","expectedTargets":["先进先出法","存货周转率","应收账款周转天数","杜邦分析","现金转换周期"]},
+    {"domain":"finance","text":"The dividend discount model and Gordon growth model imply a justified P/E and sustainable growth rate.","expectedTargets":["股利折现模型","戈登增长模型","合理市盈率","可持续增长率"]},
+    {"domain":"finance","text":"A leveraged buyout fund calls committed capital from the limited partner and later reports DPI and TVPI.","expectedTargets":["杠杆收购","承诺资本","有限合伙人","已分配资本倍数","总价值倍数"]},
+    {"domain":"finance","text":"The investment policy statement specifies strategic asset allocation, risk capacity, and portfolio rebalancing.","expectedTargets":["投资政策说明书","战略资产配置","风险承受能力","投资组合再平衡"]},
+    {"domain":"finance","text":"Loss aversion, anchoring bias, and mental accounting can distort portfolio decisions.","expectedTargets":["损失厌恶","锚定偏差","心理账户","投资组合"]},
+    {"domain":"quant_finance","text":"The risk appetite statement is implemented through a risk limit under board risk committee oversight and the CRO.","expectedTargets":["风险偏好","风险限额","董事会风险委员会","首席风险官"]},
+    {"domain":"quant_finance","text":"Independent model validation compares a challenger model and benchmark model to control model risk.","expectedTargets":["独立模型验证","挑战者模型","基准模型","模型风险"]},
+    {"domain":"quant_finance","text":"Incremental VaR, marginal VaR, and component VaR support risk-adjusted return on capital.","expectedTargets":["增量风险价值","边际风险价值","成分风险价值","风险调整资本收益率"]},
+    {"domain":"quant_finance","text":"A credit support annex defines collateral for the netting set, while EPE measures counterparty credit risk.","expectedTargets":["信用支持附件","抵押品","净额结算集合","预期正敞口","交易对手信用风险"]},
+    {"domain":"quant_finance","text":"RCSA and a key risk indicator support operational resilience and the business continuity plan.","expectedTargets":["风险与控制自我评估","关键风险指标","操作韧性","业务连续性计划"]},
+    {"domain":"quant_finance","text":"The liquidity coverage ratio requires HQLA, while the net stable funding ratio addresses maturity mismatch.","expectedTargets":["流动性覆盖率","优质流动性资产","净稳定资金比例","期限错配"]}
   ],
   "ambiguity": [
     {"domain":"auto","text":"The function return value has a type annotation.","expectedTargets":["返回"],"forbiddenTargets":["收益率"]},

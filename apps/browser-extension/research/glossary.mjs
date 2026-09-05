@@ -43,7 +43,8 @@ export async function migrateProfessionalGlossary(storage) {
     await upgradeProfessionalGlossary(storage);
     await upgradeProfessionalGlossaryV3(storage);
     await upgradeProfessionalGlossaryV4(storage);
-    return upgradeProfessionalGlossaryV5(storage);
+    await upgradeProfessionalGlossaryV5(storage);
+    return upgradeProfessionalGlossaryV6(storage);
   }
   const update = { [key]: true };
   if (Array.isArray(saved.glossaryTerms)) {
@@ -61,6 +62,7 @@ export async function migrateProfessionalGlossary(storage) {
   await upgradeProfessionalGlossaryV3(storage);
   await upgradeProfessionalGlossaryV4(storage);
   await upgradeProfessionalGlossaryV5(storage);
+  await upgradeProfessionalGlossaryV6(storage);
 }
 
 async function upgradeProfessionalGlossary(storage) {
@@ -93,6 +95,10 @@ async function upgradeProfessionalGlossaryV4(storage) {
 
 async function upgradeProfessionalGlossaryV5(storage) {
   return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV5');
+}
+
+async function upgradeProfessionalGlossaryV6(storage) {
+  return mergeMissingProfessionalDefaults(storage, 'quantScholarContextualGlossaryV6');
 }
 
 async function mergeMissingProfessionalDefaults(storage, key) {
