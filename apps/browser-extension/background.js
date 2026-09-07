@@ -468,6 +468,11 @@ async function ensureBackend(settings) {
   return backendState === 'up';
 }
 
+// The PDF/research worker shares this service worker but lives in a separate
+// module scope. Expose only the backend readiness operation so PDF translation
+// can start the same native service without duplicating launcher logic.
+globalThis.QSEnsureBackend = ensureBackend;
+
 function stopBackend() {
   if (!nativePort) return;
   try { nativePort.postMessage({ type: 'stop' }); } catch (e) { /* ignore */ }

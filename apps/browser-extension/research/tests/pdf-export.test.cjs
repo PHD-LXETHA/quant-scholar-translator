@@ -64,6 +64,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(script,/function serializeHighlights\(\)/);
   assert.match(script,/function pendingTranslationTasks\(\)/);
   assert.match(script,/async function runTranslationTasks\(tasks,isRetry\)/);
+  assert.match(script,/未识别到可翻译文字/);
   assert.match(script,/roles:activeBatch\.map\(block=>block\.role/);
   assert.match(script,/const returned=Array\.isArray\(result\?\.translations\)/);
   assert.match(script,/taskState\.failed\.push\(\{page:task\.page,batch:failedBlocks,failure:/);

@@ -389,6 +389,27 @@ test("retries a transient API response before returning success", async () => {
   assert.equal(attempts, 2);
 });
 
+test("starts the native local service before PDF translation", async () => {
+  const bg = loadBackground(); let starts = 0; let fetches = 0;
+  bg.QSEnsureBackend = async () => { starts += 1; return true; };
+  bg.fetch = async () => {
+    fetches += 1;
+    return { ok: true, status: 200, headers: { get: () => null } };
+  };
+  const response = await bg.fetchTranslationApi("http://127.0.0.1:8765/codex/v1/chat/completions", {}, 3);
+  assert.equal(response.status, 200);
+  assert.equal(starts, 1);
+  assert.equal(fetches, 1);
+});
+
+test("does not start the native service for a remote translation API", async () => {
+  const bg = loadBackground(); let starts = 0;
+  bg.QSEnsureBackend = async () => { starts += 1; return true; };
+  bg.fetch = async () => ({ ok: true, status: 200, headers: { get: () => null } });
+  await bg.fetchTranslationApi("https://api.example/v1", {}, 3);
+  assert.equal(starts, 0);
+});
+
 test("maps ACS PDF URLs to a same-origin article helper page", () => {
   const bg = loadBackground();
   assert.equal(

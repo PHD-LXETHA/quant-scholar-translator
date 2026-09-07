@@ -825,6 +825,7 @@ function mergePartialTranslationError(cause, translations) {
 }
 
 async function fetchTranslationApi(endpoint, init, maxRetries = 3) {
+  await ensureLocalTranslationBackend(endpoint);
   let lastError;
   for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
     try {
@@ -841,6 +842,16 @@ async function fetchTranslationApi(endpoint, init, maxRetries = 3) {
   }
   if (lastError) throw lastError;
   throw new Error("API 请求未完成");
+}
+
+async function ensureLocalTranslationBackend(endpoint) {
+  let url;
+  try { url = new URL(String(endpoint || "")); } catch { return false; }
+  const localHost = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+  if (!localHost || url.port !== "8765") return false;
+  const ensureBackend = globalThis.QSEnsureBackend;
+  if (typeof ensureBackend !== "function") return false;
+  try { return Boolean(await ensureBackend({})); } catch { return false; }
 }
 
 function extractResponsesText(data) {

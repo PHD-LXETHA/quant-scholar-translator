@@ -311,8 +311,9 @@ async function clearCurrentDocumentCache(){
 function updateTranslateButton(){
   const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
   const completed=blocks.filter(block=>block.translation).length;
-  $("translate").textContent=!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
-  $("translate").disabled=state.translationTask.running||Boolean(blocks.length&&completed>=blocks.length);
+  const noReadableText=Boolean(state.pages.length&&!blocks.length);
+  $("translate").textContent=noReadableText?"未识别到可翻译文字":!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
+  $("translate").disabled=state.translationTask.running||noReadableText||Boolean(blocks.length&&completed>=blocks.length);
   renderTranslationTaskPanel();
 }
 
@@ -417,7 +418,13 @@ async function translatePdf() {
 async function runTranslationTasks(tasks,isRetry) {
   if(state.translationTask.running)return;
   const queue=(tasks||[]).filter(task=>task.batch.some(block=>!block.translation));
-  if(!queue.length){updateTranslateButton();return notice("没有待翻译的段落。",false);}
+  if(!queue.length){
+    const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
+    updateTranslateButton();
+    return blocks.length
+      ? notice(`全部 ${blocks.length} 个段落已有译文。`,false)
+      : notice("未识别到可翻译文字。若正文无法选中，这是扫描版 PDF，请先进行 OCR。",true,true);
+  }
   const taskState=state.translationTask;taskState.running=true;taskState.paused=false;taskState.cancelled=false;taskState.message=isRetry?"正在重试失败部分":"正在开始翻译";updateTranslateButton();renderTranslationTaskPanel();
   let fatalError="";
   try {

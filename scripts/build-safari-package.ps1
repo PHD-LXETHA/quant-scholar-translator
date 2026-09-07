@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $source = Join-Path $projectRoot 'apps\safari-extension\*'
-$output = Join-Path $projectRoot 'dist\quant-scholar-safari-web-extension-0.7.1.zip'
+$output = Join-Path $projectRoot 'dist\quant-scholar-safari-web-extension-0.7.2.zip'
 
 New-Item -ItemType Directory -Path (Split-Path -Parent $output) -Force | Out-Null
 if (Test-Path -LiteralPath $output) {

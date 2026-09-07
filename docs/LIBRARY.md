@@ -24,8 +24,8 @@ quant-scholar pdf paper.pdf --output-dir translated
 
 ## 成品边界
 
-- `quant_scholar_translator-0.7.1-py3-none-any.whl` 是可安装的统一 Python 库。
-- `quant-scholar-translator-professional-0.7.1.zip` 包含统一库、Chrome/Safari 扩展、脚本和文档。
+- `quant_scholar_translator-0.7.2-py3-none-any.whl` 是可安装的统一 Python 库。
+- `quant-scholar-translator-professional-0.7.2.zip` 包含统一库、Chrome/Safari 扩展、脚本和文档。
 - 两个成品都不包含 `.venv`、`.models`、`vendor-src`、旧 `services`、旧 `engines` 或旧 `packages` 目录。
 - 术语表和知识会话 Schema 已作为库数据一并打包。
 
