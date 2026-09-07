@@ -9,7 +9,7 @@ test('extension manifest is valid MV3 and exposes capture plus knowledge export 
   const manifest = JSON.parse(fs.readFileSync(new URL('manifest.json', root), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
   assert.equal(manifest.name, 'Quant Scholar Translator');
-  assert.equal(manifest.version, '0.8.0');
+  assert.equal(manifest.version, '0.8.1');
   for (const permission of ['tabCapture', 'offscreen', 'storage', 'downloads']) {
     assert.ok(manifest.permissions.includes(permission));
   }

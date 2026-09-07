@@ -7,8 +7,8 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $repository = 'PHD-LXETHA/quant-scholar-translator'
 $apiBase = "https://api.github.com/repos/$repository"
-$tag = 'v0.8.0'
-$releaseName = 'Quant Scholar Translator 0.8.0 - Local OCR for Scanned PDFs'
+$tag = 'v0.8.1'
+$releaseName = 'Quant Scholar Translator 0.8.1 - OCR Payload Fix'
 $env:GIT_TERMINAL_PROMPT = '0'
 $env:GCM_INTERACTIVE = 'never'
 
@@ -42,11 +42,11 @@ try {
   }
 
   $assetNames = @(
-    'quant-scholar-translator-professional-0.8.0.zip',
-    'quant-scholar-browser-extension-0.8.0.zip',
-    'quant-scholar-safari-web-extension-0.8.0.zip',
-    'quant_scholar_translator-0.8.0-py3-none-any.whl',
-    'SHA256SUMS-0.8.0.txt'
+    'quant-scholar-translator-professional-0.8.1.zip',
+    'quant-scholar-browser-extension-0.8.1.zip',
+    'quant-scholar-safari-web-extension-0.8.1.zip',
+    'quant_scholar_translator-0.8.1-py3-none-any.whl',
+    'SHA256SUMS-0.8.1.txt'
   )
   if ($Mode -eq 'Publish') {
     foreach ($name in $assetNames) {
@@ -55,7 +55,7 @@ try {
       }
     }
     $release = $releases | Where-Object { $_.tag_name -eq $tag } | Select-Object -First 1
-    $body = (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.8.0.md') -Raw -Encoding utf8) + "`n`n---`n`n" + (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.8.0_EN.md') -Raw -Encoding utf8)
+    $body = (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.8.1.md') -Raw -Encoding utf8) + "`n`n---`n`n" + (Get-Content -LiteralPath (Join-Path $projectRoot 'docs\RELEASE_NOTES_0.8.1_EN.md') -Raw -Encoding utf8)
     if (-not $release) {
       $payload = @{ tag_name=$tag; target_commitish=((& git rev-parse HEAD).Trim()); name=$releaseName; body=$body; draft=$true; prerelease=$false } | ConvertTo-Json -Depth 4
       $release = Invoke-RestMethod -Method Post -Uri "$apiBase/releases" -Headers $headers -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($payload))

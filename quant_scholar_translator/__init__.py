@@ -13,7 +13,7 @@ from .translation import (
     translate_kimi_subscription,
 )
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 
 def translate_text(text: str, source: str = "auto", target: str = "zh", domain: str = "auto") -> str:

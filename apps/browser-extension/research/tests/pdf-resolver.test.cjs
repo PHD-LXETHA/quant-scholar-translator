@@ -420,6 +420,12 @@ test("sends scanned PDF pages only to the local OCR endpoint", async () => {
   assert.equal(result.lines[0].text,"risk");
 });
 
+test("explains OCR payload validation failures instead of exposing a bare 422", async () => {
+  const bg=loadBackground();bg.QSEnsureBackend=async()=>true;
+  bg.fetch=async()=>({ok:false,status:422,headers:{get:()=>null},text:async()=>JSON.stringify({detail:[{msg:"String should have at most 25165824 characters"}]})});
+  await assert.rejects(bg.recognizePdfPage("data:image/jpeg;base64,AAAA",.45),/页面数据过大或格式无效/);
+});
+
 test("maps ACS PDF URLs to a same-origin article helper page", () => {
   const bg = loadBackground();
   assert.equal(

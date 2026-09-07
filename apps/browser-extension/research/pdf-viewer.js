@@ -462,7 +462,16 @@ async function renderOcrPage(number){
   const scale=Math.min(3.5,Math.max(2,2000/Math.max(1,base.width))),viewport=pdfPage.getViewport({scale});
   const canvas=document.createElement("canvas");canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
   await pdfPage.render({canvasContext:canvas.getContext("2d",{alpha:false}),viewport}).promise;
-  return {dataUrl:canvas.toDataURL("image/png"),width:canvas.width,height:canvas.height};
+  return {dataUrl:encodeOcrCanvas(canvas),width:canvas.width,height:canvas.height};
+}
+
+function encodeOcrCanvas(canvas){
+  const maximum=12*1024*1024;
+  for(const quality of [.92,.84,.76,.68,.6]){
+    const dataUrl=canvas.toDataURL("image/jpeg",quality);
+    if(dataUrl.length<=maximum)return dataUrl;
+  }
+  throw new Error("当前扫描页图像过大，无法安全发送给本地 OCR；请降低 PDF 扫描分辨率后重试。");
 }
 
 async function runTranslationTasks(tasks,isRetry) {

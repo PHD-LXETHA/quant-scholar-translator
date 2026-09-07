@@ -875,7 +875,11 @@ async function recognizePdfPage(imageBase64, minimumScore = 0.45) {
   let data = {};
   try { data = raw ? JSON.parse(raw) : {}; } catch {}
   if (!response.ok) {
-    const error = new Error(typeof data?.detail === "string" ? data.detail : `本地 OCR 请求失败 HTTP ${response.status}`);
+    const validation=Array.isArray(data?.detail)?data.detail.map(item=>item?.msg).filter(Boolean).join("；"):"";
+    const message=typeof data?.detail === "string"?data.detail:response.status===422&&validation
+      ? "OCR 页面数据过大或格式无效，请降低扫描分辨率后重试。"
+      : `本地 OCR 请求失败 HTTP ${response.status}`;
+    const error = new Error(message);
     error.status = response.status;
     throw error;
   }

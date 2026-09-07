@@ -68,6 +68,8 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(script,/async function recognizeScannedPdf\(\)/);
   assert.match(script,/type:"OCR_PDF_PAGE"/);
   assert.match(script,/本地 OCR 并精译/);
+  assert.match(script,/canvas\.toDataURL\("image\/jpeg",quality\)/);
+  assert.match(script,/const maximum=12\*1024\*1024/);
   assert.match(script,/roles:activeBatch\.map\(block=>block\.role/);
   assert.match(script,/const returned=Array\.isArray\(result\?\.translations\)/);
   assert.match(script,/taskState\.failed\.push\(\{page:task\.page,batch:failedBlocks,failure:/);
