@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-scholar-translator"
-version = "0.7.2"
+version = "0.8.0"
 description = "Local-first professional translation for technical video, web, and research material"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -29,6 +29,8 @@ dependencies = [
   "deep-translator>=1.11.4",
   "transformers>=5.0",
   "sentencepiece>=0.2",
+  "rapidocr>=3.9,<4",
+  "onnxruntime>=1.20,<2",
 ]
 
 [project.urls]

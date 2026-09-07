@@ -1,9 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildTextBlocks, isFigureCaptionText, isTableCaptionText, sortBlocksForReading } from "../pdf-layout.mjs";
+import { buildOcrTextBlocks, buildTextBlocks, isFigureCaptionText, isTableCaptionText, sortBlocksForReading } from "../pdf-layout.mjs";
 
 const viewport = { width: 600, height: 800, scale: 1, transform: [1, 0, 0, 1, 0, 0] };
 const item = (str, x, baseline, width = 120, size = 10) => ({ str, width, height: size, transform: [size, 0, 0, size, x, baseline], hasEOL: true });
+
+test("rebuilds OCR lines into positioned research paragraphs", () => {
+  const blocks=buildOcrTextBlocks([
+    {text:"Expected returns increase with systematic risk",x:50,y:100,width:250,height:12},
+    {text:"under the capital asset pricing model.",x:50,y:114,width:210,height:12},
+    {text:"A separate right column",x:330,y:100,width:180,height:12}
+  ],viewport,600,800);
+  assert.ok(blocks.some(block=>block.text.includes("systematic risk under the capital asset pricing model")));
+  assert.ok(blocks.some(block=>block.text.includes("separate right column")));
+});
 
 test("keeps simultaneous left and right column lines separate", () => {
   const blocks = buildTextBlocks([

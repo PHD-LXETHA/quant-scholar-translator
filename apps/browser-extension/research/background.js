@@ -86,6 +86,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     );
     return true;
   }
+  if (message?.type === "OCR_PDF_PAGE") {
+    recognizePdfPage(message.imageBase64, message.minimumScore).then(
+      (result) => sendResponse({ ok: true, ...result }),
+      (error) => sendResponse({ ok: false, error: friendlyError(error), status: Number(error?.status) || 0 })
+    );
+    return true;
+  }
   if (message?.type === "FETCH_PDF") {
     fetchPdfForViewer(message.url).then(
       (result) => sendResponse({ ok: true, ...result }),
@@ -852,6 +859,28 @@ async function ensureLocalTranslationBackend(endpoint) {
   const ensureBackend = globalThis.QSEnsureBackend;
   if (typeof ensureBackend !== "function") return false;
   try { return Boolean(await ensureBackend({})); } catch { return false; }
+}
+
+async function recognizePdfPage(imageBase64, minimumScore = 0.45) {
+  const endpoint = "http://127.0.0.1:8765/ocr/page";
+  if (typeof imageBase64 !== "string" || !imageBase64.startsWith("data:image/")) {
+    throw new Error("OCR 页面图像无效");
+  }
+  const response = await fetchTranslationApi(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageBase64, minimumScore })
+  }, 1);
+  const raw = await response.text();
+  let data = {};
+  try { data = raw ? JSON.parse(raw) : {}; } catch {}
+  if (!response.ok) {
+    const error = new Error(typeof data?.detail === "string" ? data.detail : `本地 OCR 请求失败 HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  if (!Array.isArray(data.lines)) throw new Error("本地 OCR 返回格式无效");
+  return { width: Number(data.width) || 0, height: Number(data.height) || 0, lines: data.lines };
 }
 
 function extractResponsesText(data) {

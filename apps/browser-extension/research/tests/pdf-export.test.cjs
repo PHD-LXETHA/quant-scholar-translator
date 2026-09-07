@@ -65,6 +65,9 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(script,/function pendingTranslationTasks\(\)/);
   assert.match(script,/async function runTranslationTasks\(tasks,isRetry\)/);
   assert.match(script,/未识别到可翻译文字/);
+  assert.match(script,/async function recognizeScannedPdf\(\)/);
+  assert.match(script,/type:"OCR_PDF_PAGE"/);
+  assert.match(script,/本地 OCR 并精译/);
   assert.match(script,/roles:activeBatch\.map\(block=>block\.role/);
   assert.match(script,/const returned=Array\.isArray\(result\?\.translations\)/);
   assert.match(script,/taskState\.failed\.push\(\{page:task\.page,batch:failedBlocks,failure:/);
@@ -88,6 +91,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(content,/function quickTranslate\(rawText, rect\)/);
   assert.match(content,/科研译镜 · 划词翻译/);
   assert.match(background,/async function fetchTranslationApi\(endpoint, init, maxRetries = 3\)/);
+  assert.match(background,/async function recognizePdfPage\(imageBase64, minimumScore = 0\.45\)/);
   assert.match(background,/retry-after/);
   assert.match(options,/id="choose-cache-directory"[^>]*>选择或更换目录</);
   assert.match(options,/id="clear-cache-directory"[^>]*>停用自定义目录</);

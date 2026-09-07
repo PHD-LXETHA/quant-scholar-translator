@@ -1,5 +1,5 @@
 import * as pdfjsLib from "./vendor/pdf.min.mjs";
-import { buildTextBlocks, sortBlocksForReading } from "./pdf-layout.mjs";
+import { buildOcrTextBlocks, buildTextBlocks, sortBlocksForReading } from "./pdf-layout.mjs";
 import { availableOverlayHeight, detectVisualRegions } from "./pdf-visual-regions.mjs";
 import { renderScientificText } from "./scientific-text.mjs";
 import { splitInlineSection } from "./section-heading.mjs";
@@ -312,8 +312,8 @@ function updateTranslateButton(){
   const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
   const completed=blocks.filter(block=>block.translation).length;
   const noReadableText=Boolean(state.pages.length&&!blocks.length);
-  $("translate").textContent=noReadableText?"未识别到可翻译文字":!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
-  $("translate").disabled=state.translationTask.running||noReadableText||Boolean(blocks.length&&completed>=blocks.length);
+  $("translate").textContent=noReadableText?"本地 OCR 并精译":!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
+  $("translate").disabled=state.translationTask.running||Boolean(blocks.length&&completed>=blocks.length);
   renderTranslationTaskPanel();
 }
 
@@ -412,7 +412,57 @@ async function renderPage(number) {
 
 async function translatePdf() {
   if (!state.pages.length) return notice("请先打开 PDF", true);
+  if(state.pages.some(page=>!page.blocks.some(isTranslatablePdfBlock))){
+    const recognized=await recognizeScannedPdf();
+    if(!recognized)return;
+  }
   state.translationTask.failed=[]; await runTranslationTasks(pendingTranslationTasks(),false);
+}
+
+async function recognizeScannedPdf(){
+  if(state.translationTask.running)return false;
+  const pages=state.pages.filter(page=>!page.blocks.some(isTranslatablePdfBlock));
+  if(!pages.length)return true;
+  const task=state.translationTask;task.running=true;task.paused=false;task.cancelled=false;task.failed=[];task.message="正在启动本地 OCR";
+  $("translation-task").hidden=false;updateTranslateButton();
+  let recognized=0;
+  try{
+    for(let index=0;index<pages.length;index++){
+      await waitForTranslationResume();if(task.cancelled)break;
+      const page=pages[index];task.message=`正在 OCR 识别第 ${page.number}/${state.pages.length} 页`;
+      $("task-state").textContent=task.paused?"OCR 已暂停":"OCR 识别中";$("task-estimate").textContent="扫描页图像仅发送到本机 127.0.0.1，不上传第三方 OCR 服务。";
+      $("task-progress").max=pages.length;$("task-progress").value=index;$("task-percent").textContent=`${Math.round(index/pages.length*100)}%`;$("task-detail").textContent=task.message;
+      notice(task.message,false,true);
+      const image=await renderOcrPage(page.number);
+      const result=await chrome.runtime.sendMessage({type:"OCR_PDF_PAGE",imageBase64:image.dataUrl,minimumScore:.45});
+      if(!result?.ok)throw new Error(result?.error||"本地 OCR 识别失败");
+      page.blocks=buildOcrTextBlocks(result.lines,page.viewport,result.width||image.width,result.height||image.height);
+      if(page.blocks.length){
+        recognized+=page.blocks.length;
+        const bodySizes=page.blocks.filter(block=>block.role==="body").map(block=>block.fontSize).sort((a,b)=>a-b);
+        page.bodyFontSize=bodySizes.length?bodySizes[Math.floor(bodySizes.length/2)]:10;
+        page.figureRegions=detectVisualRegions(page.blocks,page.viewport,page.bodyFontSize);
+        page.selectionLayer.replaceChildren();buildSourceTextLayer(page);drawTranslation(page);
+      }
+      $("task-progress").value=index+1;$("task-percent").textContent=`${Math.round((index+1)/pages.length*100)}%`;
+    }
+  }catch(error){
+    task.message=error?.message||String(error);notice(`OCR 失败：${task.message}`,true,true);return false;
+  }finally{
+    task.running=false;task.paused=false;$("pause-translation").disabled=true;$("cancel-translation").disabled=true;updateTranslateButton();
+  }
+  if(task.cancelled)return notice("OCR 已取消；已识别内容仍保留。",true),false;
+  if(!recognized&&!state.pages.some(page=>page.blocks.some(isTranslatablePdfBlock)))return notice("OCR 未识别到正文。请确认页面清晰、方向正确，或提高扫描分辨率。",true,true),false;
+  buildPdfOutline();state.bodyFontSize=median(state.pages.flatMap(page=>page.blocks.filter(block=>block.role==="body").map(block=>block.fontSize)))||10;
+  await restoreTranslationSession();await prepareTranslationEstimate();notice(`OCR 已识别 ${recognized} 个段落，正在开始专业精译。`,false,true);return true;
+}
+
+async function renderOcrPage(number){
+  const pdfPage=await state.pdf.getPage(number),base=pdfPage.getViewport({scale:1});
+  const scale=Math.min(3.5,Math.max(2,2000/Math.max(1,base.width))),viewport=pdfPage.getViewport({scale});
+  const canvas=document.createElement("canvas");canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+  await pdfPage.render({canvasContext:canvas.getContext("2d",{alpha:false}),viewport}).promise;
+  return {dataUrl:canvas.toDataURL("image/png"),width:canvas.width,height:canvas.height};
 }
 
 async function runTranslationTasks(tasks,isRetry) {
@@ -423,7 +473,7 @@ async function runTranslationTasks(tasks,isRetry) {
     updateTranslateButton();
     return blocks.length
       ? notice(`全部 ${blocks.length} 个段落已有译文。`,false)
-      : notice("未识别到可翻译文字。若正文无法选中，这是扫描版 PDF，请先进行 OCR。",true,true);
+      : notice("未识别到可翻译文字。点击“本地 OCR 并精译”识别扫描页。",true,true);
   }
   const taskState=state.translationTask;taskState.running=true;taskState.paused=false;taskState.cancelled=false;taskState.message=isRetry?"正在重试失败部分":"正在开始翻译";updateTranslateButton();renderTranslationTaskPanel();
   let fatalError="";

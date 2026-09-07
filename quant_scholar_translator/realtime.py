@@ -17,6 +17,8 @@ WebSocket protocol:
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import json
 import logging
 import os
@@ -945,6 +947,11 @@ class LocalChatRequest(BaseModel):
     temperature: float | None = None
 
 
+class OcrPageRequest(BaseModel):
+    imageBase64: str = Field(min_length=16, max_length=24 * 1024 * 1024)
+    minimumScore: float = Field(default=0.45, ge=0.1, le=0.95)
+
+
 @app.get("/")
 async def root():
     return {
@@ -956,6 +963,22 @@ async def root():
         "translator": TRANSLATOR,
         "ws": f"ws://{HOST}:{PORT}/ws",
     }
+
+
+@app.post("/ocr/page")
+async def ocr_page_endpoint(body: OcrPageRequest):
+    """Recognize one rendered scanned-PDF page entirely on this computer."""
+    from .ocr import OcrUnavailableError, recognize_image
+    encoded = body.imageBase64.split(",", 1)[-1]
+    try:
+        image_bytes = base64.b64decode(encoded, validate=True)
+        return {"ok": True, **await asyncio.to_thread(
+            recognize_image, image_bytes, minimum_score=body.minimumScore
+        )}
+    except (ValueError, binascii.Error) as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except OcrUnavailableError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
 
 @app.post("/translate")

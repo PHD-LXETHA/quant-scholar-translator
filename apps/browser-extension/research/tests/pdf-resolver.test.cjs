@@ -410,6 +410,16 @@ test("does not start the native service for a remote translation API", async () 
   assert.equal(starts, 0);
 });
 
+test("sends scanned PDF pages only to the local OCR endpoint", async () => {
+  const bg=loadBackground();let url;let request;
+  bg.QSEnsureBackend=async()=>true;
+  bg.fetch=async(endpoint,options)=>{url=endpoint;request=JSON.parse(options.body);return {ok:true,status:200,headers:{get:()=>null},text:async()=>JSON.stringify({width:100,height:200,lines:[{text:"risk",x:1,y:2,width:20,height:8}]})};};
+  const result=await bg.recognizePdfPage("data:image/png;base64,AAAA",.5);
+  assert.equal(url,"http://127.0.0.1:8765/ocr/page");
+  assert.equal(request.minimumScore,.5);
+  assert.equal(result.lines[0].text,"risk");
+});
+
 test("maps ACS PDF URLs to a same-origin article helper page", () => {
   const bg = loadBackground();
   assert.equal(

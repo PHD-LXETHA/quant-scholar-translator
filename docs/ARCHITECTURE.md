@@ -27,6 +27,7 @@
 | 摘要、时间戳、解释、笔记 | YouTube Digest | 已转译为通用学习侧栏，非 YouTube 页面也能使用 |
 | 网页/PDF 交互阅读 | ResearchLens + PDF.js | 已作为同一扩展内部模块运行 |
 | 复杂论文 PDF 重建 | 统一 PDF 接口 | 可选调用环境中安装的 BabelDOC 0.6.4，不保留其源码仓库 |
+| 扫描版 PDF OCR | 本地 OCR 接口 | RapidOCR + ONNX Runtime 逐页识别，图像不发送到第三方 OCR 服务 |
 | 实时假设稳定 | WhisperLiveKit 思路 | 已重写为边界去重模块并接入 faster-whisper |
 | 专业术语与符号保护 | 本项目 | 已建立首版模块 |
 | TBX/TMX | 行业标准 | 后续导入导出与翻译记忆 |

@@ -9,6 +9,8 @@
 - `PDF.js`（随 ResearchLens 快照），Apache-2.0：用于浏览器内 PDF 阅读与文本层。
 - `WhisperLiveKit`，提交 `334b338a`：仅参考稳定前缀和重叠去重思想，运行实现已经重写在统一库中；上游源码快照不进入 0.4 成品包。未接入具有额外非商用条款的 SimulStreaming 后端。
 - `BabelDOC 0.6.4`，AGPL-3.0：0.4 成品不保留其源码仓库，只通过统一 PDF 接口调用本机环境中单独安装的运行包。
+- `RapidOCR 3.x`，Apache-2.0：作为已声明的 Python 运行依赖提供本地扫描页 OCR，不复制其源码仓库。
+- `ONNX Runtime`，MIT：作为 RapidOCR 的本地推理运行时。
 
 ## 许可证边界
 

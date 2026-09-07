@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this project in academic work, please cite it."
 title: "Quant Scholar Translator"
 type: software
-version: 0.7.2
+version: 0.8.0
 date-released: 2026-09-07
 authors:
   - name: "LX.COCOSCENT"

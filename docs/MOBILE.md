@@ -1,6 +1,6 @@
 # iPhone、iPad 与 Safari 支持
 
-Quant Scholar 0.7.2 提供两条移动路径，能力边界不同。
+Quant Scholar 0.8.0 提供两条移动路径，能力边界不同。
 
 ## Safari Web Extension
 

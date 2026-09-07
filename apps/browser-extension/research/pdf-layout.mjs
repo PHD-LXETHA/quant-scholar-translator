@@ -505,6 +505,25 @@ export function buildTextBlocks(items, viewport) {
   return uniqueBlocks;
 }
 
+function invertTransform(matrix) {
+  const [a,b,c,d,e,f]=matrix,det=a*d-b*c;
+  if(!det)throw new Error("PDF viewport transform is not invertible");
+  return [d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det];
+}
+
+export function buildOcrTextBlocks(lines, viewport, imageWidth, imageHeight) {
+  const width=Math.max(1,Number(imageWidth)||1),height=Math.max(1,Number(imageHeight)||1);
+  const scaleX=viewport.width/width,scaleY=viewport.height/height,inverse=invertTransform(viewport.transform);
+  const items=(Array.isArray(lines)?lines:[]).map(line=>{
+    const text=String(line?.text||"").replace(/\s+/g," ").trim();
+    const x=Math.max(0,Number(line?.x)||0)*scaleX,y=Math.max(0,Number(line?.y)||0)*scaleY;
+    const boxWidth=Math.max(1,Number(line?.width)||0)*scaleX,boxHeight=Math.max(6,Number(line?.height)||0)*scaleY;
+    const fontSize=Math.max(6,boxHeight*.82),baseline=y+boxHeight-fontSize*.12;
+    return {str:text,width:boxWidth/Math.max(.01,viewport.scale),transform:multiply(inverse,[fontSize,0,0,fontSize,x,baseline]),hasEOL:true};
+  }).filter(item=>item.str);
+  return buildTextBlocks(items,viewport);
+}
+
 export function sortBlocksForReading(blocks, viewport, pageNumber = 2) {
   const copy = [...blocks];
   if (pageNumber === 1) {

@@ -11,6 +11,8 @@ with their original authors.
 - ResearchLens Translator — MIT; structured webpage translation, selection
   translation, PDF reader, retries, and translation-quality foundations.
 - PDF.js — Apache-2.0; embedded PDF rendering and text layer.
+- RapidOCR — Apache-2.0; local scanned-page text detection and recognition.
+- ONNX Runtime — MIT; local inference runtime used by RapidOCR.
 - Whisper / faster-whisper, NLLB-200, and BabelDOC — optional or separately
   installed runtime/model components governed by their own licenses.
 
