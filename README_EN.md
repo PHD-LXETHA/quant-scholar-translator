@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.8.1-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.8.2-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 A local-first bilingual learning workspace for technical videos, professional webpages, and research PDFs. Quant Scholar Translator brings live captions, domain-aware translation, paper reading, terminology protection, and knowledge export into one workflow, with special attention to finance, quantitative research, economics, statistics, mathematics, and programming.
 
-> **Professional Edition 0.8.1** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
+> **Professional Edition 0.8.2** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
 
 ## Why this project exists
 
@@ -76,6 +76,8 @@ Codex authentication is independent of the translation service process: closing 
 4. Refresh the target page. Click the extension icon to show the bottom-right launcher, then click that launcher to open the complete in-page menu. Click the extension icon again to close the menu and hide the launcher.
 
 When a PDF has no selectable text layer, the translation button changes to **Local OCR and professional translation**. It recognizes pages locally and then starts the selected Codex/Kimi translation; scanned page images are not sent to a third-party OCR service.
+
+The PDF reader now separates **Original, Preserve layout, Reading reflow, and Side-by-side** views, with dedicated preserved-layout and reading-edition PDF exports. Market tables, formulas, code-like data, and ticker symbols remain untouched, while the task panel reports the current stage, checkpoint, elapsed time, ETA, and a glossary-aware token estimate.
 
 ## Layout-preserving PDF translation
 

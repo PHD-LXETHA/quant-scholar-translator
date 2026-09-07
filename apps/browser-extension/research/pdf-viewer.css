@@ -160,4 +160,9 @@ mark.user-highlight { border-radius:2px; padding:0 .03em; color:inherit; backgro
   .reading-figure img { max-width:100%!important; max-height:205mm!important; }
   .reading-figure figcaption { font-size:9.5pt!important; }
   mark.user-highlight { background:#ffe66d!important; }
+  body.print-layout-export #translation-pages { display:none!important; }
+  body.print-layout-export #source-pages { display:grid!important; gap:0!important; }
+  body.print-layout-export .page-wrap { display:block!important; margin:0 auto!important; box-shadow:none!important; break-inside:avoid!important; page-break-inside:avoid!important; break-after:page!important; page-break-after:always!important; }
+  body.print-layout-export .page-wrap:last-child { break-after:auto!important; page-break-after:auto!important; }
+  body.print-layout-export .translation-layer { display:block!important; }
 }

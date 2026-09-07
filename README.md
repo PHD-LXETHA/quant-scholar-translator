@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.8.1-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.8.2-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 面向技术视频、专业网页与科研 PDF 的本地优先双语学习工作台。它把实时字幕、专业翻译、论文阅读、术语保护与知识库导出放进同一套工作流，重点服务金融、量化、经济、统计、数学和编程内容。
 
-> **专业版 0.8.1** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
+> **专业版 0.8.2** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
 
 ## 为什么做这个项目
 
@@ -83,6 +83,8 @@ Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套�
 4. 刷新要学习的网页；点击扩展图标会显示右下角悬浮按钮，点击悬浮按钮打开完整菜单；再次点击扩展图标会同时收起菜单并隐藏悬浮按钮。
 
 PDF 若没有可选择的文字层，阅读器的精译按钮会自动显示为 **“本地 OCR 并精译”**。点击后先在本机逐页识别，再自动进入当前选择的 Codex/Kimi 专业精译；原始扫描页不会发送到第三方 OCR 服务。
+
+PDF 阅读器提供 **原版、保留版式、阅读重排、双栏对照** 四种视图，并分别导出“中文保版 PDF”和“中文阅读版 PDF”。扫描行情表、公式、代码式数据和证券代码会自动保留原样；任务面板显示阶段、断点、运行时间、预计剩余时间与更准确的 Token 估算。
 
 ## 项目结构
 

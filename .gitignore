@@ -8,6 +8,7 @@ quant-scholar/
 *.log
 build/
 dist/
+output/
 *.egg-info/
 apps/browser-extension/native/com.quant_scholar.translator.json
 学习资料/

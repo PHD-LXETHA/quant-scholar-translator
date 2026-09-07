@@ -23,9 +23,16 @@ test("estimates source and repeated prompt token usage", () => {
   assert.ok(estimate.totalTokens > estimate.inputTokens);
 });
 
+test("uses batch-specific glossary prompt totals when estimating a PDF", () => {
+  const broad = estimateTranslationUsage({ sourceChars: 7600, promptChars: 10000, batchCount: 20 });
+  const selected = estimateTranslationUsage({ sourceChars: 7600, promptCharsTotal: 6000, batchCount: 4 });
+  assert.equal(selected.batchCount, 4);
+  assert.ok(selected.totalTokens < broad.totalTokens / 5);
+});
+
 test("counts completed blocks and pages", () => {
   const progress = translationProgress([
-    { blocks: [{ role: "body", translation: "译文" }, { role: "figure-content" }, { role: "artifact" }] },
+    { blocks: [{ role: "body", translation: "译文" }, { role: "body", preserveOriginal: true }, { role: "figure-content" }, { role: "artifact" }] },
     { blocks: [{ role: "body", translation: "" }, { role: "caption", translation: "图注" }] }
   ]);
   assert.deepEqual(progress, { total: 3, completed: 2, completedPages: 1, totalPages: 2, percent: 67 });

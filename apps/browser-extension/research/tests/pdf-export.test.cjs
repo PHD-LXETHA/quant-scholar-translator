@@ -3,7 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 
-test("provides a pure-translation PDF export button and print stylesheet", () => {
+test("provides layout-preserving and reading PDF exports with print styles", () => {
   const root=path.join(__dirname,"..");
   const html=fs.readFileSync(path.join(root,"pdf-viewer.html"),"utf8");
   const script=fs.readFileSync(path.join(root,"pdf-viewer.js"),"utf8");
@@ -14,7 +14,8 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   const options=fs.readFileSync(path.join(root,"options.html"),"utf8");
   const optionsScript=fs.readFileSync(path.join(root,"options.js"),"utf8");
   const popup=fs.readFileSync(path.join(root,"popup.js"),"utf8");
-  assert.match(html,/id="export-pdf"[^>]*>导出纯译文 PDF</);
+  assert.match(html,/id="export-layout"[^>]*>导出保版 PDF</);
+  assert.match(html,/id="export-pdf"[^>]*>导出阅读版 PDF</);
   assert.match(html,/id="mark-highlight"[^>]*>标记高亮</);
   assert.match(html,/id="erase-highlight"[^>]*>擦除高亮</);
   assert.match(html,/id="auto-locate"[^>]*>联动定位：关</);
@@ -31,7 +32,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(html,/id="pause-translation"[^>]*>暂停</);
   assert.match(html,/id="cancel-translation"[^>]*>取消</);
   assert.match(html,/id="retry-failed"[^>]*>重试失败部分</);
-  assert.match(script,/async function exportTranslatedPdf\(\)/);
+  assert.match(script,/async function exportTranslatedPdf\(exportMode="reading"\)/);
   assert.match(script,/window\.print\(\)/);
   assert.match(script,/pdfAutoLocate/);
   assert.match(script,/function scheduleCounterpartCenter\(elements\)/);
@@ -41,6 +42,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(script,/function blocksForTextSelection\(page\)[\s\S]*Math\.max\(2,page\.number\)/);
   assert.equal((script.match(/for\(const block of blocksForTextSelection\(page\)\)/g)||[]).length,2);
   assert.match(css,/@media print/);
+  assert.match(css,/body\.print-layout-export #source-pages/);
   assert.match(css,/\.page-translation:not\(:last-child\).*break-after:page/s);
   assert.match(css,/\.reading-figure img.*max-height:205mm/s);
   assert.match(script,/detectVisualRegions\(blocks,viewport,bodyFontSize\)/);
@@ -72,7 +74,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(script,/const maximum=12\*1024\*1024/);
   assert.match(script,/roles:activeBatch\.map\(block=>block\.role/);
   assert.match(script,/const returned=Array\.isArray\(result\?\.translations\)/);
-  assert.match(script,/taskState\.failed\.push\(\{page:task\.page,batch:failedBlocks,failure:/);
+  assert.match(script,/taskState\.failed\.push\(\{page,pages:\[page\],batch:pageFailures,failure\}\)/);
   assert.match(script,/code:result\?\.code/);
   assert.match(script,/stage:result\?\.stage/);
   assert.match(script,/chrome\.runtime\.getManifest\(\)\.version_name/);

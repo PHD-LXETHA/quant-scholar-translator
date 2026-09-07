@@ -7,6 +7,7 @@ import { parseReferenceList } from "./reference-list.mjs";
 import { formatGlossaryPrompt, migrateProfessionalGlossary } from "./glossary.mjs";
 import { estimateTranslationUsage, translationProgress } from "./translation-usage.mjs";
 import { buildStableDocumentSignature, isCompatibleTranslationSession, matchCachedTranslations, sessionContentSimilarity } from "./pdf-session-cache.mjs";
+import { applyOcrTranslationPolicy, isTranslatablePdfBlock } from "./pdf-translation-policy.mjs";
 import { isLikelyUntranslated } from "./translation-quality.mjs";
 import { cleanupExternalTranslationSessions, deleteExternalDocumentSessions, getExternalTranslationSession, listExternalTranslationSessions, putExternalTranslationSession } from "./cache-directory.mjs";
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("research/vendor/pdf.worker.min.mjs");
@@ -15,7 +16,7 @@ await migrateProfessionalGlossary(chrome.storage.local);
 const $ = id => document.getElementById(id);
 const APP_VERSION = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
 $('app-version').textContent=`v${APP_VERSION}`;
-const state = { pdf: null, pages: [], mode: "reading", source: "", targetLanguage: "简体中文", bodyFontSize: 10, translationBodyFontSize: 0, autoLocate: false, documentKey: "", rawDocumentKey: "", documentKeys: [], profileKey: "", cacheKey: "", cacheRestoreKind: "", cacheMissReason: "", publisherArticleUrl: "", restoring: false, zoom: 1, zoomMode: "manual", currentPage: 1, activePane: "translation", searchResults: [], searchIndex: -1, translationTask: { running: false, paused: false, cancelled: false, failed: [], pauseWaiters: [], estimate: null } };
+const state = { pdf: null, pages: [], mode: "reading", source: "", targetLanguage: "简体中文", bodyFontSize: 10, translationBodyFontSize: 0, autoLocate: false, documentKey: "", rawDocumentKey: "", documentKeys: [], profileKey: "", cacheKey: "", cacheRestoreKind: "", cacheMissReason: "", publisherArticleUrl: "", restoring: false, zoom: 1, zoomMode: "manual", currentPage: 1, activePane: "translation", searchResults: [], searchIndex: -1, translationTask: { running: false, paused: false, cancelled: false, failed: [], pauseWaiters: [], estimate: null, stage:"idle", startedAt:0, lastSavedAt:0, initialCompleted:0 } };
 const sentenceLinks = new WeakMap();
 const sourceSpanLinks = new WeakMap();
 let selectionTimer;
@@ -43,7 +44,8 @@ $("cancel-translation").onclick=cancelTranslationTask;
 $("retry-failed").onclick=retryFailedTranslation;
 $("collapse-task").onclick=()=>{const collapsed=$("translation-task").classList.toggle("collapsed");$("collapse-task").textContent=collapsed?"＋":"−";$("collapse-task").setAttribute("aria-expanded",String(!collapsed));};
 $("settings").onclick = () => chrome.runtime.openOptionsPage();
-$("export-pdf").onclick = exportTranslatedPdf;
+$("export-pdf").onclick = ()=>exportTranslatedPdf("reading");
+$("export-layout").onclick = ()=>exportTranslatedPdf("overlay");
 $("clear-cache").onclick = clearCurrentDocumentCache;
 $("toggle-outline").onclick=()=>$("pdf-outline").hidden=!$("pdf-outline").hidden;
 $("close-outline").onclick=()=>$("pdf-outline").hidden=true;
@@ -99,7 +101,8 @@ async function openPdf(source, label = source) {
     state.bodyFontSize = median(state.pages.flatMap(page => page.blocks.filter(block => block.role === "body").map(block => block.fontSize))) || 10;
     $("page-total").textContent=String(state.pdf.numPages); $("page-number").max=String(state.pdf.numPages); buildPdfOutline(); setReaderToolsEnabled(true); applyZoom(); updatePageControls();
     const restored=await restoreTranslationSession(); updateTranslateButton(); await prepareTranslationEstimate();
-    if(!restored)notice(state.cacheMissReason||`已载入 ${state.pdf.numPages} 页。点击“翻译 PDF”开始。`,Boolean(state.cacheMissReason),Boolean(state.cacheMissReason));
+    const ocrPages=state.pages.filter(pageNeedsOcr).length;
+    if(!restored)notice(state.cacheMissReason||(ocrPages?`已载入 ${state.pdf.numPages} 页，其中 ${ocrPages} 页没有可用文字层。点击“本地 OCR 并精译”开始。`:`已载入 ${state.pdf.numPages} 页，可直接使用 Codex / Kimi 精译。`),Boolean(state.cacheMissReason),Boolean(state.cacheMissReason));
   } catch (error) { showPdfFallback(error); }
 }
 
@@ -311,7 +314,7 @@ async function clearCurrentDocumentCache(){
 function updateTranslateButton(){
   const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
   const completed=blocks.filter(block=>block.translation).length;
-  const noReadableText=Boolean(state.pages.length&&!blocks.length);
+  const noReadableText=Boolean(state.pages.length&&state.pages.every(pageNeedsOcr));
   $("translate").textContent=noReadableText?"本地 OCR 并精译":!completed?"Codex / Kimi 精译 PDF":completed<blocks.length?`继续精译 PDF（${completed}/${blocks.length}）`:"精译完成";
   $("translate").disabled=state.translationTask.running||Boolean(blocks.length&&completed>=blocks.length);
   renderTranslationTaskPanel();
@@ -319,7 +322,7 @@ function updateTranslateButton(){
 
 function resetTranslationTask(){
   const previous=state.translationTask; if(previous){previous.cancelled=true;for(const resolve of previous.pauseWaiters||[])resolve();}
-  state.translationTask={running:false,paused:false,cancelled:false,failed:[],pauseWaiters:[],estimate:null,message:"尚未开始"};
+  state.translationTask={running:false,paused:false,cancelled:false,failed:[],pauseWaiters:[],estimate:null,message:"尚未开始",stage:"idle",startedAt:0,lastSavedAt:0,initialCompleted:0};
   $("translation-task").hidden=true; $("pause-translation").disabled=true; $("cancel-translation").disabled=true; $("retry-failed").hidden=true;
 }
 
@@ -327,9 +330,9 @@ async function prepareTranslationEstimate(){
   if(!state.pages.length)return;
   const pending=state.pages.flatMap(page=>page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation));
   const settings=await chrome.storage.local.get(["prompt","targetLanguage","glossaryTerms"]);
-  const prompt=String(settings.prompt||"").replaceAll("{targetLanguage}",settings.targetLanguage||"简体中文")+formatGlossaryPrompt(settings.glossaryTerms);
-  const batchCount=state.pages.reduce((count,page)=>count+batches(page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation),6000,45).length,0);
-  state.translationTask.estimate=estimateTranslationUsage({sourceChars:pending.reduce((sum,block)=>sum+block.text.length,0),promptChars:prompt.length,batchCount});
+  const prompt=String(settings.prompt||"").replaceAll("{targetLanguage}",settings.targetLanguage||"简体中文");
+  const tasks=pendingTranslationTasks(),promptCharsTotal=tasks.reduce((sum,task)=>sum+prompt.length+formatGlossaryPrompt(settings.glossaryTerms,task.batch.map(block=>block.text).join("\n")).length,0);
+  state.translationTask.estimate=estimateTranslationUsage({sourceChars:pending.reduce((sum,block)=>sum+block.text.length,0),promptCharsTotal,batchCount:tasks.length});
   $("translation-task").hidden=false; renderTranslationTaskPanel();
 }
 
@@ -340,7 +343,9 @@ function renderTranslationTaskPanel(){
   const failedPreview=failedEntries.slice(0,2).map(({page,block})=>`第 ${page} 页“${String(block.text||"").replace(/\s+/g," ").slice(0,42)}${String(block.text||"").length>42?"…":""}”`).join("；");
   $("task-progress").max=Math.max(1,progress.total); $("task-progress").value=progress.completed; $("task-percent").textContent=`${progress.percent}%`;
   $("task-estimate").textContent=estimate?`待译 ${estimate.sourceChars.toLocaleString()} 字符 · 约 ${estimate.batchCount} 批 · 预计合计约 ${estimate.totalTokens.toLocaleString()} Token`:"正在估算待译内容…";
-  $("task-detail").textContent=`${task.message||"尚未开始"} · 已完成 ${progress.completed}/${progress.total} 段、${progress.completedPages}/${progress.totalPages} 页${failedEntries.length?` · 待重试 ${failedEntries.length} 段${failedPreview?`：${failedPreview}`:""}`:""}`;
+  const elapsed=task.startedAt?Date.now()-task.startedAt:0,delta=Math.max(0,progress.completed-(task.initialCompleted||0)),rate=elapsed>0?delta/elapsed:0,remaining=Math.max(0,progress.total-progress.completed);
+  const timing=task.running&&elapsed?` · 已运行 ${formatDuration(elapsed)}${rate>0?` · 预计剩余 ${formatDuration(remaining/rate)}`:""}${task.lastSavedAt?` · ${formatDuration(Date.now()-task.lastSavedAt)}前保存`:""}`:"";
+  $("task-detail").textContent=`${task.message||"尚未开始"} · 已完成 ${progress.completed}/${progress.total} 段、${progress.completedPages}/${progress.totalPages} 页${timing}${failedEntries.length?` · 待重试 ${failedEntries.length} 段${failedPreview?`：${failedPreview}`:""}`:""}`;
   $("task-state").textContent=task.running?(task.paused?"已暂停":"翻译中"):failedEntries.length?"有待重试":progress.total&&progress.completed>=progress.total?"已完成":"准备就绪";
   const errorPanel=$("task-errors"),errorList=$("task-error-list");errorPanel.hidden=!failedEntries.length;errorList.replaceChildren();
   for(const {page,block,failure} of failedEntries){
@@ -355,10 +360,12 @@ function renderTranslationTaskPanel(){
 }
 
 function pendingTranslationTasks(){
-  return state.pages.flatMap(page=>batches(page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation),6000,45).map(batch=>({page,batch})));
+  const entries=state.pages.flatMap(page=>page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation).map(block=>({page,block,text:block.text})));
+  return batches(entries,9000,60).map(group=>({page:group[0].page,pages:[...new Set(group.map(entry=>entry.page))],batch:group.map(entry=>entry.block)}));
 }
 
-function isTranslatablePdfBlock(block){return !["figure-content","artifact"].includes(block?.role);}
+function pageNeedsOcr(page){return (page?.blocks||[]).filter(isTranslatablePdfBlock).reduce((sum,block)=>sum+String(block.text||"").trim().length,0)<20;}
+function formatDuration(milliseconds){const seconds=Math.max(0,Math.round(milliseconds/1000));if(seconds<60)return`${seconds}秒`;const minutes=Math.floor(seconds/60),rest=seconds%60;return minutes<60?`${minutes}分${rest?`${rest}秒`:""}`:`${Math.floor(minutes/60)}小时${minutes%60}分`;}
 
 function toggleTranslationPause(){
   const task=state.translationTask;if(!task.running)return;
@@ -412,7 +419,7 @@ async function renderPage(number) {
 
 async function translatePdf() {
   if (!state.pages.length) return notice("请先打开 PDF", true);
-  if(state.pages.some(page=>!page.blocks.some(isTranslatablePdfBlock))){
+  if(state.pages.some(pageNeedsOcr)){
     const recognized=await recognizeScannedPdf();
     if(!recognized)return;
   }
@@ -421,11 +428,11 @@ async function translatePdf() {
 
 async function recognizeScannedPdf(){
   if(state.translationTask.running)return false;
-  const pages=state.pages.filter(page=>!page.blocks.some(isTranslatablePdfBlock));
+  const pages=state.pages.filter(pageNeedsOcr);
   if(!pages.length)return true;
-  const task=state.translationTask;task.running=true;task.paused=false;task.cancelled=false;task.failed=[];task.message="正在启动本地 OCR";
+  const task=state.translationTask;task.running=true;task.paused=false;task.cancelled=false;task.failed=[];task.message="正在启动本地 OCR";task.stage="ocr";task.startedAt=Date.now();task.lastSavedAt=0;task.initialCompleted=translationProgress(state.pages).completed;
   $("translation-task").hidden=false;updateTranslateButton();
-  let recognized=0;
+  let recognized=0,preserved=0,dataPages=0;
   try{
     for(let index=0;index<pages.length;index++){
       await waitForTranslationResume();if(task.cancelled)break;
@@ -438,6 +445,7 @@ async function recognizeScannedPdf(){
       if(!result?.ok)throw new Error(result?.error||"本地 OCR 识别失败");
       page.blocks=buildOcrTextBlocks(result.lines,page.viewport,result.width||image.width,result.height||image.height);
       if(page.blocks.length){
+        const policy=applyOcrTranslationPolicy(page.blocks);page.dataDense=policy.dataDense;preserved+=policy.preserved;if(policy.dataDense)dataPages++;
         recognized+=page.blocks.length;
         const bodySizes=page.blocks.filter(block=>block.role==="body").map(block=>block.fontSize).sort((a,b)=>a-b);
         page.bodyFontSize=bodySizes.length?bodySizes[Math.floor(bodySizes.length/2)]:10;
@@ -454,7 +462,7 @@ async function recognizeScannedPdf(){
   if(task.cancelled)return notice("OCR 已取消；已识别内容仍保留。",true),false;
   if(!recognized&&!state.pages.some(page=>page.blocks.some(isTranslatablePdfBlock)))return notice("OCR 未识别到正文。请确认页面清晰、方向正确，或提高扫描分辨率。",true,true),false;
   buildPdfOutline();state.bodyFontSize=median(state.pages.flatMap(page=>page.blocks.filter(block=>block.role==="body").map(block=>block.fontSize)))||10;
-  await restoreTranslationSession();await prepareTranslationEstimate();notice(`OCR 已识别 ${recognized} 个段落，正在开始专业精译。`,false,true);return true;
+  await restoreTranslationSession();await prepareTranslationEstimate();notice(`OCR 已识别 ${recognized} 个段落；保护 ${preserved} 个表格/代码式区域${dataPages?`，其中 ${dataPages} 页为高密度数据页`:""}。正在开始专业精译。`,false,true);return true;
 }
 
 async function renderOcrPage(number){
@@ -484,26 +492,28 @@ async function runTranslationTasks(tasks,isRetry) {
       ? notice(`全部 ${blocks.length} 个段落已有译文。`,false)
       : notice("未识别到可翻译文字。点击“本地 OCR 并精译”识别扫描页。",true,true);
   }
-  const taskState=state.translationTask;taskState.running=true;taskState.paused=false;taskState.cancelled=false;taskState.message=isRetry?"正在重试失败部分":"正在开始翻译";updateTranslateButton();renderTranslationTaskPanel();
+  const taskState=state.translationTask;taskState.running=true;taskState.paused=false;taskState.cancelled=false;taskState.message=isRetry?"正在重试失败部分":"正在开始翻译";taskState.stage="translation";taskState.startedAt=Date.now();taskState.lastSavedAt=0;taskState.initialCompleted=translationProgress(state.pages).completed;updateTranslateButton();renderTranslationTaskPanel();
   let fatalError="";
   try {
     for(let index=0;index<queue.length;index++){
       await waitForTranslationResume(); if(taskState.cancelled)break;
       const task=queue[index],activeBatch=task.batch.filter(block=>!block.translation);if(!activeBatch.length)continue;
-      taskState.message=`正在翻译第 ${task.page.number}/${state.pages.length} 页，第 ${index+1}/${queue.length} 批`;notice(taskState.message,false,true);renderTranslationTaskPanel();
+      const affectedPages=task.pages?.length?task.pages:[task.page],pageLabel=affectedPages.length===1?`第 ${affectedPages[0].number} 页`:`第 ${affectedPages[0].number}–${affectedPages.at(-1).number} 页`;
+      taskState.message=`正在翻译${pageLabel}，第 ${index+1}/${queue.length} 批`;notice(taskState.message,false,true);renderTranslationTaskPanel();
       let result;
       try{result=await chrome.runtime.sendMessage({type:"TRANSLATE_BATCH",professionalOnly:true,texts:activeBatch.map(block=>block.text),roles:activeBatch.map(block=>block.role||"")});}
       catch(error){result={ok:false,error:error?.message||String(error),retryable:true,code:"EXTENSION_MESSAGE_FAILED",stage:"extension-message",status:0,attempts:[]};}
       const returned=Array.isArray(result?.translations)?result.translations:[];
       let applied=0;
       activeBatch.forEach((block,itemIndex)=>{const value=returned[itemIndex];if(typeof value==="string"&&value.trim()){block.translation=value;applied++;}});
-      if(applied||task.page.figureRegions.length)drawTranslation(task.page);
-      if(applied)await saveTranslationSession();
+      if(applied||affectedPages.some(page=>page.figureRegions.length))for(const page of affectedPages)drawTranslation(page);
+      if(applied){await saveTranslationSession();taskState.lastSavedAt=Date.now();}
       const failedBlocks=activeBatch.filter(block=>!block.translation);
       if(result?.ok&&!failedBlocks.length){continue;}
       else{
-        if(failedBlocks.length)taskState.failed.push({page:task.page,batch:failedBlocks,failure:{error:result?.error||"翻译失败",retryable:Boolean(result?.retryable),code:result?.code||"",stage:result?.stage||"",status:Number(result?.status)||0,attempts:Array.isArray(result?.attempts)?result.attempts:[]}});
-        taskState.message=`第 ${task.page.number} 页有 ${failedBlocks.length||activeBatch.length} 段待重试：${result?.error||"翻译失败"}`;renderTranslationTaskPanel();
+        const failure={error:result?.error||"翻译失败",retryable:Boolean(result?.retryable),code:result?.code||"",stage:result?.stage||"",status:Number(result?.status)||0,attempts:Array.isArray(result?.attempts)?result.attempts:[]};
+        for(const page of affectedPages){const pageFailures=failedBlocks.filter(block=>page.blocks.includes(block));if(pageFailures.length)taskState.failed.push({page,pages:[page],batch:pageFailures,failure});}
+        taskState.message=`${pageLabel}有 ${failedBlocks.length||activeBatch.length} 段待重试：${result?.error||"翻译失败"}`;renderTranslationTaskPanel();
         if(!result?.retryable){fatalError=result?.error||"翻译失败";for(const remaining of queue.slice(index+1))if(remaining.batch.some(block=>!block.translation))taskState.failed.push(remaining);break;}
       }
     }
@@ -513,17 +523,17 @@ async function runTranslationTasks(tasks,isRetry) {
     else if(taskState.failed.length){const failedCount=taskState.failed.reduce((sum,item)=>sum+item.batch.filter(block=>!block.translation).length,0);taskState.message=fatalError?`已停止：${fatalError}`:`已完成其余内容，仍有 ${failedCount} 段待重试`;notice(`${taskState.message}。可点击“重试失败部分”。`,true,true);}
     else{taskState.message=`翻译完成：${progress.completedPages} 页`;notice(taskState.message);}
   }catch(error){taskState.message=`翻译中断：${error.message}`;notice(taskState.message,true,true);}
-  finally{taskState.running=false;taskState.paused=false;for(const resolve of taskState.pauseWaiters.splice(0))resolve();await prepareTranslationEstimate();updateTranslateButton();renderTranslationTaskPanel();}
+  finally{taskState.running=false;taskState.paused=false;taskState.stage="idle";for(const resolve of taskState.pauseWaiters.splice(0))resolve();await prepareTranslationEstimate();updateTranslateButton();renderTranslationTaskPanel();}
 }
 
-async function exportTranslatedPdf(){
+async function exportTranslatedPdf(exportMode="reading"){
   const complete=state.pages.length&&state.pages.every(page=>page.blocks.filter(isTranslatablePdfBlock).every(block=>block.translation));
-  if(!complete)return notice("请先完成整篇 PDF 翻译，再导出纯译文。",true);
-  setMode("reading"); notice("正在准备纯译文 PDF，请稍候…",false,true);
+  if(!complete)return notice("请先完成全部可翻译正文，再导出 PDF。表格、公式和代码式区域可按保护规则保留原文。",true);
+  const layout=exportMode==="overlay";setMode(layout?"overlay":"reading"); notice(`正在准备${layout?"保留版式":"阅读重排"} PDF，请稍候…`,false,true);
   const previousTitle=document.title;
   const baseName=shortName(state.source).replace(/\.pdf(?:\?.*)?$/i,"")||"科研译文";
-  document.title=`${baseName}-纯译文`;
-  document.body.classList.add("print-export");
+  document.title=`${baseName}-${layout?"中文保版":"中文阅读版"}`;
+  document.body.classList.add("print-export",layout?"print-layout-export":"print-reading-export");
   try{
     if(document.fonts?.ready)await document.fonts.ready;
     const images=[...document.querySelectorAll(".page-translation img")];
@@ -531,8 +541,8 @@ async function exportTranslatedPdf(){
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
     window.print();
   }finally{
-    document.body.classList.remove("print-export"); document.title=previousTitle;
-    notice("已打开打印窗口：请选择“另存为 PDF”。");
+    document.body.classList.remove("print-export","print-layout-export","print-reading-export"); document.title=previousTitle;
+    notice(`已打开打印窗口：请选择“另存为 PDF”，文件名建议使用“${baseName}-${layout?"中文保版":"中文阅读版"}.pdf”。`);
   }
 }
 
