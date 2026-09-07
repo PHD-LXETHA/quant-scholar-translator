@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-scholar-translator"
-version = "0.7.0"
+version = "0.7.1"
 description = "Local-first professional translation for technical video, web, and research material"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"

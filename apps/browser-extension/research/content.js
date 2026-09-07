@@ -37,7 +37,8 @@
     setTimeout(showQuickTranslateTrigger, 20);
   });
   document.addEventListener("keyup", event => {
-    if (event.key.startsWith("Arrow") || event.key === "Shift") setTimeout(showQuickTranslateTrigger, 20);
+    const key = typeof event?.key === "string" ? event.key : "";
+    if (key.startsWith("Arrow") || key === "Shift") setTimeout(showQuickTranslateTrigger, 20);
   });
   document.addEventListener("mousedown", event => {
     if (state.quickHost && event.target !== state.quickHost && !state.quickHost.contains(event.target)) hideQuickTranslateTrigger();

@@ -83,6 +83,7 @@ test("provides a pure-translation PDF export button and print stylesheet", () =>
   assert.match(manifest,/"contextMenus"/);
   assert.match(background,/researchlens-translate-selection/);
   assert.match(content,/function showQuickTranslateTrigger\(\)/);
+  assert.match(content,/typeof event\?\.key === "string"/);
   assert.match(content,/function quickTranslate\(rawText, rect\)/);
   assert.match(content,/科研译镜 · 划词翻译/);
   assert.match(background,/async function fetchTranslationApi\(endpoint, init, maxRetries = 3\)/);

@@ -16,7 +16,7 @@ import tempfile
 import threading
 import time
 from dataclasses import asdict, dataclass
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Iterable
 
 
@@ -95,7 +95,8 @@ def _clean_environment() -> dict[str, str]:
     if not env.get("CODEX_HOME", "").strip():
         user_profile = env.get("USERPROFILE", "").strip()
         if user_profile:
-            env["CODEX_HOME"] = str(Path(user_profile) / ".codex")
+            profile_path = PureWindowsPath(user_profile) if "\\" in user_profile else Path(user_profile)
+            env["CODEX_HOME"] = str(profile_path / ".codex")
     return env
 
 
