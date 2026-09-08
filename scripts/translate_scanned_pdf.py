@@ -233,7 +233,16 @@ def insert_fitted_text(page: pymupdf.Page, rect: pymupdf.Rect, text: str, start_
 
 def render_pdf(source_pdf: Path, output_pdf: Path, blocks: list[dict], translations: dict[str, str]) -> None:
     document = pymupdf.open(source_pdf)
-    regular = Path(r"C:\Windows\Fonts\msyh.ttc")
+    # Prefer a standalone static TTF. Some PDFium-based viewers render embedded
+    # TTC collections as tofu squares even though Poppler accepts the same file.
+    font_candidates = [
+        Path(r"C:\Windows\Fonts\simhei.ttf"),
+        Path(r"C:\Windows\Fonts\simsunb.ttf"),
+        Path(r"C:\Windows\Fonts\NotoSansSC-VF.ttf"),
+    ]
+    regular = next((font for font in font_candidates if font.exists()), None)
+    if regular is None:
+        raise FileNotFoundError("No compatible Simplified Chinese TTF font was found")
     by_page: dict[int, list[dict]] = {}
     for block in blocks:
         if translations.get(block["id"]):
@@ -241,7 +250,7 @@ def render_pdf(source_pdf: Path, output_pdf: Path, blocks: list[dict], translati
     try:
         for page_number, page_blocks in by_page.items():
             page = document[page_number - 1]
-            page.insert_font(fontname="qszh", fontfile=str(regular))
+            page.insert_font(fontname="qszh", fontfile=str(regular), set_simple=False)
             pixmap = page.get_pixmap(matrix=pymupdf.Matrix(0.35, 0.35), alpha=False)
             for block in page_blocks:
                 rect = pymupdf.Rect(block["rect"]) & page.rect
@@ -269,6 +278,7 @@ def render_pdf(source_pdf: Path, output_pdf: Path, blocks: list[dict], translati
                     insert_fitted_text(page, rect, translated, max(5.0, min(42.0, rect.height * 0.72)))
             print(f"RENDER {page_number}/{len(document)}", flush=True)
         output_pdf.parent.mkdir(parents=True, exist_ok=True)
+        document.subset_fonts()
         document.save(output_pdf, garbage=4, deflate=True)
     finally:
         document.close()
