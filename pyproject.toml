@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-scholar-translator"
-version = "0.8.2"
+version = "0.9.0"
 description = "Local-first professional translation for technical video, web, and research material"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -45,13 +45,11 @@ gpu = [
   "nvidia-cuda-runtime-cu12",
   "nvidia-cuda-nvrtc-cu12",
 ]
-pdf = ["BabelDOC==0.6.4"]
 all = [
   "nvidia-cublas-cu12",
   "nvidia-cudnn-cu12",
   "nvidia-cuda-runtime-cu12",
   "nvidia-cuda-nvrtc-cu12",
-  "BabelDOC==0.6.4",
 ]
 
 [project.scripts]

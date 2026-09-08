@@ -28,6 +28,7 @@ button,input { font:inherit; }
 .reader-tools { position:sticky; top:var(--toolbar-height,50px); z-index:49; display:flex; align-items:center; justify-content:center; gap:6px; min-height:42px; padding:6px 12px; border-bottom:1px solid var(--line); background:rgba(248,251,250,.97); box-shadow:0 2px 9px rgba(22,59,51,.08); }
 .reader-tools button { min-width:34px; height:30px; border:1px solid #cbdad6; border-radius:7px; color:#244b42; background:#fff; cursor:pointer; }
 .reader-tools button:disabled,.reader-tools input:disabled { cursor:not-allowed; opacity:.45; }
+.document-profile{display:flex;align-items:center;gap:7px;color:#58736c;font-size:12px;white-space:nowrap}.document-profile select{max-width:112px;border:1px solid #cbdad6;border-radius:7px;background:#fff;color:#244b42;padding:5px 7px;font:inherit}
 .tool-separator { width:1px; height:22px; margin:0 3px; background:#d5e0dd; }
 .page-control { display:flex; align-items:center; gap:5px; color:#55716a; font-size:13px; }
 .page-control input { width:54px; height:30px; border:1px solid #cbdad6; border-radius:7px; padding:3px 5px; text-align:center; }
@@ -77,6 +78,7 @@ canvas { display:block; max-width:100%; height:auto; }
 .page-translation { display:none; width:760px; padding:44px 54px; color:#182b27; background:#fff; box-shadow:0 8px 30px rgba(26,48,42,.2); font:16px/1.82 "Microsoft YaHei",system-ui,sans-serif; }
 .page-translation h3 { margin:0 0 24px; padding-bottom:12px; border-bottom:1px solid #dce8e4; color:var(--accent); }
 .page-translation p { margin:0 0 1.05em; text-align:justify; }
+.page-translation .protected-source{margin:.8em 0 1.1em;padding:.75em .95em;border-left:2px solid #82b9aa;border-radius:4px;background:#f2f8f6;color:#173f36;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;text-indent:0;white-space:pre-wrap}
 .page-translation .translation-heading-text { margin:18px 0 10px; color:#102f28; font-weight:750; line-height:1.4; }
 .page-translation .translation-heading-text.heading-level-1 { font-size:25px; line-height:1.32; }
 .page-translation .translation-heading-text.heading-level-2 { font-size:21px; }

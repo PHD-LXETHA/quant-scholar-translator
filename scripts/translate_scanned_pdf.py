@@ -17,7 +17,7 @@ from quant_scholar_translator.codex_bridge import run_codex_completion
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-GLOSSARY = PROJECT_ROOT / "quant_scholar_translator" / "data" / "babeldoc-professional.csv"
+GLOSSARY = PROJECT_ROOT / "quant_scholar_translator" / "data" / "professional-terms.csv"
 
 
 def normalized_text(value: object) -> str:

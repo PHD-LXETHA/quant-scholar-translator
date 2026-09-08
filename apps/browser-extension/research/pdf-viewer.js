@@ -1,5 +1,5 @@
 import * as pdfjsLib from "./vendor/pdf.min.mjs";
-import { buildOcrTextBlocks, buildTextBlocks, sortBlocksForReading } from "./pdf-layout.mjs";
+import { buildOcrTextBlocks, buildTextBlocks } from "./pdf-layout.mjs";
 import { availableOverlayHeight, detectVisualRegions } from "./pdf-visual-regions.mjs";
 import { renderScientificText } from "./scientific-text.mjs";
 import { splitInlineSection } from "./section-heading.mjs";
@@ -7,16 +7,17 @@ import { parseReferenceList } from "./reference-list.mjs";
 import { formatGlossaryPrompt, migrateProfessionalGlossary } from "./glossary.mjs";
 import { estimateTranslationUsage, translationProgress } from "./translation-usage.mjs";
 import { buildStableDocumentSignature, isCompatibleTranslationSession, matchCachedTranslations, sessionContentSimilarity } from "./pdf-session-cache.mjs";
-import { applyOcrTranslationPolicy, isTranslatablePdfBlock } from "./pdf-translation-policy.mjs";
+import { applyNativeTranslationPolicy, applyOcrTranslationPolicy, isTranslatablePdfBlock } from "./pdf-translation-policy.mjs";
 import { isLikelyUntranslated } from "./translation-quality.mjs";
 import { cleanupExternalTranslationSessions, deleteExternalDocumentSessions, getExternalTranslationSession, listExternalTranslationSessions, putExternalTranslationSession } from "./cache-directory.mjs";
+import { applyStructuredTranslation, buildStructuredTranslationUnits, classifyPdfDocument, orderBlocksForDocument, unitHasTranslation } from "./pdf-document-intelligence.mjs";
 pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("research/vendor/pdf.worker.min.mjs");
 await migrateProfessionalGlossary(chrome.storage.local);
 
 const $ = id => document.getElementById(id);
 const APP_VERSION = chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version;
 $('app-version').textContent=`v${APP_VERSION}`;
-const state = { pdf: null, pages: [], mode: "reading", source: "", targetLanguage: "简体中文", bodyFontSize: 10, translationBodyFontSize: 0, autoLocate: false, documentKey: "", rawDocumentKey: "", documentKeys: [], profileKey: "", cacheKey: "", cacheRestoreKind: "", cacheMissReason: "", publisherArticleUrl: "", restoring: false, zoom: 1, zoomMode: "manual", currentPage: 1, activePane: "translation", searchResults: [], searchIndex: -1, translationTask: { running: false, paused: false, cancelled: false, failed: [], pauseWaiters: [], estimate: null, stage:"idle", startedAt:0, lastSavedAt:0, initialCompleted:0 } };
+const state = { pdf: null, pages: [], mode: "reading", source: "", targetLanguage: "简体中文", bodyFontSize: 10, translationBodyFontSize: 0, autoLocate: false, documentKey: "", rawDocumentKey: "", documentKeys: [], profileKey: "", cacheKey: "", cacheRestoreKind: "", cacheMissReason: "", publisherArticleUrl: "", restoring: false, zoom: 1, zoomMode: "manual", currentPage: 1, activePane: "translation", searchResults: [], searchIndex: -1, forcedDocumentType:"auto", documentProfile:classifyPdfDocument(), outlineCount:0, translationTask: { running: false, paused: false, cancelled: false, failed: [], pauseWaiters: [], estimate: null, stage:"idle", startedAt:0, lastSavedAt:0, initialCompleted:0 } };
 const sentenceLinks = new WeakMap();
 const sourceSpanLinks = new WeakMap();
 let selectionTimer;
@@ -42,6 +43,7 @@ $("translate").textContent = 'Codex / Kimi 精译 PDF';
 $("pause-translation").onclick=toggleTranslationPause;
 $("cancel-translation").onclick=cancelTranslationTask;
 $("retry-failed").onclick=retryFailedTranslation;
+$("document-type").onchange=async event=>{state.forcedDocumentType=event.currentTarget.value;refreshDocumentProfile();for(const page of state.pages)drawTranslation(page);buildPdfOutline();await prepareTranslationEstimate();scheduleSessionSave();};
 $("collapse-task").onclick=()=>{const collapsed=$("translation-task").classList.toggle("collapsed");$("collapse-task").textContent=collapsed?"＋":"−";$("collapse-task").setAttribute("aria-expanded",String(!collapsed));};
 $("settings").onclick = () => chrome.runtime.openOptionsPage();
 $("export-pdf").onclick = ()=>exportTranslatedPdf("reading");
@@ -86,7 +88,7 @@ $("file").addEventListener("change", async event => {
 
 async function openPdf(source, label = source) {
   if (!source || (source instanceof Uint8Array && !source.length)) return;
-  notice("正在读取 PDF…", false, true); resetPagePanes(); clearPdfSearch(); resetTranslationTask(); $("pdf-fallback").hidden = true; state.pages = []; state.translationBodyFontSize = 0; state.documentKey=""; state.rawDocumentKey=""; state.documentKeys=[]; state.profileKey=""; state.cacheKey=""; state.cacheRestoreKind=""; state.cacheMissReason=""; state.publisherArticleUrl=""; $("open-publisher-page").hidden=true; state.currentPage=1; state.zoom=1; state.zoomMode="manual"; $("clear-cache").disabled=true; setReaderToolsEnabled(false);
+  notice("正在读取 PDF…", false, true); resetPagePanes(); clearPdfSearch(); resetTranslationTask(); $("pdf-fallback").hidden = true; state.pages = []; state.translationBodyFontSize = 0; state.documentKey=""; state.rawDocumentKey=""; state.documentKeys=[]; state.profileKey=""; state.cacheKey=""; state.cacheRestoreKind=""; state.cacheMissReason=""; state.publisherArticleUrl=""; state.forcedDocumentType="auto"; state.outlineCount=0; $("document-type").value="auto"; $("open-publisher-page").hidden=true; state.currentPage=1; state.zoom=1; state.zoomMode="manual"; $("clear-cache").disabled=true; setReaderToolsEnabled(false);
   try {
     const pdfData = typeof source === "string" ? await fetchRemotePdf(source) : source;
     const [rawDocumentKey,profileKey,languageSettings]=await Promise.all([hashBytes(pdfData),translationProfileKey(),chrome.storage.local.get({targetLanguage:"简体中文"})]);
@@ -95,14 +97,15 @@ async function openPdf(source, label = source) {
     const task = pdfjsLib.getDocument({ data: pdfData, cMapUrl: chrome.runtime.getURL("research/vendor/cmaps/"), cMapPacked: true, standardFontDataUrl: chrome.runtime.getURL("research/vendor/standard_fonts/") });
     state.pdf = await task.promise; state.source = String(label); document.title = `Quant Scholar PDF Reader · ${shortName(label)}`;
     for (let number = 1; number <= state.pdf.numPages; number++) await renderPage(number);
-    const signature=buildStableDocumentSignature(state.pages.map(page=>({number:page.number,blocks:sortBlocksForReading(page.blocks,page.viewport,page.number)})));
+    const outline=await state.pdf.getOutline().catch(()=>[]);state.outlineCount=Array.isArray(outline)?outline.length:0;refreshDocumentProfile();
+    const signature=buildStableDocumentSignature(state.pages.map(page=>({number:page.number,blocks:orderBlocksForDocument(page,state.documentProfile)})));
     state.documentKey=signature?await hashText(signature):rawDocumentKey;
     state.documentKeys=[...new Set([state.documentKey,rawDocumentKey].filter(Boolean))]; state.cacheKey=`${state.documentKey}:${profileKey}`; $("clear-cache").disabled=false;
     state.bodyFontSize = median(state.pages.flatMap(page => page.blocks.filter(block => block.role === "body").map(block => block.fontSize))) || 10;
     $("page-total").textContent=String(state.pdf.numPages); $("page-number").max=String(state.pdf.numPages); buildPdfOutline(); setReaderToolsEnabled(true); applyZoom(); updatePageControls();
     const restored=await restoreTranslationSession(); updateTranslateButton(); await prepareTranslationEstimate();
     const ocrPages=state.pages.filter(pageNeedsOcr).length;
-    if(!restored)notice(state.cacheMissReason||(ocrPages?`已载入 ${state.pdf.numPages} 页，其中 ${ocrPages} 页没有可用文字层。点击“本地 OCR 并精译”开始。`:`已载入 ${state.pdf.numPages} 页，可直接使用 Codex / Kimi 精译。`),Boolean(state.cacheMissReason),Boolean(state.cacheMissReason));
+    if(!restored)notice(state.cacheMissReason||(ocrPages?`已识别为${state.documentProfile.label}；${state.pdf.numPages} 页中有 ${ocrPages} 页没有可用文字层。点击“本地 OCR 并精译”开始。`:`已识别为${state.documentProfile.label}；${state.pdf.numPages} 页可直接使用 Codex / Kimi 结构化精译。`),Boolean(state.cacheMissReason),Boolean(state.cacheMissReason));
   } catch (error) { showPdfFallback(error); }
 }
 
@@ -196,7 +199,7 @@ async function cleanupReaderState(){
 }
 
 function sessionViewState(){
-  return {mode:state.mode,windowScroll:window.scrollY,sourceScroll:$("source-pages")?.scrollTop||0,translationScroll:$("translation-pages")?.scrollTop||0,zoom:state.zoom,zoomMode:state.zoomMode,currentPage:state.currentPage};
+  return {mode:state.mode,windowScroll:window.scrollY,sourceScroll:$("source-pages")?.scrollTop||0,translationScroll:$("translation-pages")?.scrollTop||0,zoom:state.zoom,zoomMode:state.zoomMode,currentPage:state.currentPage,documentType:state.forcedDocumentType};
 }
 
 function serializeHighlights(){
@@ -214,7 +217,7 @@ function serializeHighlights(){
 
 async function saveTranslationSession(){
   if(state.restoring||!state.cacheKey||!state.pages.length)return;
-  const pages=state.pages.map(page=>page.blocks.map(block=>({source:block.text,translation:block.translation||""})));
+  const pages=state.pages.map(page=>page.blocks.map(block=>({source:block.text,translation:block.translation||"",structuredSource:block.structuredSource||"",structuredTranslation:block.structuredTranslation||"",structuredUnitId:block.structuredUnitId||"",structuredAnchor:Boolean(block.structuredAnchor)})));
   await putTranslationSession({key:state.cacheKey,documentKey:state.documentKey,rawDocumentKey:state.rawDocumentKey,documentKeys:state.documentKeys,profileKey:state.profileKey,label:shortName(state.source),updatedAt:Date.now(),pages,highlights:serializeHighlights(),view:sessionViewState()});
 }
 
@@ -255,12 +258,13 @@ async function restoreTranslationSession(){
   const {session,kind}=located; state.cacheRestoreKind=kind;
   state.restoring=true; let restored=0,invalidated=0;
   try{
+    if(session.view?.documentType&&$("document-type").querySelector(`option[value="${CSS.escape(session.view.documentType)}"]`)){state.forcedDocumentType=session.view.documentType;$("document-type").value=session.view.documentType;refreshDocumentProfile();}
     const matches=matchCachedTranslations(state.pages,session.pages||[]);
     for(const match of matches){
       const block=state.pages[match.pageIndex]?.blocks?.[match.blockIndex];
       if(!block)continue;
       if(isLikelyUntranslated(block.text,match.translation,state.targetLanguage,{role:block.role||""})){block.translation="";invalidated++;continue;}
-      block.translation=match.translation;restored++;
+      block.translation=match.translation;block.structuredSource=match.structuredSource||"";block.structuredTranslation=match.structuredTranslation||"";block.structuredUnitId=match.structuredUnitId||"";block.structuredAnchor=Boolean(match.structuredAnchor);restored++;
     }
     for(const page of state.pages){
       if(page.blocks.some(block=>block.translation))drawTranslation(page);
@@ -328,18 +332,18 @@ function resetTranslationTask(){
 
 async function prepareTranslationEstimate(){
   if(!state.pages.length)return;
-  const pending=state.pages.flatMap(page=>page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation));
+  const pendingUnits=structuredTranslationUnits().filter(unit=>!unitHasTranslation(unit));
   const settings=await chrome.storage.local.get(["prompt","targetLanguage","glossaryTerms"]);
   const prompt=String(settings.prompt||"").replaceAll("{targetLanguage}",settings.targetLanguage||"简体中文");
   const tasks=pendingTranslationTasks(),promptCharsTotal=tasks.reduce((sum,task)=>sum+prompt.length+formatGlossaryPrompt(settings.glossaryTerms,task.batch.map(block=>block.text).join("\n")).length,0);
-  state.translationTask.estimate=estimateTranslationUsage({sourceChars:pending.reduce((sum,block)=>sum+block.text.length,0),promptCharsTotal,batchCount:tasks.length});
+  state.translationTask.estimate=estimateTranslationUsage({sourceChars:pendingUnits.reduce((sum,unit)=>sum+unit.text.length,0),promptCharsTotal,batchCount:tasks.length});
   $("translation-task").hidden=false; renderTranslationTaskPanel();
 }
 
 function renderTranslationTaskPanel(){
   if(!state.pages.length)return;
   const task=state.translationTask,progress=translationProgress(state.pages),estimate=task.estimate;
-  const failedEntries=task.failed.flatMap(item=>item.batch.filter(block=>!block.translation).map(block=>({page:item.page?.number||"?",block,failure:item.failure||{}})));
+  const failedEntries=task.failed.flatMap(item=>item.batch.filter(unit=>!unitHasTranslation(unit)).map(block=>({page:item.page?.number||block.page?.number||"?",block,failure:item.failure||{}})));
   const failedPreview=failedEntries.slice(0,2).map(({page,block})=>`第 ${page} 页“${String(block.text||"").replace(/\s+/g," ").slice(0,42)}${String(block.text||"").length>42?"…":""}”`).join("；");
   $("task-progress").max=Math.max(1,progress.total); $("task-progress").value=progress.completed; $("task-percent").textContent=`${progress.percent}%`;
   $("task-estimate").textContent=estimate?`待译 ${estimate.sourceChars.toLocaleString()} 字符 · 约 ${estimate.batchCount} 批 · 预计合计约 ${estimate.totalTokens.toLocaleString()} Token`:"正在估算待译内容…";
@@ -360,8 +364,15 @@ function renderTranslationTaskPanel(){
 }
 
 function pendingTranslationTasks(){
-  const entries=state.pages.flatMap(page=>page.blocks.filter(block=>isTranslatablePdfBlock(block)&&!block.translation).map(block=>({page,block,text:block.text})));
-  return batches(entries,9000,60).map(group=>({page:group[0].page,pages:[...new Set(group.map(entry=>entry.page))],batch:group.map(entry=>entry.block)}));
+  const entries=structuredTranslationUnits().filter(unit=>!unitHasTranslation(unit));
+  return batches(entries,9000,60).map(group=>({page:group[0].page,pages:[...new Set(group.flatMap(unit=>unit.pages))],batch:group}));
+}
+
+function structuredTranslationUnits(){return buildStructuredTranslationUnits(state.pages,state.documentProfile,isTranslatablePdfBlock);}
+
+function refreshDocumentProfile(){
+  state.documentProfile=classifyPdfDocument({source:state.source,pages:state.pages,outlineCount:state.outlineCount,forcedType:state.forcedDocumentType});
+  $("document-profile").textContent=`${state.documentProfile.label}${state.documentProfile.domain==="mathematics"?" · 数学":""}${state.documentProfile.forced?"（手动）":` · ${Math.round((state.documentProfile.confidence||0)*100)}%`}`;
 }
 
 function pageNeedsOcr(page){return (page?.blocks||[]).filter(isTranslatablePdfBlock).reduce((sum,block)=>sum+String(block.text||"").trim().length,0)<20;}
@@ -385,7 +396,7 @@ async function waitForTranslationResume(){
 }
 
 async function retryFailedTranslation(){
-  const tasks=state.translationTask.failed.filter(task=>task.batch.some(block=>!block.translation));
+  const tasks=state.translationTask.failed.filter(task=>task.batch.some(unit=>!unitHasTranslation(unit)));
   state.translationTask.failed=[]; await runTranslationTasks(tasks,true);
 }
 
@@ -409,7 +420,7 @@ async function renderPage(number) {
   const translated = document.createElement("article"); translated.className = "page-translation"; translated.innerHTML = `<h3>第 ${number} 页</h3>`;
   wrap.append(canvas, selectionLayer, layer); $("source-pages").append(wrap); $("translation-pages").append(translated);
   await page.render({ canvasContext: canvas.getContext("2d"), viewport, transform: ratio === 1 ? null : [ratio,0,0,ratio,0,0] }).promise;
-  const content = await page.getTextContent(); const blocks = buildTextBlocks(content.items, viewport);
+  const content = await page.getTextContent(); const blocks = buildTextBlocks(content.items, viewport); applyNativeTranslationPolicy(blocks);
   const bodySizes=blocks.filter(block=>block.role==="body").map(block=>block.fontSize).sort((a,b)=>a-b);
   const bodyFontSize=bodySizes.length?bodySizes[Math.floor(bodySizes.length/2)]:10;
   const figureRegions=detectVisualRegions(blocks,viewport,bodyFontSize);
@@ -484,7 +495,7 @@ function encodeOcrCanvas(canvas){
 
 async function runTranslationTasks(tasks,isRetry) {
   if(state.translationTask.running)return;
-  const queue=(tasks||[]).filter(task=>task.batch.some(block=>!block.translation));
+  const queue=(tasks||[]).filter(task=>task.batch.some(unit=>!unitHasTranslation(unit)));
   if(!queue.length){
     const blocks=state.pages.flatMap(page=>page.blocks.filter(isTranslatablePdfBlock));
     updateTranslateButton();
@@ -497,30 +508,30 @@ async function runTranslationTasks(tasks,isRetry) {
   try {
     for(let index=0;index<queue.length;index++){
       await waitForTranslationResume(); if(taskState.cancelled)break;
-      const task=queue[index],activeBatch=task.batch.filter(block=>!block.translation);if(!activeBatch.length)continue;
+      const task=queue[index],activeBatch=task.batch.filter(unit=>!unitHasTranslation(unit));if(!activeBatch.length)continue;
       const affectedPages=task.pages?.length?task.pages:[task.page],pageLabel=affectedPages.length===1?`第 ${affectedPages[0].number} 页`:`第 ${affectedPages[0].number}–${affectedPages.at(-1).number} 页`;
       taskState.message=`正在翻译${pageLabel}，第 ${index+1}/${queue.length} 批`;notice(taskState.message,false,true);renderTranslationTaskPanel();
       let result;
-      try{result=await chrome.runtime.sendMessage({type:"TRANSLATE_BATCH",professionalOnly:true,texts:activeBatch.map(block=>block.text),roles:activeBatch.map(block=>block.role||"")});}
+      try{result=await chrome.runtime.sendMessage({type:"TRANSLATE_BATCH",professionalOnly:true,texts:activeBatch.map(block=>block.text),roles:activeBatch.map(block=>block.role||""),documentContext:{type:state.documentProfile.type,domain:state.documentProfile.domain}});}
       catch(error){result={ok:false,error:error?.message||String(error),retryable:true,code:"EXTENSION_MESSAGE_FAILED",stage:"extension-message",status:0,attempts:[]};}
       const returned=Array.isArray(result?.translations)?result.translations:[];
       let applied=0;
-      activeBatch.forEach((block,itemIndex)=>{const value=returned[itemIndex];if(typeof value==="string"&&value.trim()){block.translation=value;applied++;}});
+      activeBatch.forEach((unit,itemIndex)=>{const value=returned[itemIndex];if(typeof value==="string"&&value.trim()&&applyStructuredTranslation(unit,value))applied++;});
       if(applied||affectedPages.some(page=>page.figureRegions.length))for(const page of affectedPages)drawTranslation(page);
       if(applied){await saveTranslationSession();taskState.lastSavedAt=Date.now();}
-      const failedBlocks=activeBatch.filter(block=>!block.translation);
+      const failedBlocks=activeBatch.filter(unit=>!unitHasTranslation(unit));
       if(result?.ok&&!failedBlocks.length){continue;}
       else{
         const failure={error:result?.error||"翻译失败",retryable:Boolean(result?.retryable),code:result?.code||"",stage:result?.stage||"",status:Number(result?.status)||0,attempts:Array.isArray(result?.attempts)?result.attempts:[]};
-        for(const page of affectedPages){const pageFailures=failedBlocks.filter(block=>page.blocks.includes(block));if(pageFailures.length)taskState.failed.push({page,pages:[page],batch:pageFailures,failure});}
+        if(failedBlocks.length)taskState.failed.push({page:affectedPages[0],pages:affectedPages,batch:failedBlocks,failure});
         taskState.message=`${pageLabel}有 ${failedBlocks.length||activeBatch.length} 段待重试：${result?.error||"翻译失败"}`;renderTranslationTaskPanel();
-        if(!result?.retryable){fatalError=result?.error||"翻译失败";for(const remaining of queue.slice(index+1))if(remaining.batch.some(block=>!block.translation))taskState.failed.push(remaining);break;}
+        if(!result?.retryable){fatalError=result?.error||"翻译失败";for(const remaining of queue.slice(index+1))if(remaining.batch.some(unit=>!unitHasTranslation(unit)))taskState.failed.push(remaining);break;}
       }
     }
     harmonizeDocumentTypography();setMode(state.mode);await saveTranslationSession();
     const progress=translationProgress(state.pages);
     if(taskState.cancelled){taskState.message="已取消，已完成译文已保存";notice("翻译已取消；已完成部分已保存在本机，下次可继续。",false,true);}
-    else if(taskState.failed.length){const failedCount=taskState.failed.reduce((sum,item)=>sum+item.batch.filter(block=>!block.translation).length,0);taskState.message=fatalError?`已停止：${fatalError}`:`已完成其余内容，仍有 ${failedCount} 段待重试`;notice(`${taskState.message}。可点击“重试失败部分”。`,true,true);}
+    else if(taskState.failed.length){const failedCount=taskState.failed.reduce((sum,item)=>sum+item.batch.filter(unit=>!unitHasTranslation(unit)).length,0);taskState.message=fatalError?`已停止：${fatalError}`:`已完成其余内容，仍有 ${failedCount} 个语义段待重试`;notice(`${taskState.message}。可点击“重试失败部分”。`,true,true);}
     else{taskState.message=`翻译完成：${progress.completedPages} 页`;notice(taskState.message);}
   }catch(error){taskState.message=`翻译中断：${error.message}`;notice(taskState.message,true,true);}
   finally{taskState.running=false;taskState.paused=false;taskState.stage="idle";for(const resolve of taskState.pauseWaiters.splice(0))resolve();await prepareTranslationEstimate();updateTranslateButton();renderTranslationTaskPanel();}
@@ -559,27 +570,32 @@ function drawTranslation(page) {
     el.style.backgroundColor=sampleBackground(page.canvas,block); page.layer.append(el); overlayEntries.push({element:el,text,block});
   }
   page.overlayEntries=overlayEntries; optimizeOverlayTypography(overlayEntries,page,state.translationBodyFontSize||0);
-  for(const block of sortBlocksForReading(page.blocks,page.viewport,page.number)) {
+  for(const block of orderBlocksForDocument(page,state.documentProfile)) {
+    if(block.preserveOriginal){const protectedSource=document.createElement("p");protectedSource.className="protected-source";renderScientificText(protectedSource,block.text);page.translated.append(protectedSource);continue;}
     if(!isTranslatablePdfBlock(block)) continue;
+    if(block.structuredUnitId&&!block.structuredAnchor)continue;
     const figureRegion=page.figureRegions.find(region=>region.caption===block);
     if(figureRegion){appendReadingFigure(page,figureRegion,block);continue;}
-    if(!block.translation) continue;
-    const references=parseReferenceList(block.translation,block.text);
-    if(references){appendReferenceList(page,block,references);continue;}
-    const inlineSection=block.role==="body"?splitInlineSection(block.text,block.translation):null;
+    const readingTranslation=block.structuredTranslation||block.translation;
+    const readingSource=block.structuredSource||block.text;
+    if(!readingTranslation) continue;
+    const displayBlock=readingTranslation===block.translation?block:{...block,text:readingSource,translation:readingTranslation};
+    const references=parseReferenceList(readingTranslation,readingSource);
+    if(references){appendReferenceList(page,displayBlock,references);continue;}
+    const inlineSection=block.role==="body"?splitInlineSection(readingSource,readingTranslation):null;
     if(inlineSection){
       const heading=document.createElement("h4"); heading.className="inline-section-heading";
-      appendLinkedSentences(heading,page,block,inlineSection.heading,inlineSection.sourceHeadingStart,inlineSection.sourceHeadingEnd);
+      appendLinkedSentences(heading,page,displayBlock,inlineSection.heading,inlineSection.sourceHeadingStart,inlineSection.sourceHeadingEnd);
       const body=document.createElement("p");
-      appendLinkedSentences(body,page,block,inlineSection.body,inlineSection.sourceBodyStart,inlineSection.sourceBodyEnd);
+      appendLinkedSentences(body,page,displayBlock,inlineSection.body,inlineSection.sourceBodyStart,inlineSection.sourceBodyEnd);
       page.translated.append(heading,body); continue;
     }
-    const p=document.createElement("p"); p.textContent=block.translation;
+    const p=document.createElement("p"); p.textContent=readingTranslation;
     if(block.role==="heading")p.className=`translation-heading-text heading-level-${block.headingLevel||3}`;
     else if(block.role==="figure-caption")p.className="translation-figure-caption-text";
     else if(block.role==="metadata")p.className="translation-metadata-text";
     else if(block.role==="caption")p.className="translation-caption-text";
-    appendLinkedSentences(p,page,block);
+    appendLinkedSentences(p,page,displayBlock);
     page.translated.append(p);
   }
 }
@@ -738,9 +754,7 @@ function setSourceSelection(anchor,focus){
 }
 
 function blocksForTextSelection(page){
-  // A coordinate-sorted PDF layer interleaves left/right column lines in the DOM.
-  // Force column reading order even on page one so a native selection stays in its visual column.
-  return sortBlocksForReading(page.blocks.filter(isTranslatablePdfBlock),page.viewport,Math.max(2,page.number));
+  return orderBlocksForDocument({...page,blocks:page.blocks.filter(isTranslatablePdfBlock)},state.documentProfile);
 }
 
 function sentenceRanges(text,language){
@@ -895,7 +909,7 @@ function fitPageWidth(){
 function buildPdfOutline(){
   const container=$("outline-items");container.replaceChildren();const seen=new Set(),items=[];
   for(const page of state.pages){
-    for(const block of sortBlocksForReading(page.blocks,page.viewport,page.number)){
+    for(const block of orderBlocksForDocument(page,state.documentProfile)){
       if(block.role!=="heading")continue;const text=block.text.replace(/\s+/g," ").trim();if(!text||seen.has(text)||text.length>180)continue;seen.add(text);items.push({page:page.number,text,level:block.headingLevel||3});
     }
   }

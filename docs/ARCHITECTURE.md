@@ -26,7 +26,7 @@
 | YouTube 原字幕和整句重组 | YT Dual Subs | 已抽取 timedtext/JSON3 轨道监听，直接进入统一翻译管线 |
 | 摘要、时间戳、解释、笔记 | YouTube Digest | 已转译为通用学习侧栏，非 YouTube 页面也能使用 |
 | 网页/PDF 交互阅读 | ResearchLens + PDF.js | 已作为同一扩展内部模块运行 |
-| 复杂论文 PDF 重建 | 统一 PDF 接口 | 可选调用环境中安装的 BabelDOC 0.6.4，不保留其源码仓库 |
+| PDF 文档理解与阅读重排 | 浏览器扩展原创模块 | 自动区分论文、研报、报纸、杂志与图书；执行 1–4 栏排序、语义段落合并和坐标回填，不调用外部 PDF 重排项目 |
 | 扫描版 PDF OCR | 本地 OCR 接口 | RapidOCR + ONNX Runtime 逐页识别，图像不发送到第三方 OCR 服务 |
 | 实时假设稳定 | WhisperLiveKit 思路 | 已重写为边界去重模块并接入 faster-whisper |
 | 专业术语与符号保护 | 本项目 | 已建立首版模块 |

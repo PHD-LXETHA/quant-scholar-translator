@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Quant Scholar Translator",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "Professional bilingual live subtitles for finance, mathematics, statistics, economics and programming learning.",
   "permissions": [
     "tabCapture",

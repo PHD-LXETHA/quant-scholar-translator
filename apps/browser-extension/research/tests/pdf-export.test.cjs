@@ -39,7 +39,9 @@ test("provides layout-preserving and reading PDF exports with print styles", () 
   assert.match(script,/pane\.scrollTo\(\{top:destination/);
   assert.match(script,/function resetPagePanes\(\)/);
   assert.doesNotMatch(script,/window\.scrollTo\(\{top:destination/);
-  assert.match(script,/function blocksForTextSelection\(page\)[\s\S]*Math\.max\(2,page\.number\)/);
+  assert.match(script,/function blocksForTextSelection\(page\)[\s\S]*orderBlocksForDocument/);
+  assert.match(html,/id="document-type"/);
+  assert.match(script,/buildStructuredTranslationUnits/);
   assert.equal((script.match(/for\(const block of blocksForTextSelection\(page\)\)/g)||[]).length,2);
   assert.match(css,/@media print/);
   assert.match(css,/body\.print-layout-export #source-pages/);
@@ -58,7 +60,7 @@ test("provides layout-preserving and reading PDF exports with print styles", () 
   assert.match(css,/\.translation-sentence\.counterpart-focus/);
   assert.match(css,/\.mode-bilingual \.pages-pane.*overflow-y:auto/s);
   assert.match(script,/document\.body\.classList\.toggle\("bilingual-active"/);
-  assert.match(script,/parseReferenceList\(block\.translation,block\.text\)/);
+  assert.match(script,/parseReferenceList\(readingTranslation,readingSource\)/);
   assert.match(css,/\.translation-reference-list li.*text-align:left/s);
   assert.match(script,/indexedDB\.open\("researchlens-reader-state",1\)/);
   assert.match(script,/async function restoreTranslationSession\(\)/);
@@ -74,7 +76,7 @@ test("provides layout-preserving and reading PDF exports with print styles", () 
   assert.match(script,/const maximum=12\*1024\*1024/);
   assert.match(script,/roles:activeBatch\.map\(block=>block\.role/);
   assert.match(script,/const returned=Array\.isArray\(result\?\.translations\)/);
-  assert.match(script,/taskState\.failed\.push\(\{page,pages:\[page\],batch:pageFailures,failure\}\)/);
+  assert.match(script,/taskState\.failed\.push\(\{page:affectedPages\[0\],pages:affectedPages,batch:failedBlocks,failure\}\)/);
   assert.match(script,/code:result\?\.code/);
   assert.match(script,/stage:result\?\.stage/);
   assert.match(script,/chrome\.runtime\.getManifest\(\)\.version_name/);

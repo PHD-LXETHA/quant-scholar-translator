@@ -70,7 +70,7 @@ chrome.commands.onCommand.addListener(async (command) => {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "TRANSLATE_BATCH") {
-    translateBatch(message.texts, message.roles, message.professionalOnly === true).then(
+    translateBatch(message.texts, message.roles, message.professionalOnly === true, message.documentContext).then(
       (translations) => sendResponse({ ok: true, translations }),
       (error) => sendResponse({
         ok: false,
@@ -522,10 +522,10 @@ async function putPdfCache(key, data, url) {
   } finally { db.close(); }
 }
 
-async function translateBatch(texts, roles = [], professionalOnly = false) {
+async function translateBatch(texts, roles = [], professionalOnly = false, documentContext = null) {
   if (!Array.isArray(texts) || !texts.length) return [];
   await migrateProfessionalGlossary(chrome.storage.local);
-  const settings = { ...DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEFAULTS))) };
+  const settings = { ...DEFAULTS, ...(await chrome.storage.local.get(Object.keys(DEFAULTS))), documentContext: normalizeDocumentContext(documentContext) };
   if (professionalOnly && !['codex', 'kimi_subscription'].includes(settings.provider))
     throw new Error('PDF 采用直接精译：请在设置中选择 Codex（ChatGPT 套餐）或 Kimi（会员套餐），不会自动切换到其他引擎');
   if (providerNeedsApiKey(settings.provider) && !settings.apiKey) throw new Error("请先在设置中填写该服务商的 API Key");
@@ -541,7 +541,7 @@ async function translateWithSettings(texts, settings, retryDepth, roles = []) {
   const repairInstruction = retryDepth > 0
     ? `\n\n这是自动修复重试。上次输出存在漏项或仍以英文为主。请逐项真正翻译为${settings.targetLanguage}；化学式和缩写可保留，但每个正文条目必须包含清晰的${settings.targetLanguage}表述。`
     : "";
-  const system = settings.prompt.replaceAll("{targetLanguage}", settings.targetLanguage) + formatGlossaryPrompt(settings.glossaryTerms, texts.join('\n')) + repairInstruction + protocol;
+  const system = settings.prompt.replaceAll("{targetLanguage}", settings.targetLanguage) + documentContextPrompt(settings.documentContext) + formatGlossaryPrompt(settings.glossaryTerms, texts.join('\n')) + repairInstruction + protocol;
   const input = JSON.stringify({ items });
   const headers = { "Content-Type": "application/json" };
   let body;
@@ -653,6 +653,24 @@ async function translateWithSettings(texts, settings, retryDepth, roles = []) {
     throw error;
   }
   return translations;
+}
+
+function normalizeDocumentContext(value) {
+  const allowedTypes=new Set(["academic-paper","research-report","newspaper","magazine","book","generic"]);
+  return {type:allowedTypes.has(value?.type)?value.type:"generic",domain:value?.domain==="mathematics"?"mathematics":"general"};
+}
+
+function documentContextPrompt(context) {
+  const rules={
+    "academic-paper":"按学术论文处理：保持论证层级、证据限定、图表编号、引文和参考文献关系，不把推测译成事实。",
+    "research-report":"按研究报告处理：严格区分事实、分析判断、预测与投资建议，完整保留估值口径、风险提示、方法和免责声明。",
+    newspaper:"按报纸文章处理：保持报道语气、引语归属、数字、日期与专栏边界，不合并无关报道。",
+    magazine:"按杂志文章处理：保持标题、导语、正文、侧栏与图注的层级和叙事语气，不合并无关栏目。",
+    book:"按专业图书处理：保持章节目次、定义、定理、例题、习题与答案编号的一致性。",
+    generic:"按专业文档处理：保持原文结构、语义限定和编号。",
+  };
+  const math=context?.domain==="mathematics"?" 数学内容中公式、变量、运算符、函数名、题号和解答步骤必须逐字保留；只翻译自然语言说明，不改写数学表达式。":"";
+  return `\n\n文档上下文：${rules[context?.type]||rules.generic}${math}`;
 }
 
 async function translateSplitBatch(texts, settings, retryDepth, roles) {

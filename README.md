@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.8.2-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.9.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 面向技术视频、专业网页与科研 PDF 的本地优先双语学习工作台。它把实时字幕、专业翻译、论文阅读、术语保护与知识库导出放进同一套工作流，重点服务金融、量化、经济、统计、数学和编程内容。
 
-> **专业版 0.8.2** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 科研 PDF
+> **专业版 0.9.0** · 由 [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) 创建 · 本地 Whisper · Codex / Kimi 套餐 · 专业 PDF
 
 ## 为什么做这个项目
 
@@ -31,7 +31,7 @@
 - 通用学习侧栏：实时查看、按时间回跳、原文/中文/双语、摘要与笔记；
 - 网页全文/选区翻译与内置 PDF.js 论文阅读器；
 - 扫描版 PDF 自动切换为本地 RapidOCR，逐页识别、重建段落后直接进入 Codex/Kimi 精译；
-- 通过统一 PDF 接口调用已安装的复杂论文版面组件；
+- 自动识别论文、研报、报纸、杂志与图书，按 1–4 栏阅读顺序重建语义段落；
 - 保存可回跳的媒体时间戳、字幕来源并自动去重；
 - 导出 Markdown、结构化 JSON 或双语 SRT，供其他工作台作为知识库摄取。
 
@@ -55,7 +55,7 @@
 powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 ```
 
-需要复杂 PDF 保版式翻译时使用 `-WithPdf`。模型文件保存在本地 `.models`，不会提交到仓库。
+模型文件保存在本地 `.models`，不会提交到仓库；PDF 版面处理已内置在扩展中，不需要另装版面组件。
 
 ### 2. 启动服务
 
@@ -84,29 +84,20 @@ Kimi Code 使用 Kimi 会员共享额度。若账户开启了 Extra Usage，套�
 
 PDF 若没有可选择的文字层，阅读器的精译按钮会自动显示为 **“本地 OCR 并精译”**。点击后先在本机逐页识别，再自动进入当前选择的 Codex/Kimi 专业精译；原始扫描页不会发送到第三方 OCR 服务。
 
-PDF 阅读器提供 **原版、保留版式、阅读重排、双栏对照** 四种视图，并分别导出“中文保版 PDF”和“中文阅读版 PDF”。扫描行情表、公式、代码式数据和证券代码会自动保留原样；任务面板显示阶段、断点、运行时间、预计剩余时间与更准确的 Token 估算。
+PDF 阅读器提供 **原版、保留版式、阅读重排、双栏对照** 四种视图，并分别导出“中文保版 PDF”和“中文阅读版 PDF”。它自动识别论文、研报、报纸、杂志与图书，也可手动纠正；三栏杂志、跨行段落和数学教材会进入对应策略。扫描行情表、公式、代码式数据和证券代码自动保留原样；任务面板显示阶段、断点、运行时间、预计剩余时间与更准确的 Token 估算。
 
 ## 项目结构
 
 - `apps/browser-extension`：Chrome Manifest V3 扩展。
 - `apps/safari-extension`：iPhone、iPad 与 macOS Safari Web Extension 源码。
 - `quant_scholar_translator/mobile`：Safari/Chrome 通用的移动知识工作台。
-- `quant_scholar_translator`：你的统一 Python 库，包含实时服务、专业翻译、稳定字幕、PDF 接口、术语库和知识数据契约。
+- `quant_scholar_translator`：你的统一 Python 库，包含实时服务、专业翻译、稳定字幕、术语库和知识数据契约。
 - `docs/MODELS.md`：已下载模型、体积、哈希、转换和剔除记录。
 - `docs/LIBRARY.md`：统一库公共接口、成品边界和依赖原则。
 - `docs/PROFESSIONAL_TRANSLATION_EVALUATION.md`：七领域真实 Codex 推理评测、门槛与适用边界。
 - `docs`：架构、来源审计和路线图。
 
 ## 进阶配置
-
-PDF 论文保版式翻译：
-
-```powershell
-$env:QS_LLM_API_KEY='在当前终端自行填写'
-$env:QS_LLM_API_BASE='你的 OpenAI-compatible 接口地址'
-$env:QS_LLM_MODEL='模型名'
-.\scripts\translate-pdf.ps1 -InputPdf 'D:\papers\paper.pdf'
-```
 
 若需扩展自动启动后端：先在 `chrome://extensions` 复制该扩展的 32 位 ID，再运行：
 
@@ -126,7 +117,7 @@ safe_source = protect("Estimate $E[R_t]$ with `statsmodels.OLS()`")
 translated = translate_text("expected return and risk premium", domain="quant_finance")
 ```
 
-默认推荐 Whisper `large-v3-turbo`；显存或算力有限时可从 `small` 或 `base` 开始。NLLB-200 600M int8 用于离线翻译，RapidOCR/ONNX Runtime 用于扫描版 PDF 的本地文字识别，BabelDOC 作为可选的复杂论文版面运行组件。
+默认推荐 Whisper `large-v3-turbo`；显存或算力有限时可从 `small` 或 `base` 开始。NLLB-200 600M int8 用于离线翻译，RapidOCR/ONNX Runtime 用于扫描版 PDF 的本地文字识别。PDF 的文档分类、1–4 栏阅读顺序、语义段落合并和译文回填由 Quant Scholar 扩展自身完成，不调用外部 PDF 重排项目。
 
 Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地转换后的 `large-v3-turbo` 权重和 faster-whisper 推理，不需要调用 OpenAI 语音 API。音频以约 1 秒 PCM 内存块送入本机服务，不生成录音文件；停止时释放轨道并清空缓冲。只有用户主动选择 Codex、Kimi 或其他云端精译功能时，识别后的文字才会发给所选服务，音频仍留在本机。
 
@@ -139,7 +130,7 @@ Whisper 是 OpenAI 开源的多语种语音识别模型。本项目使用本地�
 - DRM 平台可能让 `tabCapture` 得到静音，不能承诺支持 Netflix 等站点。
 - 当前知识导出为 Markdown/JSON/双语 SRT，尚未绑定某一个工作台的私有数据库接口。
 - iframe 内独立播放器、封闭 Shadow DOM 和站点加密字幕可能无法直接读取，但仍可回退标签页音频识别。
-- 复杂 PDF 排版作为可选运行组件安装在 `.venv`，不再保留第三方源码项目；其版面模型仍需首次下载。
+- 极复杂的浮动文本框、手写公式或加密文字层仍可能需要手动切换文档类型或使用 OCR 校正。
 - 专业译文与数值结论必须回看原始材料。
 
 ## 测试

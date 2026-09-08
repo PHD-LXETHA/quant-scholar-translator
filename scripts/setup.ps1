@@ -1,7 +1,3 @@
-param(
-  [switch]$WithPdf
-)
-
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $venvPath = Join-Path $projectRoot '.venv'
@@ -19,15 +15,8 @@ if (-not (Test-Path -LiteralPath $pythonExe)) {
 }
 
 Invoke-ProjectPython -m pip install --upgrade pip
-if ($WithPdf) {
-  Invoke-ProjectPython -m pip install -e "$projectRoot[all]"
-} else {
-  Invoke-ProjectPython -m pip install -e "$projectRoot[gpu]"
-}
+Invoke-ProjectPython -m pip install -e "$projectRoot[all]"
 
 Write-Host ''
 Write-Host 'Quant Scholar environment is ready.'
 Write-Host 'Next: run scripts\start-backend.ps1, then load apps\browser-extension in Chrome.'
-if (-not $WithPdf) {
-  Write-Host 'For layout-preserving PDF translation, run scripts\setup.ps1 -WithPdf.'
-}

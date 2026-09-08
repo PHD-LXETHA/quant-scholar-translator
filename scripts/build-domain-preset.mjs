@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const glossaryDir = path.join(projectRoot, 'quant_scholar_translator', 'data', 'glossaries');
 const output = path.join(projectRoot, 'apps', 'browser-extension', 'research', 'domain-preset.mjs');
-const babelDocOutput = path.join(projectRoot, 'quant_scholar_translator', 'data', 'babeldoc-professional.csv');
+const professionalTermsOutput = path.join(projectRoot, 'quant_scholar_translator', 'data', 'professional-terms.csv');
 const files = fs.readdirSync(glossaryDir).filter(name => name.endsWith('.json')).sort();
 const seen = new Set();
 const terms = [];
@@ -36,5 +36,5 @@ const flatTerms = terms.filter(item => {
 });
 const csv = ['source,target,tgt_lng', ...flatTerms.map(item =>
   [item.source, item.target, 'zh'].map(csvCell).join(','))].join('\n') + '\n';
-fs.writeFileSync(babelDocOutput, csv, 'utf8');
+fs.writeFileSync(professionalTermsOutput, csv, 'utf8');
 console.log(`Generated ${terms.length} contextual terms; ${flatTerms.length} unambiguous CSV terms`);

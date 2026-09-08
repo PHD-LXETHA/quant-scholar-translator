@@ -38,7 +38,15 @@ export function matchCachedTranslations(currentPages, savedPages) {
     const sid = savedId(savedPageIndex, savedBlockIndex), cid = currentId(pageIndex, blockIndex);
     if (used.has(sid) || matchedCurrent.has(cid)) return false;
     used.add(sid); matchedCurrent.add(cid);
-    matches.push({ pageIndex, blockIndex, translation: candidate.translation });
+    matches.push({
+      pageIndex,
+      blockIndex,
+      translation: candidate.translation,
+      structuredSource: candidate.structuredSource || "",
+      structuredTranslation: candidate.structuredTranslation || "",
+      structuredUnitId: candidate.structuredUnitId || "",
+      structuredAnchor: Boolean(candidate.structuredAnchor),
+    });
     return true;
   }
 

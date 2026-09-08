@@ -46,6 +46,28 @@ export function applyOcrTranslationPolicy(blocks = []) {
   return { dataDense, preserved, translated: blocks.length - preserved };
 }
 
+export function shouldPreserveScientificBlock(block) {
+  if (EXCLUDED_ROLES.has(block?.role)) return true;
+  const text = textOf(block), compact = text.replace(/\s+/g, "");
+  if (!text) return true;
+  const words = text.match(/[A-Za-z][A-Za-z'’-]*/g) || [];
+  const mathSymbols = text.match(/[=∫∑√∞≤≥≠≈±×÷∂∆∇∈∉⊂⊆∪∩→←↔^_]|(?:d[xyzts]\b)/g) || [];
+  const brackets = text.match(/[()[\]{}]/g) || [];
+  const digits = text.match(/\d/g) || [];
+  const mathDensity = (mathSymbols.length * 2 + brackets.length + digits.length) / Math.max(1, compact.length);
+  const equationLike = mathSymbols.length >= 2 && (words.length <= 12 || mathDensity >= .24);
+  const codeLike = /(?:^|\s)(?:def|class|function)\s+[A-Za-z_$][\w$]*|(?:^|\s)(?:return|import|SELECT|FROM)\s+[^.!?]+|[{};].*[={}]/.test(text) && words.length <= 24;
+  return equationLike || codeLike;
+}
+
+export function applyNativeTranslationPolicy(blocks = []) {
+  let preserved = 0;
+  for (const block of blocks) {
+    if (shouldPreserveScientificBlock(block)) { block.preserveOriginal = true; preserved += 1; }
+  }
+  return { preserved, translated: blocks.length - preserved };
+}
+
 export function isTranslatablePdfBlock(block) {
   return Boolean(block) && !block.preserveOriginal && !EXCLUDED_ROLES.has(block.role);
 }

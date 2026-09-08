@@ -3,15 +3,12 @@ from __future__ import annotations
 
 import argparse
 import os
-import subprocess
-import sys
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODELS_ROOT = PROJECT_ROOT / ".models"
 os.environ.setdefault("QS_PROJECT_ROOT", str(PROJECT_ROOT))
-os.environ.setdefault("QS_BABELDOC_CACHE", str(MODELS_ROOT / "babeldoc"))
 os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "1800")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
@@ -52,24 +49,17 @@ def convert_nllb() -> None:
     print(f"NLLB int8 verification: {translated}")
 
 
-def warmup_babeldoc() -> None:
-    subprocess.run([sys.executable, "-m", "babeldoc.main", "--warmup"], check=True)
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--whisper", action="store_true")
     parser.add_argument("--nllb", action="store_true")
-    parser.add_argument("--babeldoc", action="store_true")
     parser.add_argument("--all", action="store_true")
     args = parser.parse_args()
-    selected = args.all or not (args.whisper or args.nllb or args.babeldoc)
+    selected = args.all or not (args.whisper or args.nllb)
     if selected or args.whisper:
         download_whisper()
     if selected or args.nllb:
         convert_nllb()
-    if selected or args.babeldoc:
-        warmup_babeldoc()
     return 0
 
 

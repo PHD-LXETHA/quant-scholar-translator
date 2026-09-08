@@ -2,14 +2,14 @@
 
 [简体中文](README.md) | [English](README_EN.md)
 
-[![Version](https://img.shields.io/badge/version-0.8.2-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
+[![Version](https://img.shields.io/badge/version-0.9.0-36d6c2)](https://github.com/PHD-LXETHA/quant-scholar-translator/releases)
 [![License](https://img.shields.io/badge/license-MIT-f0c66d)](LICENSE)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4)](apps/browser-extension)
 [![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB)](pyproject.toml)
 
 A local-first bilingual learning workspace for technical videos, professional webpages, and research PDFs. Quant Scholar Translator brings live captions, domain-aware translation, paper reading, terminology protection, and knowledge export into one workflow, with special attention to finance, quantitative research, economics, statistics, mathematics, and programming.
 
-> **Professional Edition 0.8.2** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Research PDF
+> **Professional Edition 0.9.0** · Created by [**LX.COCOSCENT**](https://github.com/PHD-LXETHA) · Local Whisper · Codex / Kimi plans · Professional PDF
 
 ## Why this project exists
 
@@ -30,6 +30,7 @@ General-purpose translation tools often damage formulas, variables, statistical 
 - Provides a side-panel workspace for transcripts, bilingual reading, overviews, explanations, and notes.
 - Includes structured webpage translation and a PDF.js research-paper reader.
 - Automatically switches scanned PDFs to local RapidOCR, rebuilds positioned paragraphs, and then starts the selected Codex/Kimi professional translation.
+- Detects papers, research reports, newspapers, magazines, and books, then reconstructs semantic paragraphs in one-to-four-column reading order.
 - Exports Markdown, structured JSON, and bilingual SRT for downstream knowledge bases.
 
 ## Three live modes
@@ -50,7 +51,7 @@ The current build passes the project's internal Professional Translation Gate v7
 powershell -ExecutionPolicy Bypass -File .\scripts\setup.ps1
 ```
 
-Add `-WithPdf` when you need the optional layout-preserving PDF component. Models are stored under the local `.models` directory and are not committed to Git.
+Models are stored under the local `.models` directory and are not committed to Git. PDF layout processing is built into the extension and needs no separate layout runtime.
 
 ### 2. Start the backend
 
@@ -77,16 +78,7 @@ Codex authentication is independent of the translation service process: closing 
 
 When a PDF has no selectable text layer, the translation button changes to **Local OCR and professional translation**. It recognizes pages locally and then starts the selected Codex/Kimi translation; scanned page images are not sent to a third-party OCR service.
 
-The PDF reader now separates **Original, Preserve layout, Reading reflow, and Side-by-side** views, with dedicated preserved-layout and reading-edition PDF exports. Market tables, formulas, code-like data, and ticker symbols remain untouched, while the task panel reports the current stage, checkpoint, elapsed time, ETA, and a glossary-aware token estimate.
-
-## Layout-preserving PDF translation
-
-```powershell
-$env:QS_LLM_API_KEY='enter-your-key-locally'
-$env:QS_LLM_API_BASE='your-openai-compatible-base-url'
-$env:QS_LLM_MODEL='your-model-name'
-.\scripts\translate-pdf.ps1 -InputPdf 'D:\papers\paper.pdf'
-```
+The PDF reader separates **Original, Preserve layout, Reading reflow, and Side-by-side** views, with dedicated preserved-layout and reading-edition PDF exports. It automatically recognizes papers, research reports, newspapers, magazines, and books, and applies document-specific handling to three-column magazines, paragraph fragments, and mathematics textbooks. Market tables, formulas, code-like data, and ticker symbols remain untouched, while the task panel reports the current stage, checkpoint, elapsed time, ETA, and a glossary-aware token estimate.
 
 ## Python library
 
@@ -103,7 +95,7 @@ translated = translate_text(
 
 ## Models and privacy
 
-Whisper is an open-source multilingual speech-recognition model from OpenAI. This project runs converted `large-v3-turbo` weights locally through faster-whisper, so it does not need the OpenAI speech API. Use `small` or `base` on lower-powered machines. NLLB-200 600M int8 provides offline translation, RapidOCR with ONNX Runtime performs local OCR for scanned PDFs, and BabelDOC remains an optional runtime for complex paper layouts.
+Whisper is an open-source multilingual speech-recognition model from OpenAI. This project runs converted `large-v3-turbo` weights locally through faster-whisper, so it does not need the OpenAI speech API. Use `small` or `base` on lower-powered machines. NLLB-200 600M int8 provides offline translation, while RapidOCR with ONNX Runtime performs local OCR for scanned PDFs. PDF classification, one-to-four-column reading order, semantic paragraph assembly, and translation placement are implemented inside the Quant Scholar extension without an external PDF-reflow runtime.
 
 Audio remains local on the bundled Whisper path and is processed as roughly one-second in-memory PCM chunks; no recording file is created. Text is sent only to the selected Codex, Kimi, or other cloud provider when the user explicitly invokes cloud-backed features. On the current development machine, NLLB took about 6.6 seconds to cold-load and averaged about 0.15 seconds for warm 60–70 character English sentences with technical-value protection; this is a machine-specific measurement.
 
