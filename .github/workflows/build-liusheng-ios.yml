@@ -70,6 +70,39 @@ jobs:
                   if path.is_file() and not any(part in {".build", "DerivedData", "xcuserdata"} for part in path.parts):
                       archive.write(path, path.relative_to("apps"))
           PY
+      - name: Select iPhone simulator
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          devices=json.loads(subprocess.check_output(["xcrun","simctl","list","devices","available","--json"]))
+          phones=[device for runtime,rows in devices["devices"].items() if "iOS" in runtime for device in rows if device.get("isAvailable") and device["name"].startswith("iPhone")]
+          if not phones: raise RuntimeError("No iPhone simulator available")
+          phones.sort(key=lambda device:("Pro Max" not in device["name"],device["name"]))
+          phone=phones[0]
+          with open(os.environ["GITHUB_ENV"],"a") as stream: stream.write("SIMULATOR_ID="+phone["udid"]+"\n")
+          print("Native UI preview device:",phone["name"])
+          if phone["state"]!="Booted": subprocess.run(["xcrun","simctl","boot",phone["udid"]],check=True)
+          subprocess.run(["xcrun","simctl","bootstatus",phone["udid"],"-b"],check=True)
+          PY
+      - name: Test native navigation and large text
+        run: |
+          xcodebuild test -project apps/ios/LiuSheng.xcodeproj -scheme StillnoteUI \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath output/ios-ui-build -resultBundlePath output/ios-ui-results.xcresult \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+      - name: Export native UI screenshots
+        if: always()
+        run: |
+          if [ -d output/ios-ui-results.xcresult ]; then
+            xcrun xcresulttool export attachments --path output/ios-ui-results.xcresult --output-path output/ios-ui-screenshots
+          fi
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Stillnote-native-ui-preview
+          path: output/ios-ui-screenshots
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-artifact@v7
         with:
           name: Stillnote-unsigned-iphone
