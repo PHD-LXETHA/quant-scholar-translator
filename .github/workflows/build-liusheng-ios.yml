@@ -1,0 +1,72 @@
+name: Build Stillnote iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/liusheng-ios]
+    paths:
+      - 'apps/ios/**'
+      - '.github/workflows/build-liusheng-ios.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: liusheng-ios-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ios:
+    # Standard hosted runners on public repositories are free. Do not silently
+    # consume a private repository's billed allowance.
+    if: github.event.repository.private == false
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Show toolchain
+        run: xcodebuild -version
+      - name: Restore approved source files
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json
+          from pathlib import Path, PurePosixPath
+          bundle = json.loads(Path("apps/ios/Stillnote.sources.json").read_text())
+          for item in bundle["files"]:
+              relative = PurePosixPath(item["path"])
+              if relative.is_absolute() or ".." in relative.parts or relative.parts[:2] != ("apps", "ios"):
+                  raise ValueError("Source path outside approved iOS scope")
+              data = base64.b64decode(item["content"], validate=True)
+              if hashlib.sha256(data).hexdigest() != item["sha256"]:
+                  raise ValueError("Source digest mismatch")
+              target = Path(*relative.parts)
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+          print("Restored", len(bundle["files"]), "verified source files")
+          PY
+      - name: Test shared session model
+        working-directory: apps/ios
+        run: swift test
+      - name: Compile iPhone app without signing credentials
+        run: |
+          xcodebuild -project apps/ios/LiuSheng.xcodeproj -scheme LiuSheng \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -derivedDataPath output/ios-build CODE_SIGNING_ALLOWED=NO build
+      - name: Package unsigned app
+        run: |
+          mkdir -p output/ios-package/Payload
+          cp -R output/ios-build/Build/Products/Release-iphoneos/LiuSheng.app output/ios-package/Payload/
+          cd output/ios-package
+          ditto -c -k --sequesterRsrc --keepParent Payload ../Stillnote-unsigned.ipa
+      - name: Package restored source
+        run: ditto -c -k --keepParent apps/ios output/Stillnote-ios-source.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Stillnote-unsigned-iphone
+          path: |
+            output/Stillnote-unsigned.ipa
+            output/Stillnote-ios-source.zip
+          if-no-files-found: error
+          retention-days: 7
