@@ -61,7 +61,15 @@ jobs:
           cd output/ios-package
           ditto -c -k --sequesterRsrc --keepParent Payload ../Stillnote-unsigned.ipa
       - name: Package restored source
-        run: ditto -c -k --keepParent apps/ios output/Stillnote-ios-source.zip
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+          with ZipFile("output/Stillnote-ios-source.zip", "w", ZIP_DEFLATED) as archive:
+              for path in sorted(Path("apps/ios").rglob("*")):
+                  if path.is_file() and not any(part in {".build", "DerivedData", "xcuserdata"} for part in path.parts):
+                      archive.write(path, path.relative_to("apps"))
+          PY
       - uses: actions/upload-artifact@v7
         with:
           name: Stillnote-unsigned-iphone
