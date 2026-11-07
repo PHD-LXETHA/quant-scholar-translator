@@ -12,7 +12,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: liusheng-ios-${{ github.ref }}
+  # Each commit builds in its own workspace and publishes run-scoped artifacts.
+  # Keep older checks intact without blocking verification of a corrected commit.
+  group: liusheng-ios-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
