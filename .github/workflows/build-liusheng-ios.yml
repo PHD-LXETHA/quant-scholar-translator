@@ -23,7 +23,7 @@ jobs:
     # consume a private repository's billed allowance.
     if: github.event.repository.private == false
     runs-on: macos-15-intel
-    timeout-minutes: 25
+    timeout-minutes: 40
     env:
       DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
     steps:
@@ -93,7 +93,7 @@ jobs:
           xcodebuild test -project apps/ios/LiuSheng.xcodeproj -scheme StillnoteUI \
             -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -derivedDataPath output/ios-ui-build -resultBundlePath output/ios-ui-results.xcresult \
-            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+            -parallel-testing-enabled NO ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO
       - name: Export native UI screenshots
         if: always()
         run: |
